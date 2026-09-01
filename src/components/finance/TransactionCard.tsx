@@ -85,13 +85,13 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
         {/* Left: Icon + Info */}
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
             style={{ backgroundColor: transaction.categoryColor || "#7FE3C0" }}
           >
-            <IconComponent className="w-5 h-5" />
+            <IconComponent className="w-5 h-5 transition-transform group-hover:scale-105" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-xs font-bold text-foreground truncate">
+            <h4 className="text-xs font-bold text-foreground truncate transition-colors group-hover:text-foreground">
               {transaction.categoryName || "Kategori"}
             </h4>
             <p className="text-[11px] text-muted truncate">
@@ -118,10 +118,10 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
 
           <button
             onClick={() => setIsConfirmOpen(true)}
-            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-black/5 transition-all"
+            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] dark:hover:bg-[#382024] transition-all hover:scale-115 active:scale-95"
             title="Hapus transaksi"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5 transition-transform duration-200 hover:rotate-12" />
           </button>
         </div>
       </div>

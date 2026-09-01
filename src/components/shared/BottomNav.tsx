@@ -50,16 +50,21 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold transition-colors",
+                "group flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold transition-all select-none active:scale-90",
                 isActive
                   ? activeMode === "academic"
                     ? "text-[#7C5CFA]"
                     : "text-[#1F8766]"
-                  : "text-muted"
+                  : "text-muted hover:text-foreground"
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <Icon
+                className={cn(
+                  "w-5 h-5 transition-transform duration-300 group-hover:scale-120 group-hover:rotate-6",
+                  isActive && "scale-110"
+                )}
+              />
+              <span className="transition-transform group-hover:scale-105">{item.label}</span>
             </Link>
           );
         })}
@@ -67,12 +72,12 @@ export function BottomNav() {
         {/* Floating AI Button in Bottom Nav */}
         <button
           onClick={toggleDrawer}
-          className="flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold text-[#7C5CFA]"
+          className="group flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold text-[#7C5CFA] transition-all active:scale-90 select-none"
         >
-          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white shadow-soft">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white shadow-soft transition-transform duration-300 group-hover:scale-120 group-hover:rotate-12">
             <Sparkles className="w-4 h-4" />
           </div>
-          <span>Fio AI</span>
+          <span className="transition-transform group-hover:scale-105">Fio AI</span>
         </button>
       </div>
     </div>

@@ -17,8 +17,9 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-          Pengaturan Akun & Aplikasi ⚙️
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2.5 group">
+          <span>Pengaturan Akun & Aplikasi</span>
+          <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-[#7C5CFA] transition-transform duration-700 ease-out group-hover:rotate-180" />
         </h1>
         <p className="text-xs sm:text-sm text-muted mt-1">
           Kelola preferensi akun Firebase, mode tampilan, dan AI assistant.

@@ -58,25 +58,27 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all select-none",
+                "group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all select-none",
                 isActive
                   ? activeMode === "academic"
-                    ? "bg-[#EDE5FF] text-[#7C5CFA]"
-                    : "bg-[#E0FBF2] text-[#1F8766]"
-                  : "text-muted hover:text-foreground hover:bg-black/5"
+                    ? "bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA]"
+                    : "bg-[#E0FBF2] dark:bg-[#213831] text-[#1F8766]"
+                  : "text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
               )}
             >
               <Icon
                 className={cn(
-                  "w-4 h-4",
+                  "w-4 h-4 transition-transform duration-300 group-hover:scale-115 group-hover:rotate-6",
                   isActive
                     ? activeMode === "academic"
                       ? "text-[#7C5CFA]"
                       : "text-[#1F8766]"
-                    : "text-muted"
+                    : "text-muted group-hover:text-foreground"
                 )}
               />
-              <span>{item.label}</span>
+              <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+                {item.label}
+              </span>
             </Link>
           );
         })}

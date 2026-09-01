@@ -148,25 +148,25 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
                 href={generateGoogleCalendarUrl(task)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 rounded-lg text-muted hover:text-[#7C5CFA] hover:bg-[#EDE5FF]/50 transition-colors"
+                className="group/btn p-1.5 rounded-lg text-muted hover:text-[#7C5CFA] hover:bg-[#EDE5FF]/50 dark:hover:bg-[#383442] transition-all"
                 title="Tambahkan ke Google Calendar"
               >
-                <CalendarPlus className="w-4 h-4" />
+                <CalendarPlus className="w-4 h-4 transition-transform duration-300 group-hover/btn:scale-120 group-hover/btn:rotate-6" />
               </a>
               {onEdit && (
                 <button
                   onClick={() => onEdit(task)}
-                  className="px-2 py-1 rounded-lg text-muted hover:text-foreground hover:bg-black/5 text-xs font-semibold"
+                  className="px-2 py-1 rounded-lg text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
                 >
                   Edit
                 </button>
               )}
               <button
                 onClick={() => setIsConfirmOpen(true)}
-                className="p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] transition-colors"
+                className="group/trash p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] dark:hover:bg-[#382024] transition-all"
                 title="Hapus tugas"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4 transition-transform duration-200 group-hover/trash:rotate-12 group-hover/trash:scale-115" />
               </button>
             </div>
           </div>
