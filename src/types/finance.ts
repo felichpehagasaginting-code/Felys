@@ -51,3 +51,16 @@ export interface MonthlyBudgetSummary {
   overallPercentage: number;
   categories: Budget[];
 }
+
+export interface RecurringBill {
+  id: string;
+  name: string; // e.g. "Uang Kos Bulanan", "UKT Semester 4", "WiFi Kos", "Spotify Premium"
+  amount: number;
+  categoryId: string;
+  categoryName?: string;
+  frequency: "monthly" | "semester" | "yearly";
+  dueDay: number; // 1-31 (Day of month)
+  lastPaidDate?: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
