@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Course, Task, SubTask, PriorityLevel, TaskStatus } from "@/types/academic";
-import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt, DailyAllowanceSummary } from "@/types/finance";
+import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt, DailyAllowanceSummary, SavingsGoal } from "@/types/finance";
 import { AIInsight } from "@/types/ai";
 import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
@@ -24,6 +24,8 @@ interface DataState {
   budgetLimits: { categoryId: string; monthlyLimit: number }[];
   recurringBills: RecurringBill[];
   debts: FriendDebt[];
+  savingsGoals: SavingsGoal[];
+  emergencyFund: number;
   insights: AIInsight[];
   isLoaded: boolean;
 
@@ -59,6 +61,14 @@ interface DataState {
   addDebt: (debt: Omit<FriendDebt, "id" | "createdAt" | "isSettled">) => Promise<void>;
   settleDebt: (id: string) => Promise<void>;
   deleteDebt: (id: string) => Promise<void>;
+
+  // Savings Goals & Emergency Fund Actions
+  addSavingsGoal: (goal: Omit<SavingsGoal, "id" | "currentAmount" | "isCompleted" | "createdAt">) => Promise<void>;
+  depositToSavingsGoal: (id: string, amount: number) => Promise<void>;
+  deleteSavingsGoal: (id: string) => Promise<void>;
+  depositEmergencyFund: (amount: number, note?: string) => Promise<void>;
+  withdrawEmergencyFund: (amount: number, note?: string) => Promise<void>;
+  rolloverSurplus: (amount: number) => Promise<void>;
 
   // AI Actions
   dismissInsight: (id: string) => void;
@@ -128,6 +138,27 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     },
   ],
+  savingsGoals: [
+    {
+      id: "goal_1",
+      title: "Tabungan Laptop Kuliah Baru",
+      targetAmount: 6000000,
+      currentAmount: 1850000,
+      categoryIcon: "Laptop",
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "goal_2",
+      title: "Liburan Semester ke Jogja",
+      targetAmount: 1200000,
+      currentAmount: 750000,
+      categoryIcon: "Sparkles",
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  emergencyFund: 450000,
   insights: [],
   isLoaded: false,
 
@@ -139,6 +170,8 @@ export const useDataStore = create<DataState>((set, get) => ({
       transactions: [],
       budgetLimits: [],
       debts: [],
+      savingsGoals: [],
+      emergencyFund: 0,
       insights: [],
       isLoaded: false,
     });
@@ -561,6 +594,89 @@ export const useDataStore = create<DataState>((set, get) => ({
     set((state) => ({
       debts: state.debts.filter((d) => d.id !== id),
     }));
+  },
+
+  addSavingsGoal: async (goalData) => {
+    const newGoal: SavingsGoal = {
+      ...goalData,
+      id: `goal_${Date.now()}`,
+      currentAmount: 0,
+      isCompleted: false,
+      createdAt: new Date().toISOString(),
+    };
+    set((state) => ({
+      savingsGoals: [...state.savingsGoals, newGoal],
+    }));
+  },
+
+  depositToSavingsGoal: async (id, amount) => {
+    const goal = get().savingsGoals.find((g) => g.id === id);
+    if (!goal) return;
+
+    // Record expense transaction (Alokasi Tabungan)
+    await get().addTransaction({
+      type: "expense",
+      amount,
+      categoryId: "cat_tabungan",
+      categoryName: "Tabungan Impian",
+      note: `Setor tabungan: ${goal.title}`,
+      date: new Date().toISOString(),
+    });
+
+    set((state) => ({
+      savingsGoals: state.savingsGoals.map((g) => {
+        if (g.id === id) {
+          const newAmount = g.currentAmount + amount;
+          return {
+            ...g,
+            currentAmount: newAmount,
+            isCompleted: newAmount >= g.targetAmount,
+          };
+        }
+        return g;
+      }),
+    }));
+  },
+
+  deleteSavingsGoal: async (id) => {
+    set((state) => ({
+      savingsGoals: state.savingsGoals.filter((g) => g.id !== id),
+    }));
+  },
+
+  depositEmergencyFund: async (amount, note) => {
+    await get().addTransaction({
+      type: "expense",
+      amount,
+      categoryId: "cat_darurat",
+      categoryName: "Dana Darurat",
+      note: note || "Simpanan Cadangan Darurat Kos",
+      date: new Date().toISOString(),
+    });
+
+    set((state) => ({
+      emergencyFund: state.emergencyFund + amount,
+    }));
+  },
+
+  withdrawEmergencyFund: async (amount, note) => {
+    await get().addTransaction({
+      type: "income",
+      amount,
+      categoryId: "cat_darurat",
+      categoryName: "Tarik Dana Darurat",
+      note: note || "Penarikan Dana Darurat Kos",
+      date: new Date().toISOString(),
+    });
+
+    set((state) => ({
+      emergencyFund: Math.max(0, state.emergencyFund - amount),
+    }));
+  },
+
+  rolloverSurplus: async (amount) => {
+    // Rollover positive surplus to emergency fund
+    await get().depositEmergencyFund(amount, "Rollover Sisa Surplus Kas Bulan Lalu");
   },
 
   getMonthlyBudgetSummary: (month, year) => {

@@ -44,6 +44,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from "sonner";
 import { AntiZoomProvider } from "@/components/shared/AntiZoomProvider";
+import { PWAInstallPrompt } from "@/components/shared/PWAInstallPrompt";
 
 export default function RootLayout({
   children,
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body className={`${jakarta.className} font-sans antialiased min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 select-none`}>
         <AntiZoomProvider />
         {children}
+        <PWAInstallPrompt />
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>

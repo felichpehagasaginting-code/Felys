@@ -5,6 +5,8 @@ import { Plus, BookOpen, Trash2, Edit2, CheckSquare, Sparkles } from "lucide-rea
 import { useDataStore } from "@/stores/use-data-store";
 import { CourseModal } from "@/components/academic/CourseModal";
 import { AcademicNavTabs } from "@/components/academic/AcademicNavTabs";
+import { WeeklyTimetableGrid } from "@/components/academic/WeeklyTimetableGrid";
+import { DDayCountdownBanner } from "@/components/academic/DDayCountdownBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Course } from "@/types/academic";
@@ -41,6 +43,9 @@ export default function CoursesPage() {
     <div className="space-y-5 sm:space-y-6">
       {/* Sub-navigation tabs for iPhone and Desktop */}
       <AcademicNavTabs />
+
+      {/* D-Day Exam Countdown Widget */}
+      <DDayCountdownBanner />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -158,6 +163,11 @@ export default function CoursesPage() {
           </Button>
         </div>
       )}
+
+      {/* Weekly Timetable Grid Section */}
+      <div className="pt-4 border-t border-border">
+        <WeeklyTimetableGrid />
+      </div>
 
       <CourseModal
         isOpen={isCourseModalOpen}

@@ -9,13 +9,16 @@ import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
 import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
+import { SavingsGoalModal } from "@/components/finance/SavingsGoalModal";
+import { EmergencyFundModal } from "@/components/finance/EmergencyFundModal";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
+import { Target, Shield } from "lucide-react";
 
 export default function FinanceTransactionsPage() {
-  const { transactions, categories, getMonthlyBudgetSummary } = useDataStore();
+  const { transactions, categories, getMonthlyBudgetSummary, emergencyFund } = useDataStore();
 
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "expense" | "income">("all");
@@ -24,6 +27,8 @@ export default function FinanceTransactionsPage() {
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
+  const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
+  const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
 
   const summary = getMonthlyBudgetSummary();
 
@@ -63,6 +68,26 @@ export default function FinanceTransactionsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={() => setIsSavingsGoalOpen(true)}
+            variant="secondary"
+            size="md"
+            className="rounded-2xl"
+            title="Celengan Impian Mahasiswa"
+          >
+            <Target className="w-4 h-4 text-[#7C5CFA]" />
+            <span className="hidden sm:inline">Celengan</span>
+          </Button>
+          <Button
+            onClick={() => setIsEmergencyFundOpen(true)}
+            variant="secondary"
+            size="md"
+            className="rounded-2xl"
+            title="Kantong Dana Darurat Kos"
+          >
+            <Shield className="w-4 h-4 text-[#1F8766]" />
+            <span className="hidden sm:inline">Dana Darurat</span>
+          </Button>
           <Button
             onClick={() => setIsSplitBillOpen(true)}
             variant="secondary"
@@ -274,6 +299,16 @@ export default function FinanceTransactionsPage() {
       <SplitBillModal
         isOpen={isSplitBillOpen}
         onClose={() => setIsSplitBillOpen(false)}
+      />
+
+      <SavingsGoalModal
+        isOpen={isSavingsGoalOpen}
+        onClose={() => setIsSavingsGoalOpen(false)}
+      />
+
+      <EmergencyFundModal
+        isOpen={isEmergencyFundOpen}
+        onClose={() => setIsEmergencyFundOpen(false)}
       />
     </div>
   );

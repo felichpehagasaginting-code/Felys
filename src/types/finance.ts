@@ -94,3 +94,15 @@ export interface DailyAllowanceSummary {
   isCriticalBurn: boolean;
 }
 
+export interface SavingsGoal {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  categoryIcon?: string;
+  targetDate?: string;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
+

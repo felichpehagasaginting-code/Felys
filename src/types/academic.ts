@@ -1,11 +1,20 @@
 export type PriorityLevel = "low" | "medium" | "high";
 export type TaskStatus = "todo" | "in_progress" | "done";
 
+export interface CourseSchedule {
+  id: string;
+  dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7; // 1 = Senin, ..., 5 = Jumat
+  startTime: string; // "08:00"
+  endTime: string;   // "10:30"
+  room?: string;     // "Lab AI Gedung B"
+}
+
 export interface Course {
   id: string;
   name: string;
   color: string; // hex
   sks?: number | null;
+  schedules?: CourseSchedule[];
   createdAt?: string;
   updatedAt?: string;
 }

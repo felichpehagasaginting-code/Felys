@@ -15,6 +15,7 @@ import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
+import { DDayCountdownBanner } from "@/components/academic/DDayCountdownBanner";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -148,6 +149,11 @@ export default function DashboardPage() {
         <section>
           <InsightCard insight={insights[0]} />
         </section>
+      )}
+
+      {/* D-Day Exam Countdown Banner */}
+      {activeMode === "academic" && (
+        <DDayCountdownBanner />
       )}
 
       {/* 3. Main Dual-Widget Grid */}
