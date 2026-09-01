@@ -6,6 +6,7 @@ import { useDataStore } from "@/stores/use-data-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { CourseModal } from "@/components/academic/CourseModal";
+import { AcademicNavTabs } from "@/components/academic/AcademicNavTabs";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { Button } from "@/components/ui/Button";
 import { Task } from "@/types/academic";
@@ -77,14 +78,17 @@ export default function AcademicTasksPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Sub-navigation tabs for iPhone and Desktop */}
+      <AcademicNavTabs />
+
       {/* 1. Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
             Manajemen Tugas Kuliah 🎓
           </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-0.5 sm:mt-1">
             Urutan tugas otomatis diprioritaskan oleh AI berdasarkan deadline dan tingkat urgensi.
           </p>
         </div>
@@ -93,20 +97,20 @@ export default function AcademicTasksPage() {
           <Button
             onClick={() => setIsCourseModalOpen(true)}
             variant="secondary"
-            size="md"
-            className="rounded-2xl"
+            size="sm"
+            className="rounded-2xl text-xs"
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3.5 h-3.5" />
             <span>Mata Kuliah</span>
           </Button>
 
           <Button
             onClick={handleOpenNewTask}
             variant="academic"
-            size="md"
-            className="rounded-2xl"
+            size="sm"
+            className="rounded-2xl text-xs"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Tugas Baru</span>
           </Button>
         </div>

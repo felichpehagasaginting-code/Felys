@@ -21,6 +21,7 @@ import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { Task } from "@/types/academic";
 import { cn } from "@/lib/utils";
+import { AcademicNavTabs } from "@/components/academic/AcademicNavTabs";
 import { downloadICSFile } from "@/lib/calendar-sync";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -65,9 +66,12 @@ export default function AcademicCalendarPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Sub-navigation tabs for iPhone and Desktop */}
+      <AcademicNavTabs />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
             Kalender Deadline 📅

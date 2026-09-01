@@ -13,6 +13,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  minimumScale: 1,
   userScalable: false,
   viewportFit: "cover",
   themeColor: [
@@ -42,6 +43,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from "sonner";
+import { AntiZoomProvider } from "@/components/shared/AntiZoomProvider";
 
 export default function RootLayout({
   children,
@@ -50,7 +52,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" data-mode="academic" className={jakarta.variable} suppressHydrationWarning>
-      <body className={`${jakarta.className} font-sans antialiased min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300`}>
+      <body className={`${jakarta.className} font-sans antialiased min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 select-none`}>
+        <AntiZoomProvider />
         {children}
         <Toaster position="top-right" richColors closeButton />
       </body>

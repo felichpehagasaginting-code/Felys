@@ -9,6 +9,9 @@ import {
   Receipt,
   PieChart,
   Sparkles,
+  Calendar,
+  BookOpen,
+  BarChart3,
 } from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
@@ -22,19 +25,22 @@ export function BottomNav() {
   const academicItems = [
     { label: "Home", href: "/", icon: LayoutDashboard },
     { label: "Tugas", href: "/academic", icon: CheckSquare },
+    { label: "Kalender", href: "/academic/calendar", icon: Calendar },
+    { label: "Matkul", href: "/academic/courses", icon: BookOpen },
   ];
 
   const financeItems = [
     { label: "Home", href: "/", icon: LayoutDashboard },
     { label: "Transaksi", href: "/finance", icon: Receipt },
     { label: "Budget", href: "/finance/budget", icon: PieChart },
+    { label: "Laporan", href: "/finance/reports", icon: BarChart3 },
   ];
 
   const currentItems = activeMode === "academic" ? academicItems : financeItems;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border px-3 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] safe-bottom">
-      <div className="flex items-center justify-around">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border px-2 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] safe-bottom shadow-lg">
+      <div className="flex items-center justify-between max-w-md mx-auto">
         {currentItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

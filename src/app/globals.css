@@ -36,6 +36,14 @@
   --border-soft: #383442;
 }
 
+html {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body {
   color: var(--text-primary);
   background: var(--bg-primary);
@@ -45,6 +53,14 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   overscroll-behavior-y: contain;
+  touch-action: pan-x pan-y;
+}
+
+/* iOS Safari: Prevent automatic zoom on focus by ensuring 16px font size on mobile */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* iOS Safe Area Insets Utilities */
@@ -67,6 +83,7 @@ body {
 /* iOS Native Button active state without text selection */
 button, a, input, select, textarea {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Custom smooth transitions for theme switches */
@@ -75,15 +92,24 @@ button, a, input, select, textarea {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Hide scrollbars on touch horizontally scrollable tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Glassmorphism utility */
 .glass {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .dark .glass {
-  background: rgba(38, 35, 46, 0.85);
+  background: rgba(38, 35, 46, 0.88);
 }
 
 /* Custom Scrollbar */

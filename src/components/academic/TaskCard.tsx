@@ -142,31 +142,31 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
               )}
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Action buttons - always visible on touch/mobile, hover on desktop */}
+            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               <a
                 href={generateGoogleCalendarUrl(task)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1 rounded-lg text-muted hover:text-[#7C5CFA] transition-colors"
+                className="p-1.5 rounded-lg text-muted hover:text-[#7C5CFA] hover:bg-[#EDE5FF]/50 transition-colors"
                 title="Tambahkan ke Google Calendar"
               >
-                <CalendarPlus className="w-3.5 h-3.5" />
+                <CalendarPlus className="w-4 h-4" />
               </a>
               {onEdit && (
                 <button
                   onClick={() => onEdit(task)}
-                  className="p-1 rounded-lg text-muted hover:text-foreground text-xs font-semibold"
+                  className="px-2 py-1 rounded-lg text-muted hover:text-foreground hover:bg-black/5 text-xs font-semibold"
                 >
                   Edit
                 </button>
               )}
               <button
                 onClick={() => setIsConfirmOpen(true)}
-                className="p-1 rounded-lg text-muted hover:text-[#FF7A85] transition-colors"
+                className="p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] transition-colors"
                 title="Hapus tugas"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>

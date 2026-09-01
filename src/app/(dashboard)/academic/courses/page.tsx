@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Plus, BookOpen, Trash2, Edit2, CheckSquare, Sparkles } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { CourseModal } from "@/components/academic/CourseModal";
+import { AcademicNavTabs } from "@/components/academic/AcademicNavTabs";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Course } from "@/types/academic";
@@ -37,14 +38,17 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Sub-navigation tabs for iPhone and Desktop */}
+      <AcademicNavTabs />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
             Mata Kuliah Semester Ini 📚
           </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-0.5 sm:mt-1">
             Kelola daftar mata kuliah, warna tag, dan bobot SKS.
           </p>
         </div>
