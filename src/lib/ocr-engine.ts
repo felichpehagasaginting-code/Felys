@@ -198,8 +198,10 @@ export function parseReceiptText(text: string): OCRReceiptResult {
     suggestedCategory = "Kopi & Jajan";
   } else if (lowerText.includes("spbu") || lowerText.includes("pertamina") || lowerText.includes("shell") || lowerText.includes("gojek") || lowerText.includes("grab")) {
     suggestedCategory = "Transportasi";
+  } else if (lowerText.includes("laundry") || lowerText.includes("cuci") || lowerText.includes("londri") || lowerText.includes("dry clean")) {
+    suggestedCategory = "Laundry & Cuci Baju";
   } else if (lowerText.includes("apotek") || lowerText.includes("kimia farma") || lowerText.includes("farmasi") || lowerText.includes("klinik")) {
-    suggestedCategory = "Kesehatan";
+    suggestedCategory = "Kesehatan & Obat";
   } else if (lowerText.includes("fotokopi") || lowerText.includes("print") || lowerText.includes("buku") || lowerText.includes("stationery")) {
     suggestedCategory = "Kebutuhan Kuliah";
   }

@@ -44,6 +44,7 @@ export const DEFAULT_EXPENSE_CATEGORIES: Omit<Category, "id">[] = [
   { name: "Transportasi", icon: "Bus", color: "#6BCB77", isEssential: true, type: "expense", isDefault: true },
   { name: "Kebutuhan Kuliah", icon: "GraduationCap", color: "#B69CFF", isEssential: true, type: "expense", isDefault: true },
   { name: "Tagihan & Kos", icon: "Home", color: "#8EC8FF", isEssential: true, type: "expense", isDefault: true },
+  { name: "Laundry & Cuci Baju", icon: "Shirt", color: "#38BDF8", isEssential: true, type: "expense", isDefault: true },
   { name: "Hiburan & Nongkrong", icon: "Gamepad2", color: "#FFC978", isEssential: false, type: "expense", isDefault: true },
   { name: "Kopi & Jajan", icon: "Coffee", color: "#F59E0B", isEssential: false, type: "expense", isDefault: true },
   { name: "Belanja Pribadi", icon: "ShoppingBag", color: "#FF7A85", isEssential: false, type: "expense", isDefault: true },

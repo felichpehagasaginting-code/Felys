@@ -107,6 +107,8 @@ export function parseStudentNLP(
     if (!matchedCategory) {
       if (lower.includes("makan") || lower.includes("minum") || lower.includes("geprek") || lower.includes("bakso") || lower.includes("kfc") || lower.includes("mcd")) {
         matchedCategory = categories.find((c) => c.name.toLowerCase().includes("makan"));
+      } else if (lower.includes("laundry") || lower.includes("cuci baju") || lower.includes("londri") || lower.includes("setrika") || lower.includes("dry clean")) {
+        matchedCategory = categories.find((c) => c.name.toLowerCase().includes("laundry") || c.name.toLowerCase().includes("cuci"));
       } else if (lower.includes("kopi") || lower.includes("ngopi") || lower.includes("jajan") || lower.includes("snack") || lower.includes("boba")) {
         matchedCategory = categories.find((c) => c.name.toLowerCase().includes("kopi") || c.name.toLowerCase().includes("jajan"));
       } else if (lower.includes("bensin") || lower.includes("gojek") || lower.includes("grab") || lower.includes("angkot") || lower.includes("bus")) {
