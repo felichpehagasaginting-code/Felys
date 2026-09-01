@@ -1,14 +1,40 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, BookOpen, Trash2, CheckSquare, Sparkles } from "lucide-react";
+import { Plus, BookOpen, Trash2, Edit2, CheckSquare, Sparkles } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { CourseModal } from "@/components/academic/CourseModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
+import { Course } from "@/types/academic";
 
 export default function CoursesPage() {
   const { courses, tasks, deleteCourse } = useDataStore();
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleCreateCourse = () => {
+    setCourseToEdit(null);
+    setIsCourseModalOpen(true);
+  };
+
+  const handleEditCourse = (course: Course) => {
+    setCourseToEdit(course);
+    setIsCourseModalOpen(true);
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    try {
+      setIsDeleting(true);
+      await deleteCourse(courseToDelete.id);
+    } finally {
+      setIsDeleting(false);
+      setCourseToDelete(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -24,7 +50,7 @@ export default function CoursesPage() {
         </div>
 
         <Button
-          onClick={() => setIsCourseModalOpen(true)}
+          onClick={handleCreateCourse}
           variant="academic"
           size="md"
           className="rounded-2xl"
@@ -45,7 +71,7 @@ export default function CoursesPage() {
             return (
               <div
                 key={course.id}
-                className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-4 relative overflow-hidden"
+                className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-4 relative overflow-hidden group"
               >
                 {/* Top color bar */}
                 <div
@@ -71,13 +97,22 @@ export default function CoursesPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => deleteCourse(course.id)}
-                    className="p-1.5 rounded-xl text-muted hover:text-[#FF7A85] hover:bg-black/5 transition-colors"
-                    title="Hapus mata kuliah"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleEditCourse(course)}
+                      className="p-1.5 rounded-xl text-muted hover:text-[#7C5CFA] hover:bg-black/5 transition-colors"
+                      title="Edit mata kuliah"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setCourseToDelete(course)}
+                      className="p-1.5 rounded-xl text-muted hover:text-[#FF7A85] hover:bg-black/5 transition-colors"
+                      title="Hapus mata kuliah"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Task Count Stats */}
@@ -109,7 +144,7 @@ export default function CoursesPage() {
             Tambahkan mata kuliah semester ini agar tugas dan deadlinemu terorganisir dengan tag warna rapi.
           </p>
           <Button
-            onClick={() => setIsCourseModalOpen(true)}
+            onClick={handleCreateCourse}
             variant="academic"
             size="md"
             className="rounded-2xl mt-2"
@@ -123,6 +158,16 @@ export default function CoursesPage() {
       <CourseModal
         isOpen={isCourseModalOpen}
         onClose={() => setIsCourseModalOpen(false)}
+        courseToEdit={courseToEdit}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(courseToDelete)}
+        onClose={() => setCourseToDelete(null)}
+        onConfirm={handleDeleteCourse}
+        title="Hapus Mata Kuliah?"
+        description={`Mata kuliah "${courseToDelete?.name}" (${courseToDelete?.sks || 3} SKS) akan dihapus dari Firestore.`}
+        isSubmitting={isDeleting}
       />
     </div>
   );
