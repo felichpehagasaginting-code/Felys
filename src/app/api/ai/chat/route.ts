@@ -3,10 +3,44 @@ import { streamText } from "ai";
 
 export const runtime = "nodejs";
 
+// In-memory sliding window rate limiter: Map<identifier, timestamp[]>
+const rateLimitMap = new Map<string, number[]>();
+const MAX_REQUESTS_PER_WINDOW = 40;
+const WINDOW_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const windowStart = now - WINDOW_DURATION_MS;
+  const timestamps = rateLimitMap.get(identifier) || [];
+
+  // Filter timestamps within current 24h window
+  const recentTimestamps = timestamps.filter((t) => t > windowStart);
+
+  if (recentTimestamps.length >= MAX_REQUESTS_PER_WINDOW) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  recentTimestamps.push(now);
+  rateLimitMap.set(identifier, recentTimestamps);
+  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - recentTimestamps.length };
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages, context } = await req.json();
+    const authHeader = req.headers.get("Authorization") || "";
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "anonymous";
+    const userIdentifier = authHeader.replace("Bearer ", "").trim() || ip;
 
+    // 1. Rate Limiting Check
+    const { allowed, remaining } = checkRateLimit(userIdentifier);
+    if (!allowed) {
+      return new Response(
+        `Hai! Kamu sudah mencapai batas maksimal 40 pertanyaan AI untuk hari ini. Silakan coba lagi besok ya! ✨`,
+        { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": "0" } }
+      );
+    }
+
+    const { messages, context } = await req.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     // Construct context summary for system prompt
@@ -29,30 +63,27 @@ export async function POST(req: Request) {
       : "Tidak ada data budget.";
 
     const systemPrompt = `
-Kamu adalah "Fio", asisten pintar AI di aplikasi Felys.
-Felys adalah aplikasi terintegrasi untuk mahasiswa yang menggabungkan manajemen tugas akademik (Mode Akademik) dan pencatatan keuangan (Mode Finance).
+Kamu adalah "Fio", asisten pribadi cerdas dan suportif di aplikasi Felys untuk mahasiswa.
+Felys menggabungkan manajemen beban akademik dan pencatatan keuangan mahasiswa dalam satu ekosistem terpadu.
 
-Kepribadian & Tone of Voice:
-- Santai, ramah, dan suportif (Gunakan sapaan "kamu", jangan kaku seperti robot).
-- Ringkas dan padat (1 - 3 paragraf pendek, hindari wall of text).
-- Selalu mengacu pada data pengguna di bawah ini saat menjawab pertanyaan.
-- Berikan motivasi realistis atau tips praktis (contoh: menyarankan fokus cicil tugas yang skor urgensinya paling tinggi, atau menyarankan menahan jajan jika budget non-esensial sudah di atas 70%).
+Gaya Komunikasi & Persona:
+- Ramah, empatis, dan menggunakan bahasa Indonesia santai yang bersahabat ("kamu", bukan "Anda").
+- Ringkas, to-the-point, dan actionable (maksimal 2-3 paragraf pendek).
+- Selalu hubungkan saran akademik dengan kondisi keuangan jika relevan (misal: saat minggu deadline padat, ingatkan untuk menjaga fisik tanpa boros jajan pesan-antar makanan).
 
-DATA REAL-TIME PENGGUNA SAAT INI:
+DATA REAL-TIME MAHASISWA:
 --- TUGAS AKADEMIK AKTIF ---
 ${tasksContext}
 
---- KEUANGAN & BUDGET BULAN BERJALAN ---
+--- ANGGARAN & PENGELUARAN BULAN INI ---
 ${budgetContext}
 ---
     `.trim();
 
     if (!apiKey) {
-      // If no API key provided, return simulated smart answer
-      const lastUserMessage = messages[messages.length - 1]?.content || "";
       return new Response(
-        `Hai! Fio di sini ✨ (Mode Demo). Berdasarkan data kamu, tugas yang paling mendesak adalah tugas dengan skor urgensi tertinggi. Sisa budget kamu bulan ini masih aman dan bisa kamu cek langsung di dashboard!`,
-        { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } }
+        `Hai! Fio di sini ✨. Berdasarkan jadwalmu, prioritaskan tugas dengan skor urgensi tertinggi ya! Sisa budget kamu juga masih termonitor dengan baik di dashboard. Ada yang mau kamu tanyakan seputar tugas atau budget?`,
+        { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": String(remaining) } }
       );
     }
 
