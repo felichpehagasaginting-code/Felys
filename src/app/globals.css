@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FAF9FC;
+  --bg-surface: #FFFFFF;
+  --text-primary: #2D2A32;
+  --text-secondary: #8A8593;
+  --border-soft: #EDEAF2;
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+
+  /* Default mode is academic */
+  --accent-current: #B69CFF;
+  --accent-current-soft: #EDE5FF;
+  --accent-current-deep: #7C5CFA;
+}
+
+[data-mode="academic"] {
+  --accent-current: #B69CFF;
+  --accent-current-soft: #EDE5FF;
+  --accent-current-deep: #7C5CFA;
+}
+
+[data-mode="finance"] {
+  --accent-current: #7FE3C0;
+  --accent-current-soft: #E0FBF2;
+  --accent-current-deep: #37B98F;
+}
+
+.dark {
+  --bg-primary: #1C1A22;
+  --bg-surface: #26232E;
+  --text-primary: #F5F3F7;
+  --text-secondary: #A6A0B2;
+  --border-soft: #383442;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  transition: background-color 300ms ease, color 300ms ease;
+  overflow-x: hidden;
+}
+
+/* Custom smooth transitions for theme switches */
+* {
+  border-color: var(--border-soft);
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(38, 35, 46, 0.85);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDD8E6;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C4BDD4;
+}

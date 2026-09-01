@@ -1,0 +1,244 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt } from "lucide-react";
+import { useModeStore } from "@/stores/use-mode-store";
+import { useDataStore } from "@/stores/use-data-store";
+import { TaskCard } from "@/components/academic/TaskCard";
+import { TransactionCard } from "@/components/finance/TransactionCard";
+import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
+import { InsightCard } from "@/components/ai/InsightCard";
+import { Button } from "@/components/ui/Button";
+import { TaskFormModal } from "@/components/academic/TaskFormModal";
+import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
+import { formatCurrencyIDR, getBudgetStatusConfig } from "@/lib/utils";
+import { Task } from "@/types/academic";
+
+export default function DashboardPage() {
+  const { activeMode } = useModeStore();
+  const { tasks, transactions, insights, getMonthlyBudgetSummary } = useDataStore();
+
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+
+  // Active top urgent tasks (sorted by urgencyScore desc)
+  const activeTasks = tasks
+    .filter((t) => t.status !== "done")
+    .sort((a, b) => b.urgencyScore - a.urgencyScore)
+    .slice(0, 4);
+
+  // Monthly budget summary
+  const summary = getMonthlyBudgetSummary();
+  const budgetConfig = getBudgetStatusConfig(summary.overallPercentage);
+
+  // Recent 4 transactions
+  const recentTransactions = transactions.slice(0, 4);
+
+  const handleEditTask = (task: Task) => {
+    setTaskToEdit(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCreateTask = () => {
+    setTaskToEdit(null);
+    setIsTaskModalOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 1. Header Greeting & Status Overview */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+            Semangat Kuliahnya! 👋
+          </h1>
+          <p className="text-xs sm:text-sm text-muted mt-1">
+            {activeMode === "academic"
+              ? `Kamu punya ${activeTasks.length} tugas aktif yang butuh perhatian.`
+              : `Total sisa budget kamu bulan ini: ${formatCurrencyIDR(summary.remaining)}.`}
+          </p>
+        </div>
+
+        {/* Quick Mode Action Button */}
+        <div className="flex items-center gap-2">
+          {activeMode === "academic" ? (
+            <Button
+              onClick={handleCreateTask}
+              variant="academic"
+              size="md"
+              className="rounded-2xl"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Tugas</span>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setIsFinanceModalOpen(true)}
+              variant="finance"
+              size="md"
+              className="rounded-2xl"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Catat Transaksi</span>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Active AI Insight Card (Cross-Mode or Recommendation) */}
+      {insights.length > 0 && (
+        <section>
+          <InsightCard insight={insights[0]} />
+        </section>
+      )}
+
+      {/* 3. Main Dual-Widget Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Academic Top Urgent Tasks */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-[#EDE5FF] dark:bg-[#383442] flex items-center justify-center text-[#7C5CFA]">
+                <CheckSquare className="w-3.5 h-3.5" />
+              </div>
+              <h2 className="text-base font-bold text-foreground">
+                Tugas Prioritas Utama
+              </h2>
+            </div>
+            <Link
+              href="/academic"
+              className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1"
+            >
+              <span>Lihat Semua</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {activeTasks.length > 0 ? (
+            <div className="space-y-3">
+              {activeTasks.map((task) => (
+                <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 rounded-3xl bg-surface border border-border text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center mx-auto">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-bold text-foreground">Semua Tugas Beres!</h4>
+              <p className="text-xs text-muted max-w-sm mx-auto">
+                Tidak ada deadline mendesak saat ini. Istirahat sejenak atau cicil materi berikutnya.
+              </p>
+              <Button
+                onClick={handleCreateTask}
+                variant="academic"
+                size="sm"
+                className="mt-2"
+              >
+                + Tambah Tugas Baru
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Finance Budget & Recent Spending */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-[#E0FBF2] dark:bg-[#213831] flex items-center justify-center text-[#1F8766]">
+                <Receipt className="w-3.5 h-3.5" />
+              </div>
+              <h2 className="text-base font-bold text-foreground">
+                Ringkasan Budget Bulan Ini
+              </h2>
+            </div>
+            <Link
+              href="/finance"
+              className="text-xs font-bold text-[#1F8766] hover:underline flex items-center gap-1"
+            >
+              <span>Detail</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          {/* Budget Overview Card */}
+          <div className="p-5 rounded-3xl bg-surface border border-border space-y-4 shadow-soft">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-muted font-medium block">Sisa Anggaran</span>
+                <span className="text-2xl font-extrabold text-foreground tracking-tight">
+                  {formatCurrencyIDR(summary.remaining)}
+                </span>
+              </div>
+              <span
+                className={`px-2.5 py-1 rounded-full text-xs font-bold ${budgetConfig.badgeBg} ${budgetConfig.textColor}`}
+              >
+                {summary.overallPercentage}% Terpakai
+              </span>
+            </div>
+
+            {/* Total Budget Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="w-full h-2.5 bg-[#EDEAF2] dark:bg-[#383442] rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${budgetConfig.barColor} transition-all duration-500 rounded-full`}
+                  style={{ width: `${Math.min(100, summary.overallPercentage)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[11px] text-muted">
+                <span>Terpakai: {formatCurrencyIDR(summary.totalSpent)}</span>
+                <span>Batas: {formatCurrencyIDR(summary.totalLimit)}</span>
+              </div>
+            </div>
+
+            {/* Quick Chart */}
+            <div className="pt-2 border-t border-border/60">
+              <h4 className="text-xs font-bold text-foreground mb-1 text-center">
+                Distribusi Pengeluaran
+              </h4>
+              <DonutExpenseChart budgets={summary.categories} />
+            </div>
+
+            {/* Quick Numpad Button */}
+            <Button
+              onClick={() => setIsFinanceModalOpen(true)}
+              variant="finance"
+              size="sm"
+              className="w-full rounded-xl"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Catat Pengeluaran Cepat</span>
+            </Button>
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="space-y-2.5">
+            <h3 className="text-xs font-bold text-muted uppercase tracking-wider px-1">
+              Transaksi Terkini
+            </h3>
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((trx) => (
+                <TransactionCard key={trx.id} transaction={trx} />
+              ))
+            ) : (
+              <p className="text-xs text-muted italic p-3 text-center">Belum ada transaksi</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <TaskFormModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        taskToEdit={taskToEdit}
+      />
+      <NumpadQuickEntry
+        isOpen={isFinanceModalOpen}
+        onClose={() => setIsFinanceModalOpen(false)}
+      />
+    </div>
+  );
+}
