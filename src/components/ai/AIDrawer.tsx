@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, X, Send, Bot, User, Trash2 } from "lucide-react";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR } from "@/lib/utils";
 
 export function AIDrawer() {
+  const { user } = useAuthStore();
   const {
     isDrawerOpen,
     closeDrawer,
@@ -67,10 +69,20 @@ export function AIDrawer() {
       const activeTasks = tasks.filter((t) => t.status !== "done");
       const summary = getMonthlyBudgetSummary();
 
+      let token = "";
+      if (user) {
+        try {
+          token = await user.getIdToken();
+        } catch {}
+      }
+
       // Call streaming API
       const res = await fetch("/api/ai/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           messages: [...messages, { role: "user", content: query }],
           context: {
@@ -172,7 +184,7 @@ export function AIDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeDrawer}
-            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs"
+            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
           />
 
           {/* Drawer Container */}
