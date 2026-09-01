@@ -20,11 +20,13 @@ import {
   Store,
   Gift,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 
 interface BudgetProgressBarProps {
   budget: Budget;
   onEdit?: (budget: Budget) => void;
+  onDelete?: (budget: Budget) => void;
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -46,7 +48,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   TrendingUp,
 };
 
-export function BudgetProgressBar({ budget, onEdit }: BudgetProgressBarProps) {
+export function BudgetProgressBar({ budget, onEdit, onDelete }: BudgetProgressBarProps) {
   const IconComponent = ICON_MAP[budget.categoryIcon || ""] || Sparkles;
   const statusConfig = getBudgetStatusConfig(budget.usedPercentage);
 
@@ -71,7 +73,7 @@ export function BudgetProgressBar({ budget, onEdit }: BudgetProgressBarProps) {
           </div>
         </div>
 
-        {/* Status Badge */}
+        {/* Status Badge & Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusConfig.badgeBg} ${statusConfig.textColor}`}
@@ -84,6 +86,15 @@ export function BudgetProgressBar({ budget, onEdit }: BudgetProgressBarProps) {
               className="text-[11px] font-semibold text-muted hover:text-foreground px-1"
             >
               Ubah
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(budget)}
+              className="p-1 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-black/5 transition-colors"
+              title="Hapus limit budget"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
