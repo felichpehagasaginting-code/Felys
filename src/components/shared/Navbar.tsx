@@ -27,7 +27,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full glass border-b border-border transition-colors duration-300">
+    <header className="sticky top-0 z-40 w-full glass border-b border-border transition-colors duration-300 pt-[env(safe-area-inset-top,0px)] safe-top">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2 group select-none shrink-0">
