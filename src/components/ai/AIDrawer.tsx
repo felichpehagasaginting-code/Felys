@@ -8,6 +8,7 @@ import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR } from "@/lib/utils";
+import { FormattedMessage } from "./FormattedMessage";
 
 export function AIDrawer() {
   const { user } = useAuthStore();
@@ -250,7 +251,7 @@ export function AIDrawer() {
                         : "bg-[#F5F3F8] dark:bg-[#2F2B3A] text-foreground rounded-tl-xs border border-border"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
                   </div>
 
                   {msg.role === "user" && (
