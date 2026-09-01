@@ -22,8 +22,10 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
   const [priority, setPriority] = useState<PriorityLevel>("medium");
   const [estimatedHours, setEstimatedHours] = useState<number | undefined>(2);
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (taskToEdit) {
       setTitle(taskToEdit.title);
       setCourseId(taskToEdit.courseId);
@@ -38,41 +40,50 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
     } else {
       // Default new task values
       setTitle("");
-      setCourseId(courses[0]?.id || "");
+      setCourseId(courses.length > 0 ? courses[0].id : "general");
       const defaultDate = new Date(Date.now() + 1000 * 60 * 60 * 48); // 2 hari lagi
       setDeadline(defaultDate.toISOString().slice(0, 16));
       setPriority("medium");
       setEstimatedHours(2);
       setDescription("");
     }
-  }, [taskToEdit, isOpen, courses]);
+  }, [taskToEdit, isOpen, courses.length]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !courseId || !deadline) return;
+    const finalCourseId = courseId || (courses.length > 0 ? courses[0].id : "general");
+    if (!title.trim() || !deadline || isSubmitting) return;
 
-    if (taskToEdit) {
-      updateTask(taskToEdit.id, {
-        title: title.trim(),
-        courseId,
-        deadline: new Date(deadline).toISOString(),
-        priority,
-        estimatedHours,
-        description: description.trim() || null,
-      });
-    } else {
-      addTask({
-        title: title.trim(),
-        courseId,
-        deadline: new Date(deadline).toISOString(),
-        priority,
-        estimatedHours,
-        description: description.trim() || null,
-        status: "todo",
-      });
+    try {
+      setIsSubmitting(true);
+      if (taskToEdit) {
+        await updateTask(taskToEdit.id, {
+          title: title.trim(),
+          courseId: finalCourseId,
+          deadline: new Date(deadline).toISOString(),
+          priority,
+          estimatedHours: estimatedHours || 2,
+          description: description.trim() || null,
+        });
+      } else {
+        await addTask({
+          title: title.trim(),
+          courseId: finalCourseId,
+          deadline: new Date(deadline).toISOString(),
+          priority,
+          estimatedHours: estimatedHours || 2,
+          description: description.trim() || null,
+          status: "todo",
+        });
+      }
+      onClose();
+    } catch (err) {
+      console.error("Error saving task:", err);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    onClose();
   };
 
   return (
@@ -105,14 +116,17 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
-              required
               className="w-full bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]"
             >
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.name} ({course.sks || 3} SKS)
-                </option>
-              ))}
+              {courses.length > 0 ? (
+                courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.name} ({course.sks || 3} SKS)
+                  </option>
+                ))
+              ) : (
+                <option value="general">Kuliah Umum / Mandiri</option>
+              )}
             </select>
           </div>
 
@@ -195,11 +209,15 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
 
           {/* Submit Buttons */}
           <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" variant="academic" size="sm">
-              {taskToEdit ? "Simpan Perubahan" : "Tambah Tugas"}
+            <Button type="submit" variant="academic" size="sm" disabled={isSubmitting || !title.trim() || !deadline}>
+              {isSubmitting
+                ? "Menyimpan..."
+                : taskToEdit
+                ? "Simpan Perubahan"
+                : "Tambah Tugas"}
             </Button>
           </div>
         </form>
