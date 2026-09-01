@@ -30,10 +30,15 @@ export default function LoginPage() {
 
       const userCredential: any = await Promise.race([loginPromise, timeoutPromise]);
       
-      // Fire-and-forget background seed
-      FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid).catch((e) =>
-        console.warn("Category seed error:", e)
-      );
+      // Sync user profile & categories to Firestore
+      await Promise.all([
+        FirestoreService.syncUserProfile(userCredential.user.uid, {
+          id: userCredential.user.uid,
+          name: userCredential.user.displayName || "Mahasiswa Felys",
+          email: userCredential.user.email || email.trim(),
+        }),
+        FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
+      ]).catch((e) => console.warn("Firestore sync error:", e));
 
       router.push("/");
       router.refresh();
@@ -60,9 +65,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
-      FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid).catch((e) =>
-        console.warn("Category seed error:", e)
-      );
+      await Promise.all([
+        FirestoreService.syncUserProfile(userCredential.user.uid, {
+          id: userCredential.user.uid,
+          name: userCredential.user.displayName || "Mahasiswa Felys",
+          email: userCredential.user.email || "",
+          photoURL: userCredential.user.photoURL || null,
+        }),
+        FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
+      ]).catch((e) => console.warn("Firestore sync error:", e));
+
       router.push("/");
       router.refresh();
     } catch (err: any) {
