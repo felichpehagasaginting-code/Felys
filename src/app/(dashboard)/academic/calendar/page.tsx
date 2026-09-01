@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  addMonths,
+  subMonths,
+} from "date-fns";
 import { id } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
@@ -19,7 +31,9 @@ export default function AcademicCalendarPage() {
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const tasksForSelectedDate = tasks.filter((t) =>
     isSameDay(new Date(t.deadline), selectedDate)
@@ -84,6 +98,7 @@ export default function AcademicCalendarPage() {
               const dayTasks = tasks.filter((t) => isSameDay(new Date(t.deadline), day));
               const isSelected = isSameDay(day, selectedDate);
               const isCurrentDay = isToday(day);
+              const isCurrentMonthDay = isSameMonth(day, currentMonth);
 
               return (
                 <button
@@ -91,6 +106,7 @@ export default function AcademicCalendarPage() {
                   onClick={() => setSelectedDate(day)}
                   className={cn(
                     "h-16 p-1.5 rounded-2xl border flex flex-col items-center justify-between transition-all select-none text-xs",
+                    !isCurrentMonthDay && "opacity-40",
                     isSelected
                       ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA]"
                       : isCurrentDay
