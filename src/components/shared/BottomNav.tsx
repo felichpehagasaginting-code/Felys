@@ -33,7 +33,7 @@ export function BottomNav() {
   const currentItems = activeMode === "academic" ? academicItems : financeItems;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border px-3 py-2">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-border px-3 pt-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] safe-bottom">
       <div className="flex items-center justify-around">
         {currentItems.map((item) => {
           const Icon = item.icon;
