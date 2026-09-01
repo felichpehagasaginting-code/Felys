@@ -210,29 +210,57 @@ export default function DashboardPage() {
           <div className="p-5 rounded-3xl bg-surface border border-border space-y-4 shadow-soft">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-muted font-medium block">Sisa Anggaran</span>
-                <span className="text-2xl font-extrabold text-foreground tracking-tight">
-                  {formatCurrencyIDR(summary.remaining)}
+                <span className="text-[11px] text-muted font-bold uppercase tracking-wider block">
+                  {summary.totalLimit > 0 ? "Sisa Anggaran Terencana" : "Sisa Saldo Dompet"}
                 </span>
+                <span
+                  className={`text-2xl sm:text-3xl font-extrabold tracking-tight block ${
+                    summary.isDeficit ? "text-[#D93D4A]" : "text-foreground"
+                  }`}
+                >
+                  {summary.remaining < 0 ? "-" : ""}
+                  {formatCurrencyIDR(Math.abs(summary.remaining))}
+                </span>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted">
+                  <span>Masuk: <b className="text-[#1F8766]">+{formatCurrencyIDR(summary.totalIncome)}</b></span>
+                  <span>•</span>
+                  <span>Keluar: <b className="text-[#D93D4A]">-{formatCurrencyIDR(summary.totalSpent)}</b></span>
+                </div>
               </div>
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-bold ${budgetConfig.badgeBg} ${budgetConfig.textColor}`}
-              >
-                {summary.overallPercentage}% Terpakai
-              </span>
+
+              <div className="text-right">
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-block ${
+                    summary.isDeficit
+                      ? "bg-[#FFE8EA] text-[#D93D4A]"
+                      : `${budgetConfig.badgeBg} ${budgetConfig.textColor}`
+                  }`}
+                >
+                  {summary.isDeficit ? "Defisit" : `${summary.overallPercentage}% Terpakai`}
+                </span>
+                {summary.totalLimit > 0 && summary.totalIncome > 0 && (
+                  <span className="text-[10px] text-muted block mt-1">
+                    Saldo Kas: {formatCurrencyIDR(summary.netSavings)}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Total Budget Progress Bar */}
             <div className="space-y-1.5">
               <div className="w-full h-2.5 bg-[#EDEAF2] dark:bg-[#383442] rounded-full overflow-hidden">
                 <div
-                  className={`h-full ${budgetConfig.barColor} transition-all duration-500 rounded-full`}
+                  className={`h-full ${
+                    summary.isDeficit ? "bg-[#FF7A85]" : budgetConfig.barColor
+                  } transition-all duration-500 rounded-full`}
                   style={{ width: `${Math.min(100, summary.overallPercentage)}%` }}
                 />
               </div>
               <div className="flex justify-between text-[11px] text-muted">
                 <span>Terpakai: {formatCurrencyIDR(summary.totalSpent)}</span>
-                <span>Batas: {formatCurrencyIDR(summary.totalLimit)}</span>
+                <span>
+                  Batas: {formatCurrencyIDR(summary.effectiveBudgetBase || summary.totalSpent)}
+                </span>
               </div>
             </div>
 

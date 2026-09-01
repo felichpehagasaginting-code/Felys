@@ -15,7 +15,7 @@ export class BudgetService {
   }
 
   /**
-   * Agregasi transaksi dan hitung sisa budget per kategori
+   * Agregasi transaksi dan hitung sisa budget per kategori serta cashflow riil
    */
   public static calculateMonthlySummary(params: {
     month: number;
@@ -26,15 +26,19 @@ export class BudgetService {
   }): MonthlyBudgetSummary {
     const { month, year, categories, transactions, budgets } = params;
 
-    // Filter transaksi pengeluaran bulan dan tahun ini
-    const currentMonthExpenses = transactions.filter((trx) => {
-      if (trx.type !== "expense") return false;
+    // Filter transaksi bulan dan tahun ini
+    const currentMonthTransactions = transactions.filter((trx) => {
       const date = new Date(trx.date);
       return date.getMonth() + 1 === month && date.getFullYear() === year;
     });
 
+    const currentMonthExpenses = currentMonthTransactions.filter((t) => t.type === "expense");
+    const currentMonthIncomes = currentMonthTransactions.filter((t) => t.type === "income");
+
+    const totalSpent = currentMonthExpenses.reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = currentMonthIncomes.reduce((sum, t) => sum + t.amount, 0);
+
     let totalLimit = 0;
-    let totalSpent = 0;
 
     // Filter kategori pengeluaran saja untuk kalkulasi budget limit
     const expenseCategories = categories.filter(
@@ -49,12 +53,11 @@ export class BudgetService {
         .filter((t) => t.categoryId === cat.id || t.categoryName === cat.name)
         .reduce((sum, t) => sum + t.amount, 0);
 
-      const remainingAmount = Math.max(0, monthlyLimit - spentAmount);
+      const remainingAmount = monthlyLimit > 0 ? monthlyLimit - spentAmount : 0;
       const usedPercentage = monthlyLimit > 0 ? Math.round((spentAmount / monthlyLimit) * 100) : 0;
       const status = this.getBudgetStatus(usedPercentage);
 
       totalLimit += monthlyLimit;
-      totalSpent += spentAmount;
 
       return {
         id: `${year}_${month}_${cat.id}`,
@@ -73,16 +76,45 @@ export class BudgetService {
       };
     });
 
-    const overallPercentage = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
-    const remaining = Math.max(0, totalLimit - totalSpent);
+    // Saldo Dompet Riil (Pemasukan - Pengeluaran)
+    const netSavings = totalIncome - totalSpent;
+
+    // Basis Anggaran Acuan: Prioritaskan Total Limit (jika disetel), atau Total Pemasukan
+    const effectiveBudgetBase = totalLimit > 0 ? totalLimit : totalIncome;
+
+    // Sisa Anggaran Cerdas:
+    // 1. Jika pengguna mengatur Limit Anggaran: totalLimit - totalSpent
+    // 2. Jika pengguna belum mengatur Limit tapi ada Pemasukan: totalIncome - totalSpent
+    // 3. Jika belum ada keduanya tapi ada Pengeluaran: -totalSpent (defisit)
+    let remaining = 0;
+    if (totalLimit > 0) {
+      remaining = totalLimit - totalSpent;
+    } else if (totalIncome > 0) {
+      remaining = totalIncome - totalSpent;
+    } else {
+      remaining = -totalSpent;
+    }
+
+    const overallPercentage =
+      effectiveBudgetBase > 0
+        ? Math.round((totalSpent / effectiveBudgetBase) * 100)
+        : totalSpent > 0
+        ? 100
+        : 0;
+
+    const isDeficit = remaining < 0 || netSavings < 0;
 
     return {
       month,
       year,
-      totalLimit,
+      totalIncome,
       totalSpent,
+      totalLimit,
+      netSavings,
       remaining,
+      effectiveBudgetBase,
       overallPercentage,
+      isDeficit,
       categories: budgetList,
     };
   }

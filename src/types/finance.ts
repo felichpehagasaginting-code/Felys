@@ -45,10 +45,14 @@ export interface Budget {
 export interface MonthlyBudgetSummary {
   month: number;
   year: number;
-  totalLimit: number;
+  totalIncome: number;
   totalSpent: number;
-  remaining: number;
+  totalLimit: number;
+  netSavings: number; // Saldo Riil: totalIncome - totalSpent
+  remaining: number; // Sisa Anggaran: Menyesuaikan limit dan pemasukan
+  effectiveBudgetBase: number; // Basis anggaran acuan (Limit atau Total Pemasukan)
   overallPercentage: number;
+  isDeficit: boolean; // Menandakan apakah pengeluaran melebihi limit atau pemasukan
   categories: Budget[];
 }
 

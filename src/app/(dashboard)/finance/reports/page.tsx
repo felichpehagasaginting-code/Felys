@@ -35,33 +35,52 @@ export default function FinanceReportsPage() {
       {/* Net Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider">
-            Total Pemasukan
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#1F8766]" />
+            <span>Total Pemasukan</span>
           </span>
-          <span className="text-xl font-extrabold text-[#1F8766] block">
-            {formatCurrencyIDR(totalIncome)}
+          <span className="text-xl sm:text-2xl font-extrabold text-[#1F8766] block">
+            {formatCurrencyIDR(summary.totalIncome)}
           </span>
-        </div>
-
-        <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider">
-            Total Pengeluaran
-          </span>
-          <span className="text-xl font-extrabold text-[#D93D4A] block">
-            {formatCurrencyIDR(totalExpense)}
+          <span className="text-[11px] text-muted font-medium block">
+            Uang saku, gaji & transfer
           </span>
         </div>
 
         <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider">
-            Tabungan Bersih
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+            <ArrowDownRight className="w-3.5 h-3.5 text-[#D93D4A]" />
+            <span>Total Pengeluaran</span>
+          </span>
+          <span className="text-xl sm:text-2xl font-extrabold text-[#D93D4A] block">
+            {formatCurrencyIDR(summary.totalSpent)}
+          </span>
+          <span className="text-[11px] text-muted font-medium block">
+            {summary.totalIncome > 0
+              ? `${Math.round((summary.totalSpent / summary.totalIncome) * 100)}% dari pemasukan`
+              : "Bulan berjalan"}
+          </span>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5 text-[#7C5CFA]" />
+            <span>Saldo Dompet Bersih</span>
           </span>
           <span
-            className={`text-xl font-extrabold block ${
-              netSavings >= 0 ? "text-[#1F8766]" : "text-[#D93D4A]"
+            className={`text-xl sm:text-2xl font-extrabold block ${
+              summary.netSavings >= 0 ? "text-[#1F8766]" : "text-[#D93D4A]"
             }`}
           >
-            {formatCurrencyIDR(netSavings)}
+            {summary.netSavings < 0 ? "-" : ""}
+            {formatCurrencyIDR(Math.abs(summary.netSavings))}
+          </span>
+          <span
+            className={`text-[11px] font-medium block ${
+              summary.netSavings >= 0 ? "text-[#1F8766]" : "text-[#D93D4A]"
+            }`}
+          >
+            {summary.netSavings >= 0 ? "Surplus kas bulan ini" : "Defisit pengeluaran"}
           </span>
         </div>
       </div>

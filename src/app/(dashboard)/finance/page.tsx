@@ -97,45 +97,69 @@ export default function FinanceTransactionsPage() {
 
       {/* 2. Top Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Sisa Budget */}
+        {/* Sisa Anggaran / Saldo Bersih */}
         <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1">
-            <Wallet className="w-3.5 h-3.5 text-[#37B98F]" />
-            <span>Sisa Anggaran</span>
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5 text-[#37B98F]" />
+              <span>{summary.totalLimit > 0 ? "Sisa Kuota Anggaran" : "Sisa Saldo Dompet"}</span>
+            </span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                summary.isDeficit
+                  ? "bg-[#FFE8EA] text-[#D93D4A]"
+                  : "bg-[#E0FBF2] text-[#1F8766]"
+              }`}
+            >
+              {summary.isDeficit ? "Defisit" : "Aman"}
+            </span>
           </span>
-          <span className="text-xl sm:text-2xl font-extrabold text-foreground block">
-            {formatCurrencyIDR(summary.remaining)}
+          <span
+            className={`text-xl sm:text-2xl font-extrabold block tracking-tight ${
+              summary.isDeficit ? "text-[#D93D4A]" : "text-foreground"
+            }`}
+          >
+            {summary.remaining < 0 ? "-" : ""}
+            {formatCurrencyIDR(Math.abs(summary.remaining))}
           </span>
-          <span className="text-[11px] text-[#1F8766] font-medium">
-            {100 - summary.overallPercentage}% batas tersedia
+          <span
+            className={`text-[11px] font-medium block ${
+              summary.isDeficit ? "text-[#D93D4A]" : "text-[#1F8766]"
+            }`}
+          >
+            {summary.isDeficit
+              ? `Pengeluaran melebihi ${summary.totalLimit > 0 ? "limit" : "pemasukan"}`
+              : `${Math.max(0, 100 - summary.overallPercentage)}% batas masih tersedia`}
           </span>
         </div>
 
         {/* Total Pengeluaran */}
         <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
             <ArrowDownRight className="w-3.5 h-3.5 text-[#FF7A85]" />
             <span>Pengeluaran Bulan Ini</span>
           </span>
-          <span className="text-xl sm:text-2xl font-extrabold text-[#D93D4A] block">
+          <span className="text-xl sm:text-2xl font-extrabold text-[#D93D4A] block tracking-tight">
             {formatCurrencyIDR(summary.totalSpent)}
           </span>
-          <span className="text-[11px] text-muted font-medium">
-            Dari limit {formatCurrencyIDR(summary.totalLimit)}
+          <span className="text-[11px] text-muted font-medium block">
+            {summary.totalLimit > 0
+              ? `Dari limit Rp ${summary.totalLimit.toLocaleString("id-ID")} (${summary.overallPercentage}%)`
+              : `${summary.overallPercentage}% dari total pemasukan`}
           </span>
         </div>
 
         {/* Total Pemasukan */}
         <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-1">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
             <ArrowUpRight className="w-3.5 h-3.5 text-[#7FE3C0]" />
             <span>Total Pemasukan</span>
           </span>
-          <span className="text-xl sm:text-2xl font-extrabold text-[#1F8766] block">
-            {formatCurrencyIDR(totalIncome)}
+          <span className="text-xl sm:text-2xl font-extrabold text-[#1F8766] block tracking-tight">
+            {formatCurrencyIDR(summary.totalIncome)}
           </span>
-          <span className="text-[11px] text-muted font-medium">
-            Uang saku & pendapatan lain
+          <span className="text-[11px] text-muted font-medium block">
+            Saldo Kas Bersih: <b className={summary.netSavings >= 0 ? "text-[#1F8766]" : "text-[#D93D4A]"}>{formatCurrencyIDR(summary.netSavings)}</b>
           </span>
         </div>
       </div>
