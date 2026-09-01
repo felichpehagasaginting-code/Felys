@@ -55,6 +55,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   TrendingUp,
 };
 
+const STATIC_DEFAULT_EXPENSES: Category[] = DEFAULT_EXPENSE_CATEGORIES.map((c, i) => ({
+  ...c,
+  id: `def_exp_${i}`,
+}));
+
+const STATIC_DEFAULT_INCOMES: Category[] = DEFAULT_INCOME_CATEGORIES.map((c, i) => ({
+  ...c,
+  id: `def_inc_${i}`,
+}));
+
 export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   const { categories, addTransaction } = useDataStore();
 
@@ -62,26 +72,29 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   const [amountStr, setAmountStr] = useState("0");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter categories by type (expense vs income)
   const currentCategoryList: Category[] = React.useMemo(() => {
     if (type === "expense") {
       const userExpenses = categories.filter((c) => c.type === "expense" || (!c.type && c.isDefault));
-      if (userExpenses.length > 0) return userExpenses;
-      return DEFAULT_EXPENSE_CATEGORIES.map((c, i) => ({ ...c, id: `def_exp_${i}` }));
+      return userExpenses.length > 0 ? userExpenses : STATIC_DEFAULT_EXPENSES;
     } else {
       const userIncomes = categories.filter((c) => c.type === "income");
-      if (userIncomes.length > 0) return userIncomes;
-      return DEFAULT_INCOME_CATEGORIES.map((c, i) => ({ ...c, id: `def_inc_${i}` }));
+      return userIncomes.length > 0 ? userIncomes : STATIC_DEFAULT_INCOMES;
     }
   }, [categories, type]);
 
   // Auto-select first category on type toggle or modal open
   useEffect(() => {
+    if (!isOpen) return;
     if (currentCategoryList.length > 0) {
-      setSelectedCategory(currentCategoryList[0]);
+      const existing = currentCategoryList.find((c) => c.name === selectedCategory?.name);
+      setSelectedCategory(existing || currentCategoryList[0]);
     }
-  }, [type, currentCategoryList, isOpen]);
+  }, [type, isOpen, categories.length]);
+
+  if (!isOpen) return null;
 
   const numAmount = parseInt(amountStr, 10) || 0;
 
@@ -107,25 +120,32 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (numAmount <= 0 || !selectedCategory) return;
+    if (numAmount <= 0 || !selectedCategory || isSubmitting) return;
 
-    addTransaction({
-      type,
-      amount: numAmount,
-      categoryId: selectedCategory.id,
-      categoryName: selectedCategory.name,
-      categoryIcon: selectedCategory.icon,
-      categoryColor: selectedCategory.color,
-      note: note.trim() || null,
-      date: new Date().toISOString(),
-    });
+    try {
+      setIsSubmitting(true);
+      await addTransaction({
+        type,
+        amount: numAmount,
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        categoryIcon: selectedCategory.icon,
+        categoryColor: selectedCategory.color,
+        note: note.trim() || null,
+        date: new Date().toISOString(),
+      });
 
-    // Reset & Close
-    setAmountStr("0");
-    setNote("");
-    onClose();
+      // Reset & Close
+      setAmountStr("0");
+      setNote("");
+      onClose();
+    } catch (err) {
+      console.error("Error saving transaction:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -272,11 +292,15 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
           <Button
             type="submit"
             variant={type === "expense" ? "danger" : "finance"}
-            disabled={numAmount <= 0 || !selectedCategory}
+            disabled={numAmount <= 0 || !selectedCategory || isSubmitting}
             className="w-full h-11 rounded-2xl font-bold"
           >
             <Check className="w-4 h-4" />
-            <span>Simpan {type === "expense" ? "Pengeluaran" : "Pemasukan"}</span>
+            <span>
+              {isSubmitting
+                ? "Menyimpan ke Cloud..."
+                : `Simpan ${type === "expense" ? "Pengeluaran" : "Pemasukan"}`}
+            </span>
           </Button>
         </form>
       </ModalContent>
