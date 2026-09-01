@@ -6,6 +6,7 @@ import { useDataStore } from "@/stores/use-data-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { CourseModal } from "@/components/academic/CourseModal";
+import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { Button } from "@/components/ui/Button";
 import { Task } from "@/types/academic";
 import { isToday, isThisWeek, differenceInDays } from "date-fns";
@@ -110,6 +111,9 @@ export default function AcademicTasksPage() {
           </Button>
         </div>
       </div>
+
+      {/* Smart NLP Quick Input Bar */}
+      <NLPQuickBar />
 
       {/* 2. Controls: Search, Tabs, & Course Filter */}
       <div className="space-y-3">
