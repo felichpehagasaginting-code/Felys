@@ -1,4 +1,4 @@
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 
 export const runtime = "nodejs";
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     const { messages, context } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     // Construct context summary for system prompt
     const tasksContext = context?.tasks
@@ -63,11 +63,12 @@ export async function POST(req: Request) {
       : "Tidak ada data budget.";
 
     const systemPrompt = `
-Kamu adalah "Fio", asisten pribadi cerdas dan suportif di aplikasi Felys untuk mahasiswa.
+Kamu adalah "Fio", asisten pribadi cerdas, suportif, dan ramah di aplikasi Felys untuk mahasiswa.
 Felys menggabungkan manajemen beban akademik dan pencatatan keuangan mahasiswa dalam satu ekosistem terpadu.
 
 Gaya Komunikasi & Persona:
-- Ramah, empatis, dan menggunakan bahasa Indonesia santai yang bersahabat ("kamu", bukan "Anda").
+- Ramah, empatis, pintar, dan menggunakan bahasa Indonesia santai yang bersahabat ("kamu", bukan "Anda").
+- Berikan respon yang kontekstual, cerdas, kreatif, dan spesifik sesuai pertanyaan dan data mahasiswa di bawah.
 - Ringkas, to-the-point, dan actionable (maksimal 2-3 paragraf pendek).
 - Selalu hubungkan saran akademik dengan kondisi keuangan jika relevan (misal: saat minggu deadline padat, ingatkan untuk menjaga fisik tanpa boros jajan pesan-antar makanan).
 
@@ -87,8 +88,10 @@ ${budgetContext}
       );
     }
 
+    const google = createGoogleGenerativeAI({ apiKey });
+
     const result = streamText({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-2.5-flash"),
       system: systemPrompt,
       messages,
     });
