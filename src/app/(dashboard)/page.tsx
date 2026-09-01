@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt, Camera, CalendarClock } from "lucide-react";
+import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt, Camera, CalendarClock, Users } from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -13,6 +13,7 @@ import { InsightCard } from "@/components/ai/InsightCard";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
+import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+  const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
 
   // Time-based greeting
   const getGreeting = () => {
@@ -94,6 +96,16 @@ export default function DashboardPage() {
           ) : (
             <div className="flex items-center gap-2">
               <Button
+                onClick={() => setIsSplitBillOpen(true)}
+                variant="secondary"
+                size="md"
+                className="rounded-2xl"
+                title="Split Bill & Catatan Talangan"
+              >
+                <Users className="w-4 h-4 text-[#7C5CFA]" />
+                <span className="hidden sm:inline">Split Bill</span>
+              </Button>
+              <Button
                 onClick={() => setIsScanModalOpen(true)}
                 variant="secondary"
                 size="md"
@@ -110,7 +122,7 @@ export default function DashboardPage() {
                 className="rounded-2xl"
                 title="Tagihan & Biaya Rutin"
               >
-                <CalendarClock className="w-4 h-4 text-[#7C5CFA]" />
+                <CalendarClock className="w-4 h-4 text-[#FF7A85]" />
                 <span className="hidden sm:inline">Biaya Rutin</span>
               </Button>
               <Button
@@ -317,6 +329,10 @@ export default function DashboardPage() {
       <RecurringBillsModal
         isOpen={isRecurringModalOpen}
         onClose={() => setIsRecurringModalOpen(false)}
+      />
+      <SplitBillModal
+        isOpen={isSplitBillOpen}
+        onClose={() => setIsSplitBillOpen(false)}
       />
     </div>
   );

@@ -58,8 +58,10 @@ Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas k
 | Fitur / Modul | Deskripsi & Manfaat Bagi Mahasiswa |
 | :--- | :--- |
 | ⚡ **NLP Quick Input Bar** | Parser kalimat natural bahasa Indonesia (*contoh: "Makan siang geprek 18rb"* atau *"Makalah AI jumat jam 23:59"*) dengan *live preview chip*. |
+| 🧠 **Web Worker Real OCR Engine** | Pemindaian struk nyata dengan `tesseract.js` + Canvas contrast boost 100% di browser tanpa kirim foto ke server luar (*privacy-first*). |
+| 📅 **Google & Apple Calendar Sync** | Ekspor `.ics` standar RFC 5545 dengan pengingat otomatis H-1 & H-2 jam, serta 1-tap sinkronisasi langsung ke Google Calendar. |
+| 👥 **Split Bill & IOU Tracker** | Kalkulator patungan makan/kelompok dengan generator pesan pengingat WhatsApp sopan dan pelunasan otomatis ke saldo kas. |
 | 📶 **Offline-First Persistence** | Firestore IndexedDB Cache dengan multi-tab sync. Mahasiswa tetap bisa mencatat pengeluaran di kantin atau mencentang tugas di lab saat tanpa internet (*zero data loss*). |
-| 📸 **Smart Receipt / QRIS Scanner** | Pindai foto nota belanjaan atau screenshot bukti pembayaran QRIS dengan ekstraksi nominal otomatis ke form pengeluaran. |
 | 📅 **Tagihan & Biaya Rutin Mahasiswa** | Kelola pengingat pembayaran uang kos bulanan, UKT/SPP semesteran, WiFi, dan langganan dengan tombol *1-Click Pay & Record*. |
 | 🛡️ **Proteksi AI & Rate Limiting** | Keamanan token Firebase Auth + sliding-window rate limiter (maksimal 40 request/24 jam per akun) untuk mencegah lonjakan kuota API. |
 | 📳 **Haptic Tactile & Undo Toast** | Getaran tactile pada perangkat mobile PWA, konfirmasi hapus data, serta **Tombol Undo (Batalkan)** 5 detik untuk memulihkan catatan yang tidak sengaja terhapus. |

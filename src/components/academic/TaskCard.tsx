@@ -1,13 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Clock, Calendar, ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { 
+  Calendar, 
+  Clock, 
+  ChevronDown, 
+  ChevronUp, 
+  Check, 
+  Plus, 
+  Trash2, 
+  CalendarPlus 
+} from "lucide-react";
 import { Task } from "@/types/academic";
 import { Card } from "@/components/ui/Card";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatDateRelative, getUrgencyBadgeConfig, cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { triggerHaptic } from "@/lib/haptics";
+import { generateGoogleCalendarUrl } from "@/lib/calendar-sync";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -134,6 +144,15 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <a
+                href={generateGoogleCalendarUrl(task)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1 rounded-lg text-muted hover:text-[#7C5CFA] transition-colors"
+                title="Tambahkan ke Google Calendar"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+              </a>
               {onEdit && (
                 <button
                   onClick={() => onEdit(task)}

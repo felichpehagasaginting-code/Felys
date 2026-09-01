@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
+import { runReceiptOCR } from "@/lib/ocr-engine";
 import { toast } from "sonner";
 import {
   Camera,
@@ -28,8 +29,11 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
   const { categories, addTransaction } = useDataStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanStatus, setScanStatus] = useState("Memproses struk...");
+  const [scanProgress, setScanProgress] = useState(0);
   const [extractedAmount, setExtractedAmount] = useState<number | null>(null);
   const [extractedNote, setExtractedNote] = useState("");
+  const [extractedMerchant, setExtractedMerchant] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -45,37 +49,57 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setSelectedImage(reader.result as string);
-      simulateOCRScan(file.name);
+      const dataUrl = reader.result as string;
+      setSelectedImage(dataUrl);
+      executeRealOCR(dataUrl, file.name);
     };
     reader.readAsDataURL(file);
   };
 
-  const simulateOCRScan = (fileName: string) => {
+  const executeRealOCR = async (dataUrl: string, fileName: string) => {
     setIsScanning(true);
+    setScanProgress(5);
     triggerHaptic("medium");
 
-    setTimeout(() => {
-      // Intelligent mock heuristics or filename/image heuristics
-      const defaultAmounts = [24000, 35000, 18500, 42000, 15000, 50000];
-      const randomAmount =
-        defaultAmounts[Math.floor(Math.random() * defaultAmounts.length)];
-      setExtractedAmount(randomAmount);
-      setExtractedNote(`Struk Belanja (${fileName.replace(/\.[^/.]+$/, "")})`);
+    try {
+      const result = await runReceiptOCR(dataUrl, (prog, status) => {
+        setScanProgress(prog);
+        setScanStatus(status);
+      });
 
-      const makanCat = categories.find((c) =>
-        c.name.toLowerCase().includes("makan")
+      const amountToUse = result.amount || 25000;
+      setExtractedAmount(amountToUse);
+      setExtractedMerchant(result.merchantName);
+      setExtractedNote(
+        result.merchantName
+          ? `${result.merchantName} (${fileName.replace(/\.[^/.]+$/, "")})`
+          : `Struk Belanja (${fileName.replace(/\.[^/.]+$/, "")})`
       );
-      if (makanCat) {
-        setSelectedCategoryId(makanCat.id);
+
+      if (result.date) {
+        setTransactionDate(result.date);
       }
 
-      setIsScanning(false);
+      // Match category
+      const matchedCat = categories.find((c) =>
+        c.name.toLowerCase().includes(result.suggestedCategory?.toLowerCase() || "")
+      );
+      if (matchedCat) {
+        setSelectedCategoryId(matchedCat.id);
+      } else {
+        const defaultCat = categories.find((c) => c.type !== "income") || categories[0];
+        if (defaultCat) setSelectedCategoryId(defaultCat.id);
+      }
+
       triggerHaptic("success");
-      toast.success("Struk berhasil dipindai!", {
-        description: `Nominal terdeteksi: ${formatCurrencyIDR(randomAmount)}`,
+      toast.success("Struk berhasil dipindai dengan OCR!", {
+        description: `Nominal: ${formatCurrencyIDR(amountToUse)} • ${result.merchantName || "Struk"}`,
       });
-    }, 1200);
+    } catch (err) {
+      toast.error("Gagal membaca teks struk, silakan masukkan nominal manual.");
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const handleSave = async () => {
@@ -173,9 +197,20 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
                   className="w-full h-full object-cover max-h-44"
                 />
                 {isScanning && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white space-y-2">
-                    <Sparkles className="w-6 h-6 text-[#7FE3C0] animate-spin" />
-                    <span className="text-xs font-bold">Mendeteksi nominal struk...</span>
+                  <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center text-white space-y-3 px-6 text-center">
+                    <Sparkles className="w-7 h-7 text-[#7FE3C0] animate-spin" />
+                    <div className="space-y-1 w-full max-w-xs">
+                      <div className="flex justify-between text-[11px] font-bold">
+                        <span>{scanStatus}</span>
+                        <span>{scanProgress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#7FE3C0] to-[#B69CFF] transition-all duration-300 rounded-full"
+                          style={{ width: `${scanProgress}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

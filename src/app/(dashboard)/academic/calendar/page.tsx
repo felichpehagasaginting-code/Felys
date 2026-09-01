@@ -15,12 +15,15 @@ import {
   subMonths,
 } from "date-fns";
 import { id } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Share2, Download } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { Task } from "@/types/academic";
 import { cn } from "@/lib/utils";
+import { downloadICSFile } from "@/lib/calendar-sync";
+import { Button } from "@/components/ui/Button";
+import { toast } from "sonner";
 
 export default function AcademicCalendarPage() {
   const { tasks } = useDataStore();
@@ -49,6 +52,18 @@ export default function AcademicCalendarPage() {
     setIsTaskModalOpen(true);
   };
 
+  const handleExportICS = () => {
+    const activeTasks = tasks.filter((t) => t.status !== "done");
+    if (activeTasks.length === 0) {
+      toast.info("Tidak ada tugas aktif untuk diekspor ke kalender.");
+      return;
+    }
+    downloadICSFile(activeTasks, "felys_tugas_kuliah.ics");
+    toast.success("File .ics berhasil diunduh!", {
+      description: "Buka file ini di Apple Calendar (iOS/Mac) atau Google Calendar untuk sinkronisasi otomatis.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -58,27 +73,40 @@ export default function AcademicCalendarPage() {
             Kalender Deadline 📅
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
-            Pantau jadwal pengumpulan tugas sepanjang bulan.
+            Pantau jadwal pengumpulan tugas dan sinkronkan ke Google / Apple Calendar.
           </p>
         </div>
 
-        {/* Month Navigation */}
-        <div className="flex items-center gap-2 bg-surface border border-border p-1.5 rounded-2xl shadow-soft">
-          <button
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5"
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={handleExportICS}
+            variant="secondary"
+            size="sm"
+            className="rounded-2xl text-xs"
+            title="Ekspor file .ics untuk Apple Calendar, Google Calendar, dan Outlook"
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-xs font-bold px-2 text-foreground min-w-[120px] text-center capitalize">
-            {format(currentMonth, "MMMM yyyy", { locale: id })}
-          </span>
-          <button
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <Download className="w-3.5 h-3.5 text-[#7C5CFA]" />
+            <span>Ekspor ke Kalender HP</span>
+          </Button>
+
+          {/* Month Navigation */}
+          <div className="flex items-center gap-2 bg-surface border border-border p-1.5 rounded-2xl shadow-soft">
+            <button
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-bold px-2 text-foreground min-w-[120px] text-center capitalize">
+              {format(currentMonth, "MMMM yyyy", { locale: id })}
+            </span>
+            <button
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

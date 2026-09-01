@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Course, Task, SubTask, PriorityLevel, TaskStatus } from "@/types/academic";
-import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill } from "@/types/finance";
+import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt } from "@/types/finance";
 import { AIInsight } from "@/types/ai";
 import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
@@ -23,6 +23,7 @@ interface DataState {
   transactions: Transaction[];
   budgetLimits: { categoryId: string; monthlyLimit: number }[];
   recurringBills: RecurringBill[];
+  debts: FriendDebt[];
   insights: AIInsight[];
   isLoaded: boolean;
 
@@ -52,6 +53,11 @@ interface DataState {
   addRecurringBill: (bill: Omit<RecurringBill, "id" | "createdAt">) => Promise<void>;
   deleteRecurringBill: (id: string) => Promise<void>;
   payRecurringBill: (id: string) => Promise<void>;
+
+  // Split Bill & Debts Actions
+  addDebt: (debt: Omit<FriendDebt, "id" | "createdAt" | "isSettled">) => Promise<void>;
+  settleDebt: (id: string) => Promise<void>;
+  deleteDebt: (id: string) => Promise<void>;
 
   // AI Actions
   dismissInsight: (id: string) => void;
@@ -99,6 +105,28 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     },
   ],
+  debts: [
+    {
+      id: "debt_1",
+      friendName: "Andi Pratama",
+      friendPhone: "081234567890",
+      amount: 35000,
+      description: "Talangan Makan Siang Nasi Padang",
+      type: "they_owe_me",
+      isSettled: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "debt_2",
+      friendName: "Siti Rahma",
+      friendPhone: "089876543210",
+      amount: 15000,
+      description: "Patungan Print & Jilid Makalah AI",
+      type: "they_owe_me",
+      isSettled: false,
+      createdAt: new Date().toISOString(),
+    },
+  ],
   insights: [],
   isLoaded: false,
 
@@ -109,6 +137,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       categories: [],
       transactions: [],
       budgetLimits: [],
+      debts: [],
       insights: [],
       isLoaded: false,
     });
@@ -489,6 +518,47 @@ export const useDataStore = create<DataState>((set, get) => ({
       recurringBills: state.recurringBills.map((b) =>
         b.id === id ? { ...b, lastPaidDate: new Date().toISOString() } : b
       ),
+    }));
+  },
+
+  addDebt: async (debtData) => {
+    const newDebt: FriendDebt = {
+      ...debtData,
+      id: `debt_${Date.now()}`,
+      isSettled: false,
+      createdAt: new Date().toISOString(),
+    };
+    set((state) => ({
+      debts: [newDebt, ...state.debts],
+    }));
+  },
+
+  settleDebt: async (id) => {
+    const debt = get().debts.find((d) => d.id === id);
+    if (!debt || debt.isSettled) return;
+
+    // If they owe me money, registering repayment counts as income
+    if (debt.type === "they_owe_me") {
+      await get().addTransaction({
+        type: "income",
+        amount: debt.amount,
+        categoryId: "cat_saku",
+        categoryName: "Pelunasan Talangan",
+        note: `Pelunasan talangan dari ${debt.friendName} (${debt.description})`,
+        date: new Date().toISOString(),
+      });
+    }
+
+    set((state) => ({
+      debts: state.debts.map((d) =>
+        d.id === id ? { ...d, isSettled: true, settledDate: new Date().toISOString() } : d
+      ),
+    }));
+  },
+
+  deleteDebt: async (id) => {
+    set((state) => ({
+      debts: state.debts.filter((d) => d.id !== id),
     }));
   },
 

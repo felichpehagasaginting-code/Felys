@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon, Camera, CalendarClock } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon, Camera, CalendarClock, Users } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { TransactionCard } from "@/components/finance/TransactionCard";
 import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
 import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
+import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default function FinanceTransactionsPage() {
   const [isNumpadOpen, setIsNumpadOpen] = useState(false);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+  const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
 
   const summary = getMonthlyBudgetSummary();
 
@@ -55,11 +57,21 @@ export default function FinanceTransactionsPage() {
             Pencatatan Keuangan 💸
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
-            Catat pengeluaran dan pemasukan dengan input kilat atau scan struk.
+            Catat pengeluaran, scan struk, dan bagi tagihan patungan.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={() => setIsSplitBillOpen(true)}
+            variant="secondary"
+            size="md"
+            className="rounded-2xl"
+            title="Split Bill & Catatan Talangan"
+          >
+            <Users className="w-4 h-4 text-[#7C5CFA]" />
+            <span className="hidden sm:inline">Split Bill</span>
+          </Button>
           <Button
             onClick={() => setIsScanModalOpen(true)}
             variant="secondary"
@@ -77,7 +89,7 @@ export default function FinanceTransactionsPage() {
             className="rounded-2xl"
             title="Tagihan & Biaya Rutin"
           >
-            <CalendarClock className="w-4 h-4 text-[#7C5CFA]" />
+            <CalendarClock className="w-4 h-4 text-[#FF7A85]" />
             <span className="hidden sm:inline">Biaya Rutin</span>
           </Button>
           <Button
@@ -253,6 +265,11 @@ export default function FinanceTransactionsPage() {
       <RecurringBillsModal
         isOpen={isRecurringModalOpen}
         onClose={() => setIsRecurringModalOpen(false)}
+      />
+
+      <SplitBillModal
+        isOpen={isSplitBillOpen}
+        onClose={() => setIsSplitBillOpen(false)}
       />
     </div>
   );

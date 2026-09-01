@@ -68,3 +68,16 @@ export interface RecurringBill {
   isActive: boolean;
   createdAt: string;
 }
+
+export interface FriendDebt {
+  id: string;
+  friendName: string;
+  friendPhone?: string;
+  amount: number;
+  description: string;
+  type: "they_owe_me" | "i_owe_them"; // Piutang (Teman hutang ke saya) / Hutang (Saya hutang ke teman)
+  isSettled: boolean;
+  settledDate?: string | null;
+  dueDate?: string | null;
+  createdAt: string;
+}
