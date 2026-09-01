@@ -2,13 +2,17 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt } from "lucide-react";
+import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt, Camera, CalendarClock } from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TransactionCard } from "@/components/finance/TransactionCard";
 import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
 import { InsightCard } from "@/components/ai/InsightCard";
+import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
+import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
+import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -17,11 +21,25 @@ import { Task } from "@/types/academic";
 
 export default function DashboardPage() {
   const { activeMode } = useModeStore();
-  const { tasks, transactions, insights, getMonthlyBudgetSummary } = useDataStore();
+  const { user } = useAuthStore();
+  const { tasks, transactions, insights, getMonthlyBudgetSummary, isLoaded } = useDataStore();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+
+  // Time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 11) return "Selamat Pagi";
+    if (hour < 15) return "Selamat Siang";
+    if (hour < 18) return "Selamat Sore";
+    return "Selamat Malam";
+  };
+
+  const displayName = user?.displayName ? user.displayName.split(" ")[0] : "Mahasiswa";
 
   // Active top urgent tasks (sorted by urgencyScore desc)
   const activeTasks = tasks
@@ -52,17 +70,17 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Semangat Kuliahnya! 👋
+            {getGreeting()}, {displayName}! ✨
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
             {activeMode === "academic"
-              ? `Kamu punya ${activeTasks.length} tugas aktif yang butuh perhatian.`
-              : `Total sisa budget kamu bulan ini: ${formatCurrencyIDR(summary.remaining)}.`}
+              ? `Kamu punya ${activeTasks.length} tugas aktif yang sedang berjalan.`
+              : `Sisa saldo aman kamu bulan ini: ${formatCurrencyIDR(summary.remaining)}.`}
           </p>
         </div>
 
-        {/* Quick Mode Action Button */}
-        <div className="flex items-center gap-2">
+        {/* Quick Mode Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
           {activeMode === "academic" ? (
             <Button
               onClick={handleCreateTask}
@@ -74,20 +92,45 @@ export default function DashboardPage() {
               <span>Tambah Tugas</span>
             </Button>
           ) : (
-            <Button
-              onClick={() => setIsFinanceModalOpen(true)}
-              variant="finance"
-              size="md"
-              className="rounded-2xl"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Catat Transaksi</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsScanModalOpen(true)}
+                variant="secondary"
+                size="md"
+                className="rounded-2xl"
+                title="Pindai Struk / Bukti QRIS"
+              >
+                <Camera className="w-4 h-4 text-[#1F8766]" />
+                <span className="hidden sm:inline">Scan Struk</span>
+              </Button>
+              <Button
+                onClick={() => setIsRecurringModalOpen(true)}
+                variant="secondary"
+                size="md"
+                className="rounded-2xl"
+                title="Tagihan & Biaya Rutin"
+              >
+                <CalendarClock className="w-4 h-4 text-[#7C5CFA]" />
+                <span className="hidden sm:inline">Biaya Rutin</span>
+              </Button>
+              <Button
+                onClick={() => setIsFinanceModalOpen(true)}
+                variant="finance"
+                size="md"
+                className="rounded-2xl"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Catat Transaksi</span>
+              </Button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* 2. Active AI Insight Card (Cross-Mode or Recommendation) */}
+      {/* 2. Smart Natural Language Quick Input Bar */}
+      <NLPQuickBar />
+
+      {/* 3. Active AI Insight Card (Cross-Mode or Recommendation) */}
       {insights.length > 0 && (
         <section>
           <InsightCard insight={insights[0]} />
@@ -238,6 +281,14 @@ export default function DashboardPage() {
       <NumpadQuickEntry
         isOpen={isFinanceModalOpen}
         onClose={() => setIsFinanceModalOpen(false)}
+      />
+      <ReceiptScanModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+      />
+      <RecurringBillsModal
+        isOpen={isRecurringModalOpen}
+        onClose={() => setIsRecurringModalOpen(false)}
       />
     </div>
   );

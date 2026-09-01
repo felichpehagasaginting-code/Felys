@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon, Camera, CalendarClock } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { TransactionCard } from "@/components/finance/TransactionCard";
 import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
+import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
+import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
+import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
 
@@ -16,6 +19,8 @@ export default function FinanceTransactionsPage() {
   const [selectedType, setSelectedType] = useState<"all" | "expense" | "income">("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [isNumpadOpen, setIsNumpadOpen] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
 
   const summary = getMonthlyBudgetSummary();
 
@@ -50,20 +55,45 @@ export default function FinanceTransactionsPage() {
             Pencatatan Keuangan 💸
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
-            Catat pengeluaran dan pemasukan dengan input kilat.
+            Catat pengeluaran dan pemasukan dengan input kilat atau scan struk.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsNumpadOpen(true)}
-          variant="finance"
-          size="md"
-          className="rounded-2xl"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Catat Transaksi Baru</span>
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={() => setIsScanModalOpen(true)}
+            variant="secondary"
+            size="md"
+            className="rounded-2xl"
+            title="Scan Foto Struk / QRIS"
+          >
+            <Camera className="w-4 h-4 text-[#1F8766]" />
+            <span className="hidden sm:inline">Scan Struk</span>
+          </Button>
+          <Button
+            onClick={() => setIsRecurringModalOpen(true)}
+            variant="secondary"
+            size="md"
+            className="rounded-2xl"
+            title="Tagihan & Biaya Rutin"
+          >
+            <CalendarClock className="w-4 h-4 text-[#7C5CFA]" />
+            <span className="hidden sm:inline">Biaya Rutin</span>
+          </Button>
+          <Button
+            onClick={() => setIsNumpadOpen(true)}
+            variant="finance"
+            size="md"
+            className="rounded-2xl"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Catat Transaksi</span>
+          </Button>
+        </div>
       </div>
+
+      {/* NLP Quick Bar */}
+      <NLPQuickBar />
 
       {/* 2. Top Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -189,6 +219,16 @@ export default function FinanceTransactionsPage() {
       <NumpadQuickEntry
         isOpen={isNumpadOpen}
         onClose={() => setIsNumpadOpen(false)}
+      />
+
+      <ReceiptScanModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+      />
+
+      <RecurringBillsModal
+        isOpen={isRecurringModalOpen}
+        onClose={() => setIsRecurringModalOpen(false)}
       />
     </div>
   );

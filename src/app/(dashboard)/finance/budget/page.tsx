@@ -5,14 +5,17 @@ import { Plus, PieChart, Sparkles, AlertCircle, TrendingDown } from "lucide-reac
 import { useDataStore } from "@/stores/use-data-store";
 import { BudgetProgressBar } from "@/components/finance/BudgetProgressBar";
 import { BudgetModal } from "@/components/finance/BudgetModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Budget } from "@/types/finance";
 import { formatCurrencyIDR, getBudgetStatusConfig } from "@/lib/utils";
 
 export default function FinanceBudgetPage() {
-  const { getMonthlyBudgetSummary } = useDataStore();
+  const { getMonthlyBudgetSummary, deleteBudgetLimit } = useDataStore();
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetToEdit, setBudgetToEdit] = useState<Budget | null>(null);
+  const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const summary = getMonthlyBudgetSummary();
   const overallConfig = getBudgetStatusConfig(summary.overallPercentage);
@@ -25,6 +28,17 @@ export default function FinanceBudgetPage() {
   const handleOpenNewBudget = () => {
     setBudgetToEdit(null);
     setIsBudgetModalOpen(true);
+  };
+
+  const handleDeleteBudget = async () => {
+    if (!budgetToDelete) return;
+    try {
+      setIsDeleting(true);
+      await deleteBudgetLimit(budgetToDelete.categoryId);
+    } finally {
+      setIsDeleting(false);
+      setBudgetToDelete(null);
+    }
   };
 
   return (
@@ -104,6 +118,7 @@ export default function FinanceBudgetPage() {
               key={budget.id}
               budget={budget}
               onEdit={handleEditBudget}
+              onDelete={setBudgetToDelete}
             />
           ))}
         </div>
@@ -113,6 +128,15 @@ export default function FinanceBudgetPage() {
         isOpen={isBudgetModalOpen}
         onClose={() => setIsBudgetModalOpen(false)}
         budgetToEdit={budgetToEdit}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(budgetToDelete)}
+        onClose={() => setBudgetToDelete(null)}
+        onConfirm={handleDeleteBudget}
+        title="Hapus Batas Budget Kategori?"
+        description={`Limit anggaran untuk kategori "${budgetToDelete?.categoryName}" (${formatCurrencyIDR(budgetToDelete?.monthlyLimit || 0)}) akan dihapus dari Firestore.`}
+        isSubmitting={isDeleting}
       />
     </div>
   );
