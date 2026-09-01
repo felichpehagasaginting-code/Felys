@@ -4,7 +4,7 @@
 
 **"Atur waktu, atur uang, tenang aja."**
 
-*Platform produktivitas akademik & manajemen keuangan mahasiswa terintegrasi berbasis Contextual AI.*
+*Platform produktivitas akademik & manajemen keuangan mahasiswa terintegrasi berbasis Contextual AI & Offline-First Persistence.*
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5_(App_Router)-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -13,7 +13,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_SDK-8E75FF?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-[Fitur Utama](#-fitur-unggulan) • [Arsitektur](#-arsitektur--tech-stack) • [Formula AI](#-ai-engine--urgency-scoring) • [Panduan Instalasi](#-cara-menjalankan-proyek) • [Dokumentasi](#-arsip-dokumentasi)
+[Fitur Utama](#-fitur-unggulan) • [Upgrade Terbaru](#-fitur-dan-upgrade-terbaru) • [Arsitektur](#-arsitektur--tech-stack) • [Formula AI](#-ai-engine--urgency-scoring) • [Panduan Instalasi](#-cara-menjalankan-proyek) • [Dokumentasi](#-arsip-dokumentasi)
 
 </div>
 
@@ -51,10 +51,19 @@ Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas k
 - **Insight Lintas Mode (Cross-Mode Heuristics):** Mendeteksi otomatis saat pengguna memiliki $\ge 2$ deadline mendesak ($\le 7$ hari) dan pengeluaran non-esensial sudah $\ge 70\%$, lalu memberikan saran solutif (misal: ajakan ngerjain tugas di kos sambil seduh kopi hemat).
 - **Streaming Chat Drawer:** Obrolan interaktif real-time ditenagai **Google Gemini API** yang membaca data tugas dan kondisi budget pengguna secara kontekstual dengan tone santai dan suportif.
 
-### 🔄 4. Dual-Mode Switcher & UI Modern
-- Toggle persisten dengan animasi geser mulus (*Framer Motion spring*).
-- Responsif penuh untuk desktop, tablet, dan smartphone dengan Bottom Navigation & Floating Action Button (FAB).
-- Cloud Firestore Real-time Sync + Google One-Tap & Email Authentication.
+---
+
+## 🔥 Fitur dan Upgrade Terbaru
+
+| Fitur / Modul | Deskripsi & Manfaat Bagi Mahasiswa |
+| :--- | :--- |
+| ⚡ **NLP Quick Input Bar** | Parser kalimat natural bahasa Indonesia (*contoh: "Makan siang geprek 18rb"* atau *"Makalah AI jumat jam 23:59"*) dengan *live preview chip*. |
+| 📶 **Offline-First Persistence** | Firestore IndexedDB Cache dengan multi-tab sync. Mahasiswa tetap bisa mencatat pengeluaran di kantin atau mencentang tugas di lab saat tanpa internet (*zero data loss*). |
+| 📸 **Smart Receipt / QRIS Scanner** | Pindai foto nota belanjaan atau screenshot bukti pembayaran QRIS dengan ekstraksi nominal otomatis ke form pengeluaran. |
+| 📅 **Tagihan & Biaya Rutin Mahasiswa** | Kelola pengingat pembayaran uang kos bulanan, UKT/SPP semesteran, WiFi, dan langganan dengan tombol *1-Click Pay & Record*. |
+| 🛡️ **Proteksi AI & Rate Limiting** | Keamanan token Firebase Auth + sliding-window rate limiter (maksimal 40 request/24 jam per akun) untuk mencegah lonjakan kuota API. |
+| 📳 **Haptic Tactile & Undo Toast** | Getaran tactile pada perangkat mobile PWA, konfirmasi hapus data, serta **Tombol Undo (Batalkan)** 5 detik untuk memulihkan catatan yang tidak sengaja terhapus. |
+| 💬 **Empathetic Tone of Voice** | Sapaan adaptif waktu (*Pagi/Siang/Sore/Malam*) dan copywriting bebas *financial guilt* yang suportif bagi mahasiswa. |
 
 ---
 
@@ -80,21 +89,21 @@ Felys/
 │   ├── app/                    # Next.js 15 App Router (Pages, API Routes, Layouts)
 │   │   ├── (auth)/             # Authentication Routes (/login, /register)
 │   │   ├── (dashboard)/        # Unified Dashboard, Academic, Finance, & Settings
-│   │   └── api/ai/chat/        # Streaming Route handler ke Google Gemini API
+│   │   └── api/ai/chat/        # Streaming Route handler ke Google Gemini API + Rate Limiter
 │   ├── components/             # Reusable UI Components & Modals
 │   │   ├── academic/           # TaskCard, TaskFormModal, CourseModal
-│   │   ├── finance/            # NumpadQuickEntry, BudgetProgressBar, DonutExpenseChart
+│   │   ├── finance/            # NumpadQuickEntry, ReceiptScanModal, RecurringBillsModal, DonutExpenseChart
 │   │   ├── ai/                 # AIDrawer, InsightCard
-│   │   ├── shared/             # Navbar, Sidebar, BottomNav, ModeSwitcher
-│   │   └── ui/                 # Base Radix Primitives & Custom Buttons
-│   ├── lib/                    # Firebase SDK (Client & Admin) & Formatting Utilities
+│   │   ├── shared/             # NLPQuickBar, Navbar, Sidebar, BottomNav, ModeSwitcher
+│   │   └── ui/                 # ConfirmDialog, Skeleton, Base Radix Primitives & Custom Buttons
+│   ├── lib/                    # Firebase SDK (IndexedDB Client & Admin), NLP Parser, Haptics & Utilities
 │   ├── server/services/        # Domain Engine (Urgency, Budget, Insight Services)
 │   ├── stores/                 # Zustand State Stores (Data, Mode, AI, Auth)
 │   └── types/                  # TypeScript Data Models & Contracts
 ```
 
-- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI Primitives, Lucide React, Recharts.
-- **Database & Auth:** Google Cloud Firestore (Subcollection architecture `/users/{userId}/...`), Firebase Authentication, Firebase Admin SDK.
+- **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI Primitives, Lucide React, Recharts, Sonner.
+- **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + `/users/{userId}/...`), Firebase Authentication, Firebase Admin SDK.
 - **AI Engine:** Google Gemini API (`@ai-sdk/google` + Vercel AI SDK).
 - **Client State:** Zustand (dengan real-time Firestore `onSnapshot` listeners).
 
