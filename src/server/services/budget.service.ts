@@ -36,12 +36,17 @@ export class BudgetService {
     let totalLimit = 0;
     let totalSpent = 0;
 
-    const budgetList: Budget[] = categories.map((cat) => {
+    // Filter kategori pengeluaran saja untuk kalkulasi budget limit
+    const expenseCategories = categories.filter(
+      (c) => c.type === "expense" || (!c.type && c.isDefault)
+    );
+
+    const budgetList: Budget[] = expenseCategories.map((cat) => {
       const budgetConfig = budgets.find((b) => b.categoryId === cat.id);
       const monthlyLimit = budgetConfig?.monthlyLimit || 0;
 
       const spentAmount = currentMonthExpenses
-        .filter((t) => t.categoryId === cat.id)
+        .filter((t) => t.categoryId === cat.id || t.categoryName === cat.name)
         .reduce((sum, t) => sum + t.amount, 0);
 
       const remainingAmount = Math.max(0, monthlyLimit - spentAmount);
