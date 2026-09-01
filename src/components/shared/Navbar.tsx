@@ -155,7 +155,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
 
             {/* Interactive Settings Dropdown / Quick Preferences Menu */}
             {isSettingsOpen && (
-              <div className="absolute right-0 top-12 w-72 sm:w-80 rounded-3xl bg-surface/95 dark:bg-[#26232E]/95 backdrop-blur-xl border border-border shadow-float p-4 space-y-3.5 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute right-0 top-12 w-72 sm:w-80 rounded-3xl bg-white dark:bg-[#26232E] border border-border shadow-2xl p-4 space-y-3.5 z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/10">
                 {/* Profile Header */}
                 <div className="flex items-center gap-3 pb-3 border-b border-border">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white font-extrabold text-sm shadow-soft">
@@ -195,7 +195,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                       }}
                       className={`py-1.5 rounded-xl transition-all ${
                         activeMode === "academic"
-                          ? "bg-surface text-[#7C5CFA] shadow-xs"
+                          ? "bg-white dark:bg-[#26232E] text-[#7C5CFA] shadow-xs"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -208,7 +208,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                       }}
                       className={`py-1.5 rounded-xl transition-all ${
                         activeMode === "finance"
-                          ? "bg-surface text-[#1F8766] shadow-xs"
+                          ? "bg-white dark:bg-[#26232E] text-[#1F8766] shadow-xs"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -222,13 +222,13 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                   <Link
                     href="/settings"
                     onClick={() => setIsSettingsOpen(false)}
-                    className="flex items-center justify-between p-2.5 rounded-2xl text-xs font-semibold text-foreground hover:bg-[#EDE5FF] dark:hover:bg-[#383442] transition-colors group"
+                    className="flex items-center justify-between p-2.5 rounded-2xl text-xs font-semibold text-foreground hover:bg-[#EDE5FF] dark:hover:bg-[#383442] transition-colors group/item"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Settings className="w-4 h-4 text-[#7C5CFA] transition-transform duration-500 group-hover:rotate-180" />
+                      <Settings className="w-4 h-4 text-[#7C5CFA] transition-transform duration-500 group-hover/item:rotate-180" />
                       <span>Halaman Pengaturan Penuh</span>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted group-hover/item:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
 
