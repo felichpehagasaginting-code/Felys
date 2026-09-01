@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
-import { Budget } from "@/types/finance";
+import { Category, Budget } from "@/types/finance";
+import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/firebase/firestore-service";
 import { formatCurrencyIDR } from "@/lib/utils";
 
 interface BudgetModalProps {
@@ -13,27 +14,49 @@ interface BudgetModalProps {
   budgetToEdit?: Budget | null;
 }
 
+const STATIC_DEFAULT_EXPENSES: Category[] = DEFAULT_EXPENSE_CATEGORIES.map((c, i) => ({
+  ...c,
+  id: `def_exp_${i}`,
+}));
+
 export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps) {
   const { categories, setBudgetLimit } = useDataStore();
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [limit, setLimit] = useState(500000);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Filter only expense categories for budget limits
+  const expenseCategories: Category[] = React.useMemo(() => {
+    const list = categories.filter((c) => c.type === "expense" || (!c.type && c.isDefault));
+    return list.length > 0 ? list : STATIC_DEFAULT_EXPENSES;
+  }, [categories]);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (budgetToEdit) {
       setSelectedCategoryId(budgetToEdit.categoryId);
       setLimit(budgetToEdit.monthlyLimit);
-    } else if (categories.length > 0) {
-      setSelectedCategoryId(categories[0].id);
+    } else if (expenseCategories.length > 0) {
+      setSelectedCategoryId(expenseCategories[0].id);
       setLimit(500000);
     }
-  }, [budgetToEdit, isOpen, categories]);
+  }, [budgetToEdit, isOpen, categories.length]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCategoryId || limit <= 0) return;
+    if (!selectedCategoryId || limit <= 0 || isSubmitting) return;
 
-    setBudgetLimit(selectedCategoryId, limit);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      await setBudgetLimit(selectedCategoryId, limit);
+      onClose();
+    } catch (err) {
+      console.error("Error saving budget:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const quickLimits = [200000, 500000, 1000000, 1500000, 2000000];
@@ -56,7 +79,7 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
                 onChange={(e) => setSelectedCategoryId(e.target.value)}
                 className="w-full bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#7FE3C0]"
               >
-                {categories.map((cat) => (
+                {expenseCategories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name} ({cat.isEssential ? "Esensial" : "Non-esensial"})
                   </option>
@@ -104,11 +127,11 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" variant="finance" size="sm">
-              Simpan Budget
+            <Button type="submit" variant="finance" size="sm" disabled={isSubmitting || limit <= 0}>
+              {isSubmitting ? "Menyimpan..." : "Simpan Budget"}
             </Button>
           </div>
         </form>
