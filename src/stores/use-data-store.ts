@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { Course, Task, SubTask, PriorityLevel, TaskStatus } from "@/types/academic";
-import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt } from "@/types/finance";
+import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt, DailyAllowanceSummary } from "@/types/finance";
 import { AIInsight } from "@/types/ai";
 import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
@@ -50,6 +50,7 @@ interface DataState {
   setBudgetLimit: (categoryId: string, monthlyLimit: number) => Promise<void>;
   deleteBudgetLimit: (categoryId: string) => Promise<void>;
   getMonthlyBudgetSummary: (month?: number, year?: number) => MonthlyBudgetSummary;
+  getDailyAllowanceSummary: () => DailyAllowanceSummary;
   addRecurringBill: (bill: Omit<RecurringBill, "id" | "createdAt">) => Promise<void>;
   deleteRecurringBill: (id: string) => Promise<void>;
   payRecurringBill: (id: string) => Promise<void>;
@@ -573,6 +574,15 @@ export const useDataStore = create<DataState>((set, get) => ({
       categories: get().categories,
       transactions: get().transactions,
       budgets: get().budgetLimits,
+    });
+  },
+
+  getDailyAllowanceSummary: () => {
+    const summary = get().getMonthlyBudgetSummary();
+    return BudgetService.calculateDailyAllowance({
+      summary,
+      transactions: get().transactions,
+      recurringBills: get().recurringBills,
     });
   },
 

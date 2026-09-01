@@ -45,6 +45,17 @@ export function formatDateRelative(dateInput: string | Date): string {
   return format(date, "d MMM yyyy", { locale: id });
 }
 
+export function formatDateIndonesian(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return format(date, "EEEE, d MMMM yyyy", { locale: id });
+}
+
+export function formatTimeIndonesian(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  return format(date, "HH:mm", { locale: id });
+}
+
+
 export function getUrgencyBadgeConfig(score: number): {
   level: "urgent" | "warning" | "safe";
   label: string;

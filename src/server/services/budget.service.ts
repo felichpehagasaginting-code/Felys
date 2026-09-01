@@ -129,4 +129,83 @@ export class BudgetService {
 
     return nonEssentialOverloaded.length > 0 ? nonEssentialOverloaded[0] : null;
   }
+
+  /**
+   * Hitung batas belanja harian aman (Safe-to-Spend Daily Allowance) & Proyeksi Dompet Kering
+   */
+  public static calculateDailyAllowance(params: {
+    summary: MonthlyBudgetSummary;
+    transactions: Transaction[];
+    recurringBills: { id: string; amount: number; dueDay: number; isActive: boolean }[];
+  }) {
+    const { summary, transactions, recurringBills } = params;
+
+    const now = new Date();
+    const currentDay = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const remainingDays = Math.max(1, daysInMonth - currentDay + 1);
+
+    // Tagihan rutin mendatang yang belum jatuh tempo di sisa bulan ini
+    const upcomingBillsAmount = recurringBills
+      .filter((b) => b.isActive && b.dueDay >= currentDay)
+      .reduce((sum, b) => sum + b.amount, 0);
+
+    // Dana aman tersedia untuk belanja harian
+    const availableFund = Math.max(0, summary.netSavings - upcomingBillsAmount);
+    const dailyAllowance = Math.round(availableFund / remainingDays);
+
+    // Pengeluaran khusus hari ini
+    const todayYear = now.getFullYear();
+    const todayMonth = now.getMonth();
+    const todayDate = now.getDate();
+
+    const todaySpent = transactions
+      .filter((t) => {
+        if (t.type !== "expense") return false;
+        const d = new Date(t.date);
+        return (
+          d.getFullYear() === todayYear &&
+          d.getMonth() === todayMonth &&
+          d.getDate() === todayDate
+        );
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const todayRemaining = dailyAllowance - todaySpent;
+    const isOverDailyLimit = todayRemaining < 0;
+
+    // Hitung Laju Pengeluaran Harian (Burn Rate)
+    const passedDays = Math.max(1, currentDay);
+    const dailyBurnRate = Math.round(summary.totalSpent / passedDays);
+
+    let projectedBurnDate: string | null = null;
+    let isCriticalBurn = false;
+
+    if (dailyBurnRate > 0 && summary.netSavings > 0) {
+      const daysLeftBeforeEmpty = Math.floor(summary.netSavings / dailyBurnRate);
+      if (daysLeftBeforeEmpty < remainingDays) {
+        const exhaustionDate = new Date();
+        exhaustionDate.setDate(currentDay + daysLeftBeforeEmpty);
+        const monthNames = [
+          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        projectedBurnDate = `${exhaustionDate.getDate()} ${monthNames[exhaustionDate.getMonth()]}`;
+        isCriticalBurn = daysLeftBeforeEmpty <= 7;
+      }
+    }
+
+    return {
+      dailyAllowance,
+      todaySpent,
+      todayRemaining,
+      remainingDays,
+      upcomingBillsAmount,
+      isOverDailyLimit,
+      dailyBurnRate,
+      projectedBurnDate,
+      isCriticalBurn,
+    };
+  }
 }
+

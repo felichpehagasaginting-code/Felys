@@ -14,6 +14,7 @@ import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
+import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -295,6 +296,9 @@ export default function DashboardPage() {
               <span>Catat Pengeluaran Cepat</span>
             </Button>
           </div>
+
+          {/* Daily Allowance & Burn Rate Forecast */}
+          <DailyAllowanceCard />
 
           {/* Recent Transactions */}
           <div className="space-y-2.5">

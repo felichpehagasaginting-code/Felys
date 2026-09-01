@@ -4,8 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
-import { PriorityLevel, Task } from "@/types/academic";
+import { PriorityLevel, Task, SubTask } from "@/types/academic";
+import { Sparkles, Plus, Trash2, CheckCircle2, ListChecks, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -22,7 +25,10 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
   const [priority, setPriority] = useState<PriorityLevel>("medium");
   const [estimatedHours, setEstimatedHours] = useState<number | undefined>(2);
   const [description, setDescription] = useState("");
+  const [subtasks, setSubtasks] = useState<SubTask[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiBreakingDown, setIsAiBreakingDown] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,6 +43,7 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
       setPriority(taskToEdit.priority);
       setEstimatedHours(taskToEdit.estimatedHours || 2);
       setDescription(taskToEdit.description || "");
+      setSubtasks(taskToEdit.subtasks || []);
     } else {
       // Default new task values
       setTitle("");
@@ -46,10 +53,85 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
       setPriority("medium");
       setEstimatedHours(2);
       setDescription("");
+      setSubtasks([]);
     }
   }, [taskToEdit, isOpen, courses.length]);
 
   if (!isOpen) return null;
+
+  const handleAiBreakdown = async () => {
+    if (!title.trim()) {
+      toast.error("Tuliskan nama tugas terlebih dahulu ya!");
+      return;
+    }
+
+    try {
+      setIsAiBreakingDown(true);
+      triggerHaptic("medium");
+
+      const selectedCourse = courses.find((c) => c.id === courseId);
+      const res = await fetch("/api/ai/breakdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskTitle: title.trim(),
+          courseName: selectedCourse?.name || "Umum",
+          deadline,
+          estimatedHours,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Gagal generate subtask");
+
+      const data = await res.json();
+      if (data.subtasks && Array.isArray(data.subtasks)) {
+        const newItems: SubTask[] = data.subtasks.map((st: any, idx: number) => ({
+          id: `sub_${Date.now()}_${idx}`,
+          taskId: taskToEdit?.id || "temp",
+          title: st.title || `Langkah ${idx + 1}`,
+          isDone: false,
+          order: idx,
+        }));
+
+        setSubtasks((prev) => [...prev, ...newItems]);
+        triggerHaptic("success");
+        toast.success(`Berhasil membuat ${newItems.length} subtask dengan Fio AI! ✨`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal memecah subtask AI. Silakan tambahkan manual.");
+    } finally {
+      setIsAiBreakingDown(false);
+    }
+  };
+
+  const handleAddManualSubtask = () => {
+    if (!newSubtaskTitle.trim()) return;
+    const newItem: SubTask = {
+      id: `sub_${Date.now()}`,
+      taskId: taskToEdit?.id || "temp",
+      title: newSubtaskTitle.trim(),
+      isDone: false,
+      order: subtasks.length,
+    };
+    setSubtasks([...subtasks, newItem]);
+    setNewSubtaskTitle("");
+    triggerHaptic("light");
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    setSubtasks(subtasks.filter((s) => s.id !== subtaskId));
+    triggerHaptic("light");
+  };
+
+  const handleToggleSubtask = (subtaskId: string) => {
+    setSubtasks(
+      subtasks.map((s) =>
+        s.id === subtaskId ? { ...s, isDone: !s.isDone } : s
+      )
+    );
+    triggerHaptic("light");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,23 +140,23 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
 
     try {
       setIsSubmitting(true);
+      triggerHaptic("medium");
+
+      const taskPayload = {
+        title: title.trim(),
+        courseId: finalCourseId,
+        deadline: new Date(deadline).toISOString(),
+        priority,
+        estimatedHours: estimatedHours || 2,
+        description: description.trim() || null,
+        subtasks,
+      };
+
       if (taskToEdit) {
-        await updateTask(taskToEdit.id, {
-          title: title.trim(),
-          courseId: finalCourseId,
-          deadline: new Date(deadline).toISOString(),
-          priority,
-          estimatedHours: estimatedHours || 2,
-          description: description.trim() || null,
-        });
+        await updateTask(taskToEdit.id, taskPayload);
       } else {
         await addTask({
-          title: title.trim(),
-          courseId: finalCourseId,
-          deadline: new Date(deadline).toISOString(),
-          priority,
-          estimatedHours: estimatedHours || 2,
-          description: description.trim() || null,
+          ...taskPayload,
           status: "todo",
         });
       }
@@ -92,20 +174,128 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
         title={taskToEdit ? "Edit Tugas Kuliah" : "Tambah Tugas Kuliah"}
         description="Felys akan otomatis menghitung urgensi tugas berdasarkan deadline & beban waktu."
       >
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2 max-h-[75vh] overflow-y-auto px-0.5">
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1">
-              Nama Tugas <span className="text-[#FF7A85]">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-foreground">
+                Nama Tugas <span className="text-[#FF7A85]">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleAiBreakdown}
+                disabled={isAiBreakingDown || !title.trim()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#EDE5FF] to-[#E0FBF2] dark:from-[#383442] dark:to-[#26232E] border border-[#B69CFF]/40 text-[#7C5CFA] dark:text-[#B69CFF] text-[11px] font-bold hover:shadow-soft hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                title="Pecah tugas besar jadi langkah-langkah terstruktur dengan AI"
+              >
+                {isAiBreakingDown ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin text-[#7C5CFA]" />
+                    <span>Memproses...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 text-[#7C5CFA]" />
+                    <span>✨ Pecah Subtask AI</span>
+                  </>
+                )}
+              </button>
+            </div>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Makalah Grafika Komputer"
+              placeholder="Contoh: Makalah Grafika Komputer / Laporan Praktikum"
               className="w-full bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border rounded-xl px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]"
             />
+          </div>
+
+          {/* Subtasks Section */}
+          <div className="p-3.5 rounded-2xl bg-[#F8F7FA] dark:bg-[#2A2634] border border-border/80 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <ListChecks className="w-3.5 h-3.5 text-[#7C5CFA]" />
+                <span>Checklist Subtask ({subtasks.length})</span>
+              </span>
+              {subtasks.length > 0 && (
+                <span className="text-[10px] font-bold text-[#1F8766]">
+                  {subtasks.filter((s) => s.isDone).length}/{subtasks.length} Selesai
+                </span>
+              )}
+            </div>
+
+            {/* Subtasks List */}
+            {subtasks.length > 0 && (
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {subtasks.map((st, idx) => (
+                  <div
+                    key={st.id}
+                    className="flex items-center justify-between gap-2 p-2 rounded-xl bg-surface border border-border text-xs group"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSubtask(st.id)}
+                      className="flex items-center gap-2 text-left min-w-0 flex-1"
+                    >
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all",
+                          st.isDone
+                            ? "bg-[#7FE3C0] border-[#7FE3C0] text-white"
+                            : "border-border hover:border-[#7C5CFA]"
+                        )}
+                      >
+                        {st.isDone && <CheckCircle2 className="w-3 h-3" />}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-xs truncate",
+                          st.isDone
+                            ? "line-through text-muted"
+                            : "text-foreground font-medium"
+                        )}
+                      >
+                        {idx + 1}. {st.title}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubtask(st.id)}
+                      className="opacity-60 group-hover:opacity-100 p-1 text-muted hover:text-[#FF7A85] transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Manual Subtask Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddManualSubtask();
+                  }
+                }}
+                placeholder="Tambah langkah manual..."
+                className="flex-1 bg-surface border border-border rounded-xl px-3 py-1.5 text-xs text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
+              />
+              <button
+                type="button"
+                onClick={handleAddManualSubtask}
+                disabled={!newSubtaskTitle.trim()}
+                className="px-3 py-1.5 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] dark:text-[#B69CFF] text-xs font-bold hover:bg-[#7C5CFA] hover:text-white transition-all disabled:opacity-40"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Course Selector */}
@@ -208,7 +398,7 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
               Batal
             </Button>

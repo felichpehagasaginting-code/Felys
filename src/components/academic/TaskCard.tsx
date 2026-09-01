@@ -9,13 +9,15 @@ import {
   Check, 
   Plus, 
   Trash2, 
-  CalendarPlus 
+  CalendarPlus,
+  Share2
 } from "lucide-react";
 import { Task } from "@/types/academic";
 import { Card } from "@/components/ui/Card";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatDateRelative, getUrgencyBadgeConfig, cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ShareTaskModal } from "./ShareTaskModal";
 import { triggerHaptic } from "@/lib/haptics";
 import { generateGoogleCalendarUrl } from "@/lib/calendar-sync";
 import { toast } from "sonner";
@@ -31,6 +33,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isDone = task.status === "done";
@@ -144,6 +147,14 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
 
             {/* Action buttons - always visible on touch/mobile, hover on desktop */}
             <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(true)}
+                className="group/btn p-1.5 rounded-lg text-muted hover:text-[#7C5CFA] hover:bg-[#EDE5FF]/50 dark:hover:bg-[#383442] transition-all"
+                title="Bagi Tugas ke WhatsApp / QR Code"
+              >
+                <Share2 className="w-4 h-4 transition-transform duration-300 group-hover/btn:scale-120 group-hover/btn:rotate-12" />
+              </button>
               <a
                 href={generateGoogleCalendarUrl(task)}
                 target="_blank"
@@ -308,6 +319,12 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
       title="Hapus Tugas Kuliah?"
       description={`Tugas "${task.title}" beserta seluruh checklist sub-tugasnya akan dihapus permanen dari Firestore.`}
       isSubmitting={isDeleting}
+    />
+
+    <ShareTaskModal
+      task={task}
+      isOpen={isShareOpen}
+      onClose={() => setIsShareOpen(false)}
     />
   </>
   );

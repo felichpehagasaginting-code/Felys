@@ -10,6 +10,7 @@ import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
+import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
 
@@ -175,6 +176,9 @@ export default function FinanceTransactionsPage() {
           </span>
         </div>
       </div>
+
+      {/* Safe-to-Spend Daily Allowance & Burn Rate Forecast */}
+      <DailyAllowanceCard />
 
       {/* 3. Main Grid: Transactions List & Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

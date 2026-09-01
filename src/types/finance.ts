@@ -81,3 +81,16 @@ export interface FriendDebt {
   dueDate?: string | null;
   createdAt: string;
 }
+
+export interface DailyAllowanceSummary {
+  dailyAllowance: number;
+  todaySpent: number;
+  todayRemaining: number;
+  remainingDays: number;
+  upcomingBillsAmount: number;
+  isOverDailyLimit: boolean;
+  dailyBurnRate: number;
+  projectedBurnDate: string | null; // e.g. "19 September"
+  isCriticalBurn: boolean;
+}
+
