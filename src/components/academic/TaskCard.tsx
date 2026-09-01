@@ -6,6 +6,9 @@ import { Task } from "@/types/academic";
 import { Card } from "@/components/ui/Card";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatDateRelative, getUrgencyBadgeConfig, cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
 interface TaskCardProps {
@@ -14,15 +17,40 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onEdit }: TaskCardProps) {
-  const { toggleTaskStatus, toggleSubtask, addSubtask, deleteTask } = useDataStore();
+  const { toggleTaskStatus, toggleSubtask, addSubtask, deleteTask, addTask } = useDataStore();
   const [isExpanded, setIsExpanded] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isDone = task.status === "done";
   const urgencyConfig = getUrgencyBadgeConfig(task.urgencyScore);
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      triggerHaptic("warning");
+      const backup = { ...task };
+      await deleteTask(task.id);
+
+      toast.info(`Tugas "${task.title}" dihapus`, {
+        action: {
+          label: "Batalkan",
+          onClick: () => {
+            triggerHaptic("success");
+            addTask(backup);
+            toast.success("Tugas berhasil dikembalikan!");
+          },
+        },
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleToggleDone = (e: React.MouseEvent) => {
     e.stopPropagation();
+    triggerHaptic(isDone ? "light" : "success");
     if (!isDone) {
       // Trigger confetti on completion
       confetti({
@@ -31,6 +59,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         origin: { y: 0.8 },
         colors: ["#B69CFF", "#7FE3C0", "#FFC978"],
       });
+      toast.success("Hebat! 1 tugas kuliah berhasil diselesaikan 🎉");
     }
     toggleTaskStatus(task.id);
   };
@@ -48,79 +77,80 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
       : 0;
 
   return (
-    <Card
-      className={cn(
-        "group relative overflow-hidden transition-all duration-200 border",
-        isDone
-          ? "opacity-60 bg-[#FAF9FC]/50 dark:bg-[#1E1C24]/50 border-border"
-          : "hover:shadow-card hover:-translate-y-0.5 bg-surface border-border"
-      )}
-    >
-      {/* Left urgency vertical highlight bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1.5"
-        style={{
-          backgroundColor: isDone ? "#D1CADB" : urgencyConfig.dotColor,
-        }}
-      />
+    <>
+      <Card
+        className={cn(
+          "group relative overflow-hidden transition-all duration-200 border",
+          isDone
+            ? "opacity-60 bg-[#FAF9FC]/50 dark:bg-[#1E1C24]/50 border-border"
+            : "hover:shadow-card hover:-translate-y-0.5 bg-surface border-border"
+        )}
+      >
+        {/* Left urgency vertical highlight bar */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5"
+          style={{
+            backgroundColor: isDone ? "#D1CADB" : urgencyConfig.dotColor,
+          }}
+        />
 
-      <div className="pl-2">
-        {/* Top Meta: Course Badge & Urgency Pill */}
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Course Tag */}
-            <span
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-foreground/80 border"
-              style={{
-                backgroundColor: `${task.courseColor || "#B69CFF"}20`,
-                borderColor: `${task.courseColor || "#B69CFF"}50`,
-              }}
-            >
+        <div className="pl-2">
+          {/* Top Meta: Course Badge & Urgency Pill */}
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Course Tag */}
               <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: task.courseColor || "#B69CFF" }}
-              />
-              {task.courseName || "Mata Kuliah"}
-            </span>
-
-            {/* Urgency Badge */}
-            {!isDone && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border",
-                  urgencyConfig.bgClass,
-                  urgencyConfig.textClass,
-                  urgencyConfig.borderClass
-                )}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold text-foreground/80 border"
+                style={{
+                  backgroundColor: `${task.courseColor || "#B69CFF"}20`,
+                  borderColor: `${task.courseColor || "#B69CFF"}50`,
+                }}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: urgencyConfig.dotColor }}
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: task.courseColor || "#B69CFF" }}
                 />
-                {urgencyConfig.label} ({Math.round(task.urgencyScore)})
+                {task.courseName || "Mata Kuliah"}
               </span>
-            )}
-          </div>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {onEdit && (
+              {/* Urgency Badge */}
+              {!isDone && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border",
+                    urgencyConfig.bgClass,
+                    urgencyConfig.textClass,
+                    urgencyConfig.borderClass
+                  )}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: urgencyConfig.dotColor }}
+                  />
+                  {urgencyConfig.label} ({Math.round(task.urgencyScore)})
+                </span>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(task)}
+                  className="p-1 rounded-lg text-muted hover:text-foreground text-xs font-semibold"
+                >
+                  Edit
+                </button>
+              )}
               <button
-                onClick={() => onEdit(task)}
-                className="p-1 rounded-lg text-muted hover:text-foreground text-xs font-semibold"
+                onClick={() => setIsConfirmOpen(true)}
+                className="p-1 rounded-lg text-muted hover:text-[#FF7A85] transition-colors"
+                title="Hapus tugas"
               >
-                Edit
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
-            )}
-            <button
-              onClick={() => deleteTask(task.id)}
-              className="p-1 rounded-lg text-muted hover:text-[#FF7A85] transition-colors"
-              title="Hapus tugas"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            </div>
           </div>
-        </div>
 
         {/* Task Title & Checkbox */}
         <div className="flex items-start gap-3 mb-2.5">
@@ -251,5 +281,15 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         )}
       </div>
     </Card>
+
+    <ConfirmDialog
+      isOpen={isConfirmOpen}
+      onClose={() => setIsConfirmOpen(false)}
+      onConfirm={handleDelete}
+      title="Hapus Tugas Kuliah?"
+      description={`Tugas "${task.title}" beserta seluruh checklist sub-tugasnya akan dihapus permanen dari Firestore.`}
+      isSubmitting={isDeleting}
+    />
+  </>
   );
 }
