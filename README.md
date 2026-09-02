@@ -4,7 +4,7 @@
 
 **"Atur waktu, atur uang, tenang aja."**
 
-*Platform produktivitas akademik & manajemen keuangan mahasiswa terintegrasi berbasis Contextual AI & Offline-First Persistence.*
+*Platform produktivitas akademik & manajemen keuangan mahasiswa terintegrasi berbasis Contextual AI, Always-Open Web Companion, Multi-Account Allocation, & Offline-First Persistence.*
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5_(App_Router)-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -13,7 +13,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_SDK-8E75FF?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-[Fitur Utama](#-fitur-unggulan) • [Upgrade Terbaru](#-fitur-dan-upgrade-terbaru) • [Arsitektur](#-arsitektur--tech-stack) • [Formula AI](#-ai-engine--urgency-scoring) • [Panduan Instalasi](#-cara-menjalankan-proyek) • [Dokumentasi](#-arsip-dokumentasi)
+[Fitur Utama](#-fitur-unggulan) • [Upgrade Terbaru](#-fitur-dan-upgrade-terbaru) • [Multi-Account & E-Wallet](#-alokasi-penyimpanan-multi-rekening--e-wallet) • [Always-Open Web Companion](#-always-open-web-companion) • [Arsitektur](#-arsitektur--tech-stack) • [Formula AI](#-ai-engine--urgency-scoring) • [Panduan Instalasi](#-cara-menjalankan-proyek) • [Dokumentasi](#-arsip-dokumentasi)
 
 </div>
 
@@ -23,7 +23,7 @@
 
 Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas kuliah yang menumpuk** dan **keuangan/uang saku yang cepat habis**. Seringkali aplikasi pencatat tugas dan aplikasi keuangan terpisah, sehingga mahasiswa tidak menyadari korelasi bahwa saat deadline menumpuk, pengeluaran impulsif untuk kopi, jajan, dan nongkrong ikut melonjak.
 
-**Felys** hadir sebagai solusi all-in-one dengan **Dual-Mode System** (*Mode Akademik* & *Mode Keuangan*) yang disatukan oleh asisten AI pintar bernama **Fio**.
+**Felys** hadir sebagai solusi all-in-one dengan **Dual-Mode System** (*Mode Akademik* & *Mode Keuangan*) yang disatukan oleh asisten AI pintar bernama **Fio**, serta dirancang khusus sebagai **Always-Open Companion** yang ringan dan hemat daya baterai di laptop mahasiswa.
 
 ---
 
@@ -31,12 +31,13 @@ Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas k
 
 ### 🎓 1. Mode Akademik (Lavender Pop `#B69CFF`)
 - **Urgency Scoring Engine Otomatis:** Menghitung skor urgensi setiap tugas secara matematis (0 - 100) berdasarkan sisa waktu deadline, tingkat prioritas, dan estimasi jam pengerjaan.
+- **Target D-Day Countdown (UTS / UAS / Sidang Skripsi):** Hitung mundur target akademik penting yang tersinkronisasi *real-time* dan permanen di Cloud Firestore.
 - **Daftar Tugas & Checklist Sub-tasks:** Cicil tugas besar menjadi langkah-langkah kecil dengan indikator progres visual dan selebrasi konfeti saat tugas tuntas.
 - **Kalender Deadline Interaktif:** Visualisasi titik warna tugas berdasarkan mata kuliah untuk memetakan beban belajar bulanan.
-- **Manajemen Mata Kuliah:** Kelola SKS, tag warna kustom, dan monitoring tugas aktif per mata kuliah.
+- **Manajemen Mata Kuliah & Jadwal Kelas:** Kelola SKS, dosen, ruang kelas, tag warna kustom, dan monitoring tugas aktif per mata kuliah.
 
 ### 💸 2. Mode Keuangan (Mint Pop `#7FE3C0`)
-- **Numpad Quick Entry (Zero-Friction):** Catat transaksi dalam hitungan detik dengan tombol instan `+000`, backspace, dan grid kategori 1-tap.
+- **Numpad Quick Entry (Zero-Friction):** Catat transaksi dalam hitungan detik dengan tombol instan `+000`, backspace, pemilih sumber dompet/rekening, dan grid kategori 1-tap.
 - **18 Kategori Mahasiswa Lengkap:** 
   - *Pengeluaran:* Makan & Minum, Transportasi, Kebutuhan Kuliah, Tagihan & Kos, Hiburan, Kopi & Jajan, Belanja, Kesehatan, Pulsa/Langganan, dan Lainnya.
   - *Pemasukan:* Uang Saku & Ortu, Gaji/Part-time, Beasiswa, Freelance/Projek, Jualan/Usaha, Hadiah/Bonus, Investasi/Cashback, dan Lainnya.
@@ -45,15 +46,57 @@ Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas k
   - 🟡 **Perhatian** ($70\% - 89\%$)
   - 🟠 **Warning** ($90\% - 99\%$)
   - 🔴 **Overbudget** ($\ge 100\%$)
-- **Laporan & Distribusi Pengeluaran:** Ringkasan pemasukan, pengeluaran, tabungan bersih (*net savings*), dan diagram donat proporsi pengeluaran.
+- **Kantong Dana Darurat & Celengan Impian (*Savings Goals*):** Sisihkan tabungan khusus laptop baru, liburan semester, atau dana darurat kosan secara otomatis.
 
 ### 🤖 3. Engine Asisten AI "Fio" & Insight Lintas Mode
 - **Insight Lintas Mode (Cross-Mode Heuristics):** Mendeteksi otomatis saat pengguna memiliki $\ge 2$ deadline mendesak ($\le 7$ hari) dan pengeluaran non-esensial sudah $\ge 70\%$, lalu memberikan saran solutif (misal: ajakan ngerjain tugas di kos sambil seduh kopi hemat).
-- **Streaming Chat Drawer:** Obrolan interaktif real-time ditenagai **Google Gemini API** yang membaca data tugas dan kondisi budget pengguna secara kontekstual dengan tone santai dan suportif.
+- **Streaming Chat Drawer:** Obrolan interaktif real-time ditenagai **Google Gemini API** yang membaca data tugas, jadwal kuliah, dokumen materi PDF, dan kondisi budget pengguna secara kontekstual.
+- **Production Multi-Tier Fallback Chain:** Otomatis berganti model (`gemini-2.5-flash` $\rightarrow$ `gemini-2.0-flash` $\rightarrow$ `gemini-1.5-flash`) untuk menjamin AI 100% selalu online dan stabil di production.
 
 ---
 
-## 🔥 Fitur dan Upgrade Terbaru
+## 💳 Alokasi Penyimpanan Multi-Rekening & E-Wallet
+
+Mahasiswa dapat membagi dan mengelola alokasi saldo uang mereka ke berbagai rekening dan dompet digital dengan **Logo Asli Platform**:
+
+| Platform | Logo Resmi | Fitur & Integrasi |
+| :--- | :---: | :--- |
+| **GoPay** | 🟢 Official GoTo Blue/Green | Sumber dana transaksi & saldo jajan |
+| **Superbank** | 🟡 Official Dark & Neon Lime | Tabungan bunga tinggi & alokasi belanja |
+| **SeaBank** | 🟠 Official SeaBank Coral/Orange | Rekening tabungan utama & transfer gratis |
+| **DANA** | 🔵 Official DANA Blue | Pembayaran QRIS & tagihan kos |
+| **OVO** | 🟣 Official OVO Royal Purple | Transportasi & jajan online |
+| **ShopeePay** | 🔴 Official ShopeePay Orange | Belanja kebutuhan kuliah online |
+| **BCA, Mandiri, BRI, BNI** | 🏛️ Official Banking Emblems | Transfer uang saku orang tua & beasiswa |
+| **Uang Tunai (Cash)** | 💵 Mint Green Cash Badge | Uang fisik di dompet untuk warung/kantin |
+
+### ⚡ Keunggulan Fitur Akun:
+- ✏️ **Ubah Saldo Langsung (*Direct Balance Reconciliation*):** Sesuaikan nominal saldo riil kapan saja tanpa dicatat sebagai transaksi pengeluaran/pemasukan, menjaga grafik arus kas tetap bersih.
+- 🔄 **Pindah Saldo Antar-Akun (*Inter-Account Transfer*):** Pindahkan saldo (misal: top-up GoPay dari SeaBank) dengan *net cashflow* tetap 0.
+- 💰 **Total Net Worth Real-Time:** Monitoring total kekayaan aktif di semua platform dalam 1 layar.
+
+---
+
+## 🖥️ Always-Open Web Companion
+
+Dirancang khusus agar tab Felys dapat dibuka sepanjang hari di latar belakang tanpa memboroskan baterai laptop:
+
+1. 🍅 **Pomodoro Focus Timer dengan Dynamic Tab Title:** 
+   - Judul tab browser otomatis menampilkan countdown aktif (contoh: `[🍅 24:50] Tugas | Felys`).
+   - Melodic Web Audio Synth Chime ($C_5 \rightarrow E_5 \rightarrow G_5$) dengan *zero MP3 memory draw*.
+   - Dukungan Web Notification API untuk notifikasi desktop saat sesi selesai.
+2. 🪟 **Floating Picture-in-Picture (PiP) Mini Companion:**
+   - Mini window Felys mengambang di atas Microsoft Word, VS Code, Canva, atau PPT saat nugas.
+3. 📝 **Lecture Scratchpad & Sticky Notes:**
+   - Catatan coret-coret cepat dengan debounced 500ms auto-save ke IndexedDB.
+4. ⏳ **Live Class Agenda:**
+   - Status realtime kelas yang sedang berlangsung vs kelas berikutnya dengan countdown menit.
+5. 📖 **Split-Screen PDF Lecture Reader + Contextual AI:**
+   - Unggah slide PDF materi kuliah, teks diekstrak otomatis di sisi klien (`unpdf`), dan langsung ditanyakan ke Fio AI tanpa perlu copas manual.
+
+---
+
+## 🔥 Fitur dan Upgrade Tambahan
 
 | Fitur / Modul | Deskripsi & Manfaat Bagi Mahasiswa |
 | :--- | :--- |
@@ -65,7 +108,7 @@ Sebagai mahasiswa, dua beban terbesar dalam keseharian adalah **deadline tugas k
 | 📅 **Tagihan & Biaya Rutin Mahasiswa** | Kelola pengingat pembayaran uang kos bulanan, UKT/SPP semesteran, WiFi, dan langganan dengan tombol *1-Click Pay & Record*. |
 | 🛡️ **Proteksi AI & Rate Limiting** | Keamanan token Firebase Auth + sliding-window rate limiter (maksimal 40 request/24 jam per akun) untuk mencegah lonjakan kuota API. |
 | 📳 **Haptic Tactile & Undo Toast** | Getaran tactile pada perangkat mobile PWA, konfirmasi hapus data, serta **Tombol Undo (Batalkan)** 5 detik untuk memulihkan catatan yang tidak sengaja terhapus. |
-| 💬 **Empathetic Tone of Voice** | Sapaan adaptif waktu (*Pagi/Siang/Sore/Malam*) dan copywriting bebas *financial guilt* yang suportif bagi mahasiswa. |
+| 📱 **Progressive Web App (PWA)** | Install ke layar utama iPhone/Android dengan ikon kustom elegan dual-mode (*no AI slop*). |
 
 ---
 
@@ -87,25 +130,30 @@ $$U = (0.5 \times D) + (0.3 \times P) + (0.2 \times E)$$
 
 ```
 Felys/
+├── public/
+│   ├── logos/                  # Official Bank & E-Wallet SVG Vectors (GoPay, SeaBank, BCA, dll.)
+│   ├── icon.png & apple-icon   # High-resolution PWA App Badges
+│   └── manifest.webmanifest    # Progressive Web App Manifest
 ├── src/
 │   ├── app/                    # Next.js 15 App Router (Pages, API Routes, Layouts)
 │   │   ├── (auth)/             # Authentication Routes (/login, /register)
 │   │   ├── (dashboard)/        # Unified Dashboard, Academic, Finance, & Settings
-│   │   └── api/ai/chat/        # Streaming Route handler ke Google Gemini API + Rate Limiter
+│   │   └── api/ai/             # Streaming Chat & Breakdown API with Gemini Multi-Model Fallback
 │   ├── components/             # Reusable UI Components & Modals
-│   │   ├── academic/           # TaskCard, TaskFormModal, CourseModal
-│   │   ├── finance/            # NumpadQuickEntry, ReceiptScanModal, RecurringBillsModal, DonutExpenseChart
+│   │   ├── academic/           # TaskCard, CourseModal, PomodoroWidget, DDayCountdownBanner, PDFLectureReaderModal
+│   │   ├── finance/            # AccountOverviewGrid, AccountProviderLogo, AdjustBalanceModal, NumpadQuickEntry, ReceiptScanModal
 │   │   ├── ai/                 # AIDrawer, InsightCard
-│   │   ├── shared/             # NLPQuickBar, Navbar, Sidebar, BottomNav, ModeSwitcher
-│   │   └── ui/                 # ConfirmDialog, Skeleton, Base Radix Primitives & Custom Buttons
-│   ├── lib/                    # Firebase SDK (IndexedDB Client & Admin), NLP Parser, Haptics & Utilities
-│   ├── server/services/        # Domain Engine (Urgency, Budget, Insight Services)
-│   ├── stores/                 # Zustand State Stores (Data, Mode, AI, Auth)
+│   │   ├── shared/             # NLPQuickBar, Navbar, PiPCompanionModal, ScratchpadPanel, ModeSwitcher
+│   │   └── ui/                 # Base Radix Primitives, Modals, ConfirmDialog, Skeletons
+│   ├── lib/                    # Firebase Firestore Service, Notification Service, unpdf extractor, Haptics
+│   ├── server/services/        # Urgency, Budget, & Cross-Mode Insight Services
+│   ├── stores/                 # Zustand State Stores (Data, Pomodoro, AI, Auth, Mode)
 │   └── types/                  # TypeScript Data Models & Contracts
 ```
 
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI Primitives, Lucide React, Recharts, Sonner.
-- **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + `/users/{userId}/...`), Firebase Authentication, Firebase Admin SDK.
+- **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + `/users/{userId}/...`), Firebase Authentication.
+- **PDF & OCR:** `unpdf` client parser, `tesseract.js` Web Worker OCR.
 - **AI Engine:** Google Gemini API (`@ai-sdk/google` + Vercel AI SDK).
 - **Client State:** Zustand (dengan real-time Firestore `onSnapshot` listeners).
 
@@ -121,8 +169,8 @@ Felys/
 ### 2. Kloning & Instalasi Dependensi
 ```bash
 # Clone repository
-git clone https://github.com/your-username/felys.git
-cd felys
+git clone https://github.com/felichpehagasaginting-code/Felys.git
+cd Felys
 
 # Install paket dependensi
 npm install
@@ -143,11 +191,6 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
-
-# Firebase Admin Service Account
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_CLIENT_EMAIL=your_service_account_email
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
 ### 4. Menjalankan Server Development
@@ -165,8 +208,6 @@ npm run start
 ---
 
 ## 📚 Arsip Dokumentasi Proyek
-
-Spesifikasi teknis, rancangan UI/UX, dan panduan lengkap terdokumentasi dalam dokumen berikut:
 
 | Dokumen | Deskripsi Ringkas |
 | :--- | :--- |
