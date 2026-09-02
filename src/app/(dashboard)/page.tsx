@@ -2,7 +2,22 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Plus, CheckSquare, Receipt, Camera, CalendarClock, Users } from "lucide-react";
+import {
+  Sparkles,
+  ArrowRight,
+  Plus,
+  CheckSquare,
+  Receipt,
+  Camera,
+  CalendarClock,
+  Users,
+  Target,
+  Shield,
+  BookOpen,
+  TrendingUp,
+  Wallet,
+  Clock,
+} from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -14,9 +29,12 @@ import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
+import { SavingsGoalModal } from "@/components/finance/SavingsGoalModal";
+import { EmergencyFundModal } from "@/components/finance/EmergencyFundModal";
 import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
 import { DDayCountdownBanner } from "@/components/academic/DDayCountdownBanner";
 import { LiveClassStatusCard } from "@/components/academic/LiveClassStatusCard";
+import { AccountOverviewGrid } from "@/components/finance/AccountOverviewGrid";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -26,7 +44,14 @@ import { Task } from "@/types/academic";
 export default function DashboardPage() {
   const { activeMode } = useModeStore();
   const { user } = useAuthStore();
-  const { tasks, transactions, insights, getMonthlyBudgetSummary, isLoaded } = useDataStore();
+  const {
+    tasks,
+    courses,
+    transactions,
+    insights,
+    getMonthlyBudgetSummary,
+    getTotalNetWorth,
+  } = useDataStore();
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -34,6 +59,8 @@ export default function DashboardPage() {
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
+  const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
+  const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
 
   // Time-based greeting
   const getGreeting = () => {
@@ -49,15 +76,17 @@ export default function DashboardPage() {
   // Active top urgent tasks (sorted by urgencyScore desc)
   const activeTasks = tasks
     .filter((t) => t.status !== "done")
-    .sort((a, b) => b.urgencyScore - a.urgencyScore)
-    .slice(0, 4);
+    .sort((a, b) => b.urgencyScore - a.urgencyScore);
+
+  const completedTodayCount = tasks.filter((t) => t.status === "done").length;
 
   // Monthly budget summary
   const summary = getMonthlyBudgetSummary();
   const budgetConfig = getBudgetStatusConfig(summary.overallPercentage);
+  const totalNetWorth = getTotalNetWorth();
 
-  // Recent 4 transactions
-  const recentTransactions = transactions.slice(0, 4);
+  // Recent 5 transactions
+  const recentTransactions = transactions.slice(0, 5);
 
   const handleEditTask = (task: Task) => {
     setTaskToEdit(task);
@@ -70,40 +99,52 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Greeting & Status Overview */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      {/* 1. Welcoming Hero Banner (Apple Minimalist Aesthetics) */}
+      <section className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-surface to-background border border-border shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Felys Student Space</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">
             {getGreeting()}, {displayName}! ✨
           </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1">
+          <p className="text-xs sm:text-sm text-muted max-w-xl leading-relaxed">
             {activeMode === "academic"
-              ? `Kamu punya ${activeTasks.length} tugas aktif yang sedang berjalan.`
-              : `Sisa saldo aman kamu bulan ini: ${formatCurrencyIDR(summary.remaining)}.`}
+              ? `Kamu memiliki ${activeTasks.length} tugas aktif dan ${completedTodayCount} tugas tuntas. Fokus satu per satu, ya!`
+              : `Total aset bersih aktifmu ${formatCurrencyIDR(totalNetWorth)}. Jaga pengeluaran tetap terkontrol hari ini.`}
           </p>
         </div>
 
-        {/* Quick Mode Action Buttons */}
+        {/* Action Bar Pills */}
         <div className="flex items-center gap-2 flex-wrap">
           {activeMode === "academic" ? (
-            <Button
-              onClick={handleCreateTask}
-              variant="academic"
-              size="md"
-              className="rounded-2xl"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Tugas</span>
-            </Button>
+            <>
+              <Link href="/academic/calendar">
+                <Button variant="secondary" size="md" className="rounded-2xl">
+                  <Clock className="w-4 h-4 text-[#7C5CFA]" />
+                  <span>Kalender</span>
+                </Button>
+              </Link>
+              <Button
+                onClick={handleCreateTask}
+                variant="academic"
+                size="md"
+                className="rounded-2xl"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Tugas</span>
+              </Button>
+            </>
           ) : (
-            <div className="flex items-center gap-2">
+            <>
               <Button
                 onClick={() => setIsSplitBillOpen(true)}
                 variant="secondary"
                 size="md"
                 className="rounded-2xl"
-                title="Split Bill & Catatan Talangan"
+                title="Split Bill"
               >
                 <Users className="w-4 h-4 text-[#7C5CFA]" />
                 <span className="hidden sm:inline">Split Bill</span>
@@ -113,7 +154,7 @@ export default function DashboardPage() {
                 variant="secondary"
                 size="md"
                 className="rounded-2xl"
-                title="Pindai Struk / Bukti QRIS"
+                title="Scan Struk"
               >
                 <Camera className="w-4 h-4 text-[#1F8766]" />
                 <span className="hidden sm:inline">Scan Struk</span>
@@ -123,10 +164,20 @@ export default function DashboardPage() {
                 variant="secondary"
                 size="md"
                 className="rounded-2xl"
-                title="Tagihan & Biaya Rutin"
+                title="Biaya Rutin"
               >
                 <CalendarClock className="w-4 h-4 text-[#FF7A85]" />
-                <span className="hidden sm:inline">Biaya Rutin</span>
+                <span className="hidden sm:inline">Tagihan</span>
+              </Button>
+              <Button
+                onClick={() => setIsSavingsGoalOpen(true)}
+                variant="secondary"
+                size="md"
+                className="rounded-2xl"
+                title="Celengan Impian"
+              >
+                <Target className="w-4 h-4 text-[#B69CFF]" />
+                <span className="hidden sm:inline">Celengan</span>
               </Button>
               <Button
                 onClick={() => setIsFinanceModalOpen(true)}
@@ -137,196 +188,317 @@ export default function DashboardPage() {
                 <Plus className="w-4 h-4" />
                 <span>Catat Transaksi</span>
               </Button>
-            </div>
+            </>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* 2. Smart Natural Language Quick Input Bar */}
-      <NLPQuickBar />
+      {/* 2. Natural Language Quick Input Bar */}
+      <section>
+        <NLPQuickBar />
+      </section>
 
-      {/* 3. Active AI Insight Card (Cross-Mode or Recommendation) */}
+      {/* 3. AI Contextual Insight Card (if available) */}
       {insights.length > 0 && (
         <section>
           <InsightCard insight={insights[0]} />
         </section>
       )}
 
-      {/* D-Day Exam Countdown & Live Class Status */}
+      {/* ========================================================================= */}
+      {/* SECTION A: MODE AKADEMIK (FOCUSED & SPACIOUS) */}
+      {/* ========================================================================= */}
       {activeMode === "academic" && (
-        <div className="space-y-4">
-          <LiveClassStatusCard />
-          <DDayCountdownBanner />
-        </div>
-      )}
+        <div className="space-y-8 animate-in fade-in-50 duration-300">
+          {/* Top Status Grid: Live Class & D-Day Banner */}
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LiveClassStatusCard />
+            <DDayCountdownBanner />
+          </section>
 
-      {/* 3. Main Dual-Widget Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Academic Top Urgent Tasks */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[#EDE5FF] dark:bg-[#383442] flex items-center justify-center text-[#7C5CFA]">
-                <CheckSquare className="w-3.5 h-3.5" />
-              </div>
-              <h2 className="text-base font-bold text-foreground">
-                Tugas Prioritas Utama
-              </h2>
-            </div>
-            <Link
-              href="/academic"
-              className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1"
-            >
-              <span>Lihat Semua</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {activeTasks.length > 0 ? (
-            <div className="space-y-3">
-              {activeTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 rounded-3xl bg-surface border border-border text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center mx-auto">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h4 className="text-sm font-bold text-foreground">Semua Tugas Beres!</h4>
-              <p className="text-xs text-muted max-w-sm mx-auto">
-                Tidak ada deadline mendesak saat ini. Istirahat sejenak atau cicil materi berikutnya.
-              </p>
-              <Button
-                onClick={handleCreateTask}
-                variant="academic"
-                size="sm"
-                className="mt-2"
-              >
-                + Tambah Tugas Baru
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Finance Budget & Recent Spending */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-[#E0FBF2] dark:bg-[#213831] flex items-center justify-center text-[#1F8766]">
-                <Receipt className="w-3.5 h-3.5" />
-              </div>
-              <h2 className="text-base font-bold text-foreground">
-                Ringkasan Budget Bulan Ini
-              </h2>
-            </div>
-            <Link
-              href="/finance"
-              className="text-xs font-bold text-[#1F8766] hover:underline flex items-center gap-1"
-            >
-              <span>Detail</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {/* Budget Overview Card */}
-          <div className="p-5 rounded-3xl bg-surface border border-border space-y-4 shadow-soft">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[11px] text-muted font-bold uppercase tracking-wider block">
-                  {summary.totalLimit > 0 ? "Sisa Anggaran Terencana" : "Sisa Saldo Dompet"}
-                </span>
-                <span
-                  className={`text-2xl sm:text-3xl font-extrabold tracking-tight block ${
-                    summary.isDeficit ? "text-[#D93D4A]" : "text-foreground"
-                  }`}
-                >
-                  {summary.remaining < 0 ? "-" : ""}
-                  {formatCurrencyIDR(Math.abs(summary.remaining))}
-                </span>
-                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted">
-                  <span>Masuk: <b className="text-[#1F8766]">+{formatCurrencyIDR(summary.totalIncome)}</b></span>
-                  <span>•</span>
-                  <span>Keluar: <b className="text-[#D93D4A]">-{formatCurrencyIDR(summary.totalSpent)}</b></span>
+          {/* Main Tasks Board */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-2xl bg-[#EDE5FF] dark:bg-[#383442] flex items-center justify-center text-[#7C5CFA]">
+                  <CheckSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">
+                    Daftar Tugas Prioritas
+                  </h2>
+                  <p className="text-xs text-muted">
+                    Diurutkan otomatis oleh AI berdasarkan deadline, bobot, dan estimasi waktu.
+                  </p>
                 </div>
               </div>
 
-              <div className="text-right">
-                <span
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-block ${
-                    summary.isDeficit
-                      ? "bg-[#FFE8EA] text-[#D93D4A]"
-                      : `${budgetConfig.badgeBg} ${budgetConfig.textColor}`
-                  }`}
-                >
-                  {summary.isDeficit ? "Defisit" : `${summary.overallPercentage}% Terpakai`}
-                </span>
-                {summary.totalLimit > 0 && summary.totalIncome > 0 && (
-                  <span className="text-[10px] text-muted block mt-1">
-                    Saldo Kas: {formatCurrencyIDR(summary.netSavings)}
-                  </span>
-                )}
-              </div>
+              <Link
+                href="/academic"
+                className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1 bg-[#EDE5FF]/60 dark:bg-[#383442]/60 px-3 py-1.5 rounded-full transition-all"
+              >
+                <span>Lihat Semua ({tasks.length})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
-            {/* Total Budget Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="w-full h-2.5 bg-[#EDEAF2] dark:bg-[#383442] rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${
-                    summary.isDeficit ? "bg-[#FF7A85]" : budgetConfig.barColor
-                  } transition-all duration-500 rounded-full`}
-                  style={{ width: `${Math.min(100, summary.overallPercentage)}%` }}
-                />
+            {activeTasks.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activeTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
+                ))}
               </div>
-              <div className="flex justify-between text-[11px] text-muted">
-                <span>Terpakai: {formatCurrencyIDR(summary.totalSpent)}</span>
-                <span>
-                  Batas: {formatCurrencyIDR(summary.effectiveBudgetBase || summary.totalSpent)}
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Chart */}
-            <div className="pt-2 border-t border-border/60">
-              <h4 className="text-xs font-bold text-foreground mb-1 text-center">
-                Distribusi Pengeluaran
-              </h4>
-              <DonutExpenseChart budgets={summary.categories} />
-            </div>
-
-            {/* Quick Numpad Button */}
-            <Button
-              onClick={() => setIsFinanceModalOpen(true)}
-              variant="finance"
-              size="sm"
-              className="w-full rounded-xl"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Catat Pengeluaran Cepat</span>
-            </Button>
-          </div>
-
-          {/* Daily Allowance & Burn Rate Forecast */}
-          <DailyAllowanceCard />
-
-          {/* Recent Transactions */}
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold text-muted uppercase tracking-wider px-1">
-              Transaksi Terkini
-            </h3>
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((trx) => (
-                <TransactionCard key={trx.id} transaction={trx} />
-              ))
             ) : (
-              <p className="text-xs text-muted italic p-3 text-center">Belum ada transaksi</p>
+              <div className="p-12 rounded-[32px] bg-surface border border-border text-center space-y-3 shadow-soft">
+                <div className="w-14 h-14 rounded-3xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center mx-auto">
+                  <Sparkles className="w-7 h-7" />
+                </div>
+                <h4 className="text-base font-bold text-foreground">Semua Tugas Beres! 🎉</h4>
+                <p className="text-xs text-muted max-w-md mx-auto leading-relaxed">
+                  Tidak ada deadline mendesak saat ini. Waktu yang tepat untuk istirahat sejenak atau membaca materi kuliah berikutnya.
+                </p>
+                <Button
+                  onClick={handleCreateTask}
+                  variant="academic"
+                  size="md"
+                  className="rounded-2xl mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Tambah Tugas Baru</span>
+                </Button>
+              </div>
             )}
-          </div>
-        </div>
-      </div>
+          </section>
 
-      {/* Modals */}
+          {/* Mata Kuliah Quick Badges */}
+          {courses.length > 0 && (
+            <section className="p-6 rounded-[32px] bg-surface border border-border shadow-soft space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#7C5CFA]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+                    Mata Kuliah Aktif Semester Ini
+                  </h3>
+                </div>
+                <Link
+                  href="/academic/courses"
+                  className="text-xs font-bold text-[#7C5CFA] hover:underline"
+                >
+                  Kelola Mata Kuliah
+                </Link>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {courses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="px-3.5 py-1.5 rounded-2xl border text-xs font-bold flex items-center gap-2 shadow-xs"
+                    style={{
+                      backgroundColor: `${course.color}15`,
+                      borderColor: `${course.color}40`,
+                      color: "inherit",
+                    }}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: course.color }}
+                    />
+                    <span>{course.name}</span>
+                    <span className="text-[10px] text-muted font-normal">
+                      ({course.sks || 3} SKS)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION B: MODE KEUANGAN (SPACIOUS & STRUCTURED) */}
+      {/* ========================================================================= */}
+      {activeMode === "finance" && (
+        <div className="space-y-8 animate-in fade-in-50 duration-300">
+          {/* 1. Multi-Account Grid (Dompet & E-Wallet) */}
+          <section>
+            <AccountOverviewGrid />
+          </section>
+
+          {/* 2. Dual Analytics Columns: Budget Status vs Daily Allowance */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Monthly Budget & Expense Distribution */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="p-6 sm:p-7 rounded-[32px] bg-surface border border-border space-y-5 shadow-soft">
+                <div className="flex items-center justify-between pb-3 border-b border-border/80">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
+                      <Receipt className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        Status Anggaran Bulanan
+                      </h3>
+                      <p className="text-[11px] text-muted">
+                        Pantau limit pengeluaran agar tidak overbudget di akhir bulan.
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                      summary.isDeficit
+                        ? "bg-[#FFE8EA] text-[#D93D4A]"
+                        : `${budgetConfig.badgeBg} ${budgetConfig.textColor}`
+                    }`}
+                  >
+                    {summary.isDeficit ? "Defisit" : `${summary.overallPercentage}% Terpakai`}
+                  </span>
+                </div>
+
+                {/* Numbers Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                    <span className="text-[11px] text-muted font-semibold block mb-0.5">
+                      Sisa Budget
+                    </span>
+                    <span
+                      className={`text-xl font-extrabold tracking-tight ${
+                        summary.isDeficit ? "text-[#D93D4A]" : "text-[#1F8766]"
+                      }`}
+                    >
+                      {formatCurrencyIDR(Math.abs(summary.remaining))}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                    <span className="text-[11px] text-muted font-semibold block mb-0.5">
+                      Pemasukan Kas
+                    </span>
+                    <span className="text-xl font-extrabold tracking-tight text-[#1F8766]">
+                      +{formatCurrencyIDR(summary.totalIncome)}
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                    <span className="text-[11px] text-muted font-semibold block mb-0.5">
+                      Total Pengeluaran
+                    </span>
+                    <span className="text-xl font-extrabold tracking-tight text-[#D93D4A]">
+                      -{formatCurrencyIDR(summary.totalSpent)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress Gauge */}
+                <div className="space-y-2">
+                  <div className="w-full h-3 bg-[#EDEAF2] dark:bg-[#383442] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${
+                        summary.isDeficit ? "bg-[#FF7A85]" : budgetConfig.barColor
+                      } transition-all duration-500 rounded-full`}
+                      style={{ width: `${Math.min(100, summary.overallPercentage)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted font-medium">
+                    <span>Terpakai: {formatCurrencyIDR(summary.totalSpent)}</span>
+                    <span>Batas: {formatCurrencyIDR(summary.effectiveBudgetBase || summary.totalSpent)}</span>
+                  </div>
+                </div>
+
+                {/* Distribution Chart */}
+                <div className="pt-4 border-t border-border/60">
+                  <h4 className="text-xs font-bold text-foreground mb-2 text-center">
+                    Distribusi Kategori Pengeluaran
+                  </h4>
+                  <DonutExpenseChart budgets={summary.categories} />
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Daily Allowance & Quick Shortucts */}
+            <div className="lg:col-span-5 space-y-6">
+              <DailyAllowanceCard />
+
+              {/* Quick Feature Pocket Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setIsSavingsGoalOpen(true)}
+                  className="p-4 rounded-3xl bg-surface border border-border hover:shadow-soft transition-all text-left space-y-1.5 group"
+                >
+                  <div className="w-8 h-8 rounded-2xl bg-[#EDE5FF] text-[#7C5CFA] flex items-center justify-center transition-transform group-hover:scale-110">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-foreground block">
+                    Celengan Impian
+                  </span>
+                  <p className="text-[10px] text-muted leading-tight">
+                    Tabungan target laptop & liburan semester
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setIsEmergencyFundOpen(true)}
+                  className="p-4 rounded-3xl bg-surface border border-border hover:shadow-soft transition-all text-left space-y-1.5 group"
+                >
+                  <div className="w-8 h-8 rounded-2xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center transition-transform group-hover:scale-110">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-foreground block">
+                    Dana Darurat
+                  </span>
+                  <p className="text-[10px] text-muted leading-tight">
+                    Cadangan kas tak terduga kosan
+                  </p>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. Recent Transactions Feed */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
+                  <Receipt className="w-3.5 h-3.5" />
+                </div>
+                <h3 className="text-base font-bold text-foreground">
+                  Transaksi Keuangan Terkini
+                </h3>
+              </div>
+              <Link
+                href="/finance"
+                className="text-xs font-bold text-[#1F8766] hover:underline flex items-center gap-1"
+              >
+                <span>Buka Riwayat Lengkap ({transactions.length})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {recentTransactions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recentTransactions.map((trx) => (
+                  <TransactionCard key={trx.id} transaction={trx} />
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 rounded-[32px] bg-surface border border-border text-center space-y-2">
+                <p className="text-xs text-muted italic">Belum ada transaksi yang dicatat.</p>
+                <Button
+                  onClick={() => setIsFinanceModalOpen(true)}
+                  variant="finance"
+                  size="sm"
+                  className="rounded-2xl mt-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Catat Transaksi Pertama</span>
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* Global Modals (Zero Feature Reduction) */}
       <TaskFormModal
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
@@ -347,6 +519,14 @@ export default function DashboardPage() {
       <SplitBillModal
         isOpen={isSplitBillOpen}
         onClose={() => setIsSplitBillOpen(false)}
+      />
+      <SavingsGoalModal
+        isOpen={isSavingsGoalOpen}
+        onClose={() => setIsSavingsGoalOpen(false)}
+      />
+      <EmergencyFundModal
+        isOpen={isEmergencyFundOpen}
+        onClose={() => setIsEmergencyFundOpen(false)}
       />
     </div>
   );
