@@ -6,6 +6,7 @@ import { Navbar } from "@/components/shared/Navbar";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { AIDrawer } from "@/components/ai/AIDrawer";
+import { DynamicIsland } from "@/components/shared/DynamicIsland";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
 import { useModeStore } from "@/stores/use-mode-store";
@@ -91,6 +92,9 @@ export default function DashboardLayout({
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />
+
+      {/* Dynamic Island Apple Simulation */}
+      <DynamicIsland />
 
       {/* Always-Open Companion Tools */}
       <PomodoroWidget />
