@@ -1,6 +1,32 @@
 export type TransactionType = "expense" | "income";
 export type BudgetStatus = "safe" | "attention" | "warning" | "overbudget";
 
+export type AccountProvider =
+  | "gopay"
+  | "superbank"
+  | "seabank"
+  | "dana"
+  | "ovo"
+  | "shopeepay"
+  | "bca"
+  | "mandiri"
+  | "bri"
+  | "bni"
+  | "cash"
+  | "custom";
+
+export interface FinancialAccount {
+  id: string;
+  name: string; // e.g. "GoPay Utama", "SeaBank Tabungan", "Uang Saku Dompet"
+  provider: AccountProvider;
+  accountNumber?: string; // e.g. "0823... / 1234"
+  currentBalance: number;
+  color: string;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -20,6 +46,8 @@ export interface Transaction {
   categoryName?: string;
   categoryIcon?: string;
   categoryColor?: string;
+  accountId?: string; // ID of the FinancialAccount source/destination
+  accountName?: string;
   note?: string | null;
   date: string; // ISO string
   createdAt: string;
@@ -104,5 +132,3 @@ export interface SavingsGoal {
   isCompleted: boolean;
   createdAt: string;
 }
-
-

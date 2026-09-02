@@ -13,6 +13,7 @@ import { SavingsGoalModal } from "@/components/finance/SavingsGoalModal";
 import { EmergencyFundModal } from "@/components/finance/EmergencyFundModal";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
 import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
+import { AccountOverviewGrid } from "@/components/finance/AccountOverviewGrid";
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
 import { Target, Shield } from "lucide-react";
@@ -132,6 +133,9 @@ export default function FinanceTransactionsPage() {
 
       {/* NLP Quick Bar */}
       <NLPQuickBar />
+
+      {/* Multi-Account & E-Wallet Allocation Grid */}
+      <AccountOverviewGrid />
 
       {/* 2. Top Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

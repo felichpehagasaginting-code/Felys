@@ -5,6 +5,7 @@ import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
 import { TransactionType, Category } from "@/types/finance";
+import { AccountProviderLogo } from "./AccountProviderLogo";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
@@ -26,6 +27,7 @@ import {
   Store,
   Gift,
   TrendingUp,
+  Shirt,
   Delete,
   Check,
 } from "lucide-react";
@@ -53,6 +55,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Store,
   Gift,
   TrendingUp,
+  Shirt,
 };
 
 const STATIC_DEFAULT_EXPENSES: Category[] = DEFAULT_EXPENSE_CATEGORIES.map((c, i) => ({
@@ -66,13 +69,21 @@ const STATIC_DEFAULT_INCOMES: Category[] = DEFAULT_INCOME_CATEGORIES.map((c, i) 
 }));
 
 export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
-  const { categories, addTransaction } = useDataStore();
+  const { categories, addTransaction, accounts } = useDataStore();
 
   const [type, setType] = useState<TransactionType>("expense");
   const [amountStr, setAmountStr] = useState("0");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (accounts.length > 0 && !selectedAccountId) {
+      const defaultAcc = accounts.find((a) => a.isDefault) || accounts[0];
+      setSelectedAccountId(defaultAcc.id);
+    }
+  }, [accounts, selectedAccountId]);
 
   // Filter categories by type (expense vs income)
   const currentCategoryList: Category[] = React.useMemo(() => {
@@ -85,24 +96,26 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
     }
   }, [categories, type]);
 
-  // Auto-select first category on type toggle or modal open
+  // Auto-select first category when modal opens or type changes
   useEffect(() => {
-    if (!isOpen) return;
     if (currentCategoryList.length > 0) {
-      const existing = currentCategoryList.find((c) => c.name === selectedCategory?.name);
-      setSelectedCategory(existing || currentCategoryList[0]);
+      setSelectedCategory(currentCategoryList[0]);
     }
-  }, [type, isOpen, categories.length]);
-
-  if (!isOpen) return null;
+  }, [type, currentCategoryList]);
 
   const numAmount = parseInt(amountStr, 10) || 0;
 
-  const handleNumpadPress = (digit: string) => {
+  const handleNumpadPress = (val: string) => {
     if (amountStr === "0") {
-      setAmountStr(digit);
-    } else if (amountStr.length < 9) {
-      setAmountStr(amountStr + digit);
+      setAmountStr(val);
+    } else if (amountStr.length < 10) {
+      setAmountStr(amountStr + val);
+    }
+  };
+
+  const handleQuickAddZeroes = (zeroes: string) => {
+    if (amountStr !== "0" && amountStr.length + zeroes.length <= 11) {
+      setAmountStr(amountStr + zeroes);
     }
   };
 
@@ -114,18 +127,13 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
     }
   };
 
-  const handleQuickAddZeroes = (zeros: string) => {
-    if (amountStr !== "0" && amountStr.length + zeros.length <= 9) {
-      setAmountStr(amountStr + zeros);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (numAmount <= 0 || !selectedCategory || isSubmitting) return;
+    if (numAmount <= 0 || !selectedCategory) return;
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
+      const selectedAcc = accounts.find((a) => a.id === selectedAccountId);
       await addTransaction({
         type,
         amount: numAmount,
@@ -133,6 +141,8 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
         categoryName: selectedCategory.name,
         categoryIcon: selectedCategory.icon,
         categoryColor: selectedCategory.color,
+        accountId: selectedAccountId || undefined,
+        accountName: selectedAcc?.name,
         note: note.trim() || null,
         date: new Date().toISOString(),
       });
@@ -151,8 +161,8 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Catat Keuangan Cepat"
-        description="Input kilat dengan numpad dan pilih kategori 1-tap."
+        title="Catat Keuangan Cepat 💸"
+        description="Input kilat dengan numpad, pilih kategori, dan alokasikan ke dompet/rekening."
         className="max-w-md"
       >
         <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -197,7 +207,43 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             </span>
           </div>
 
-          {/* 1-Tap Category Grid (Dynamic based on Expense/Income) */}
+          {/* Account Source Selector (GoPay, SeaBank, Cash, etc.) */}
+          {accounts.length > 0 && (
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1">
+                {type === "expense" ? "Sumber Dana / Akun:" : "Disimpan ke Akun:"}
+              </label>
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {accounts.map((acc) => {
+                  const isSelected = selectedAccountId === acc.id;
+                  return (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      onClick={() => setSelectedAccountId(acc.id)}
+                      className={`p-1.5 px-2.5 rounded-xl border flex items-center gap-1.5 transition-all shrink-0 text-left ${
+                        isSelected
+                          ? "bg-surface border-[#7C5CFA] ring-2 ring-[#7C5CFA]/40 shadow-xs"
+                          : "bg-[#FAF9FC] dark:bg-[#2F2B3A] border-border text-muted hover:text-foreground"
+                      }`}
+                    >
+                      <AccountProviderLogo provider={acc.provider} size="sm" />
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold text-foreground block truncate max-w-[100px]">
+                          {acc.name}
+                        </span>
+                        <span className="text-[9px] text-muted font-mono block">
+                          {formatCurrencyIDR(acc.currentBalance)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 1-Tap Category Grid */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold text-foreground">
@@ -208,7 +254,7 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
               </span>
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5 max-h-40 overflow-y-auto p-0.5">
+            <div className="grid grid-cols-4 gap-1.5 max-h-36 overflow-y-auto p-0.5">
               {currentCategoryList.map((cat) => {
                 const IconComponent = ICON_MAP[cat.icon] || Sparkles;
                 const isSelected = selectedCategory?.name === cat.name;

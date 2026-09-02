@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./client";
 import { Course, Task, DDayEvent } from "@/types/academic";
-import { Category, Transaction, SavingsGoal, RecurringBill, FriendDebt } from "@/types/finance";
+import { Category, Transaction, SavingsGoal, RecurringBill, FriendDebt, FinancialAccount } from "@/types/finance";
 import { UserProfile } from "@/types/user";
 
 /**
@@ -459,6 +459,100 @@ export class FirestoreService {
 
   public static async deleteDebt(userId: string, debtId: string): Promise<void> {
     const ref = doc(db, "users", userId, "debts", debtId);
+    await deleteDoc(ref);
+  }
+
+  // --- FINANCIAL ACCOUNTS (DOMPET & REKENING MULTI-PLATFORM) ---
+  public static readonly DEFAULT_ACCOUNTS: Omit<FinancialAccount, "id">[] = [
+    {
+      name: "Uang Tunai (Dompet)",
+      provider: "cash",
+      currentBalance: 150000,
+      color: "#10B981",
+      isDefault: true,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      name: "SeaBank Utama",
+      provider: "seabank",
+      accountNumber: "9012",
+      currentBalance: 1250000,
+      color: "#FF5722",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      name: "GoPay Jajan",
+      provider: "gopay",
+      accountNumber: "0823",
+      currentBalance: 85000,
+      color: "#00AED6",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  public static subscribeAccounts(userId: string, callback: (accounts: FinancialAccount[]) => void) {
+    const ref = collection(db, "users", userId, "accounts");
+    return onSnapshot(
+      ref,
+      (snapshot) => {
+        const list: FinancialAccount[] = snapshot.docs.map((d) => ({
+          ...(d.data() as Omit<FinancialAccount, "id">),
+          id: d.id,
+        }));
+        callback(list);
+      },
+      (error) => console.warn("Accounts listener error:", error)
+    );
+  }
+
+  public static async seedDefaultAccountsIfEmpty(userId: string): Promise<void> {
+    try {
+      const accRef = collection(db, "users", userId, "accounts");
+      const snap = await getDocs(accRef);
+
+      if (snap.empty) {
+        for (const acc of FirestoreService.DEFAULT_ACCOUNTS) {
+          await addDoc(accRef, cleanFirestoreData(acc));
+        }
+      }
+    } catch (e) {
+      console.warn("Error seeding default accounts to Firestore:", e);
+    }
+  }
+
+  public static async addAccount(userId: string, account: Omit<FinancialAccount, "id">, customId?: string): Promise<string> {
+    const docId = customId || doc(collection(db, "users", userId, "accounts")).id;
+    const ref = doc(db, "users", userId, "accounts", docId);
+    const payload = cleanFirestoreData({
+      ...account,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await setDoc(ref, payload);
+    return docId;
+  }
+
+  public static async updateAccount(userId: string, accountId: string, updates: Partial<FinancialAccount>): Promise<void> {
+    const ref = doc(db, "users", userId, "accounts", accountId);
+    const payload = cleanFirestoreData({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+    await updateDoc(ref, payload);
+  }
+
+  public static async adjustAccountBalance(userId: string, accountId: string, newBalance: number): Promise<void> {
+    const ref = doc(db, "users", userId, "accounts", accountId);
+    await updateDoc(ref, {
+      currentBalance: newBalance,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  public static async deleteAccount(userId: string, accountId: string): Promise<void> {
+    const ref = doc(db, "users", userId, "accounts", accountId);
     await deleteDoc(ref);
   }
 }

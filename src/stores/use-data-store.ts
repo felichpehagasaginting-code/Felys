@@ -2,7 +2,18 @@
 
 import { create } from "zustand";
 import { Course, Task, SubTask, PriorityLevel, TaskStatus, DDayEvent } from "@/types/academic";
-import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt, DailyAllowanceSummary, SavingsGoal } from "@/types/finance";
+import {
+  Category,
+  Transaction,
+  MonthlyBudgetSummary,
+  Budget,
+  RecurringBill,
+  FriendDebt,
+  DailyAllowanceSummary,
+  SavingsGoal,
+  FinancialAccount,
+  AccountProvider,
+} from "@/types/finance";
 import { AIInsight } from "@/types/ai";
 import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
@@ -20,6 +31,7 @@ interface DataState {
   courses: Course[];
   tasks: Task[];
   ddayEvent: DDayEvent;
+  accounts: FinancialAccount[];
   categories: Category[];
   transactions: Transaction[];
   budgetLimits: { categoryId: string; monthlyLimit: number }[];
@@ -47,6 +59,14 @@ interface DataState {
   addSubtask: (taskId: string, title: string) => Promise<void>;
 
   updateDDayEvent: (dday: { title: string; targetDate: string }) => Promise<void>;
+
+  // Multi-Account & Wallet Actions
+  addAccount: (account: Omit<FinancialAccount, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  updateAccount: (id: string, updates: Partial<FinancialAccount>) => Promise<void>;
+  adjustAccountBalance: (id: string, newBalance: number) => Promise<void>;
+  transferBetweenAccounts: (fromId: string, toId: string, amount: number, note?: string) => Promise<void>;
+  deleteAccount: (id: string) => Promise<void>;
+  getTotalNetWorth: () => number;
 
   // Finance Actions
   addCategory: (category: Omit<Category, "id">) => Promise<void>;
@@ -85,6 +105,57 @@ export const useDataStore = create<DataState>((set, get) => ({
     title: "Ujian Tengah Semester (UTS)",
     targetDate: "2026-09-21",
   },
+  accounts: [
+    {
+      id: "acc_cash",
+      name: "Uang Tunai (Dompet)",
+      provider: "cash",
+      currentBalance: 150000,
+      color: "#10B981",
+      isDefault: true,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "acc_seabank",
+      name: "SeaBank Utama",
+      provider: "seabank",
+      accountNumber: "9012",
+      currentBalance: 1250000,
+      color: "#FF5722",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "acc_gopay",
+      name: "GoPay Jajan",
+      provider: "gopay",
+      accountNumber: "0823",
+      currentBalance: 85000,
+      color: "#00AED6",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "acc_superbank",
+      name: "Superbank Belanja",
+      provider: "superbank",
+      accountNumber: "5512",
+      currentBalance: 320000,
+      color: "#121212",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "acc_dana",
+      name: "DANA Bayar Tagihan",
+      provider: "dana",
+      accountNumber: "0812",
+      currentBalance: 65000,
+      color: "#118EEA",
+      isDefault: false,
+      createdAt: new Date().toISOString(),
+    },
+  ],
   categories: [],
   transactions: [],
   budgetLimits: [],
@@ -184,8 +255,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   // Real-time Firestore synchronizer
   initFirestoreSync: (userId: string) => {
-    // 1. Ensure categories are seeded in Firestore if brand new user
+    // 1. Ensure categories and default accounts are seeded in Firestore if brand new user
     FirestoreService.seedDefaultCategoriesIfEmpty(userId);
+    FirestoreService.seedDefaultAccountsIfEmpty(userId);
 
     // 2. Subscribe to user profile (D-Day event, emergency fund)
     const unsubProfile = FirestoreService.subscribeUserProfile(userId, (data) => {
@@ -210,6 +282,12 @@ export const useDataStore = create<DataState>((set, get) => ({
     const unsubTasks = FirestoreService.subscribeTasks(userId, (tasks) => {
       set({ tasks });
       get().refreshInsights();
+    });
+
+    const unsubAccounts = FirestoreService.subscribeAccounts(userId, (accounts) => {
+      if (accounts.length > 0) {
+        set({ accounts });
+      }
     });
 
     const unsubCategories = FirestoreService.subscribeCategories(userId, (categories) => {
@@ -249,6 +327,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       unsubProfile();
       unsubCourses();
       unsubTasks();
+      unsubAccounts();
       unsubCategories();
       unsubTransactions();
       unsubBudgets();
@@ -462,6 +541,109 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
+  // Multi-Account & Wallet Actions
+  addAccount: async (accountData) => {
+    const userId = getCurrentUserId();
+    const accId = `acc_${Date.now()}`;
+    const newAccount: FinancialAccount = {
+      ...accountData,
+      id: accId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    set((state) => ({ accounts: [...state.accounts, newAccount] }));
+
+    if (userId) {
+      try {
+        await FirestoreService.addAccount(userId, newAccount, accId);
+      } catch (err) {
+        console.warn("Firestore addAccount warning:", err);
+      }
+    }
+  },
+
+  updateAccount: async (id, updates) => {
+    const userId = getCurrentUserId();
+    set((state) => ({
+      accounts: state.accounts.map((a) =>
+        a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a
+      ),
+    }));
+
+    if (userId) {
+      try {
+        await FirestoreService.updateAccount(userId, id, updates);
+      } catch (err) {
+        console.warn("Firestore updateAccount warning:", err);
+      }
+    }
+  },
+
+  adjustAccountBalance: async (id, newBalance) => {
+    const userId = getCurrentUserId();
+    set((state) => ({
+      accounts: state.accounts.map((a) =>
+        a.id === id ? { ...a, currentBalance: newBalance, updatedAt: new Date().toISOString() } : a
+      ),
+    }));
+
+    if (userId) {
+      try {
+        await FirestoreService.adjustAccountBalance(userId, id, newBalance);
+      } catch (err) {
+        console.warn("Firestore adjustAccountBalance warning:", err);
+      }
+    }
+  },
+
+  transferBetweenAccounts: async (fromId, toId, amount, note) => {
+    const userId = getCurrentUserId();
+    const fromAcc = get().accounts.find((a) => a.id === fromId);
+    const toAcc = get().accounts.find((a) => a.id === toId);
+    if (!fromAcc || !toAcc || amount <= 0) return;
+
+    const newFromBal = Math.max(0, fromAcc.currentBalance - amount);
+    const newToBal = toAcc.currentBalance + amount;
+
+    set((state) => ({
+      accounts: state.accounts.map((a) => {
+        if (a.id === fromId) return { ...a, currentBalance: newFromBal, updatedAt: new Date().toISOString() };
+        if (a.id === toId) return { ...a, currentBalance: newToBal, updatedAt: new Date().toISOString() };
+        return a;
+      }),
+    }));
+
+    if (userId) {
+      try {
+        await FirestoreService.adjustAccountBalance(userId, fromId, newFromBal);
+        await FirestoreService.adjustAccountBalance(userId, toId, newToBal);
+      } catch (err) {
+        console.warn("Firestore transferBetweenAccounts warning:", err);
+      }
+    }
+  },
+
+  deleteAccount: async (id) => {
+    const userId = getCurrentUserId();
+    set((state) => ({
+      accounts: state.accounts.filter((a) => a.id !== id),
+    }));
+
+    if (userId) {
+      try {
+        await FirestoreService.deleteAccount(userId, id);
+      } catch (err) {
+        console.warn("Firestore deleteAccount warning:", err);
+      }
+    }
+  },
+
+  getTotalNetWorth: () => {
+    const accountsTotal = get().accounts.reduce((sum, a) => sum + (Number(a.currentBalance) || 0), 0);
+    return accountsTotal + (Number(get().emergencyFund) || 0);
+  },
+
   // Finance Actions
   addCategory: async (categoryData) => {
     const userId = getCurrentUserId();
@@ -490,6 +672,22 @@ export const useDataStore = create<DataState>((set, get) => ({
       id: trxId,
       createdAt: new Date().toISOString(),
     };
+
+    // Auto-update account balance if accountId is attached
+    if (trxData.accountId) {
+      const targetAcc = get().accounts.find((a) => a.id === trxData.accountId);
+      if (targetAcc) {
+        const delta = trxData.type === "income" ? trxData.amount : -trxData.amount;
+        const newBal = Math.max(0, targetAcc.currentBalance + delta);
+        set((state) => ({
+          accounts: state.accounts.map((a) => (a.id === trxData.accountId ? { ...a, currentBalance: newBal } : a)),
+        }));
+
+        if (userId) {
+          FirestoreService.adjustAccountBalance(userId, trxData.accountId, newBal);
+        }
+      }
+    }
 
     set((state) => ({
       transactions: [newTrx, ...state.transactions],
@@ -707,6 +905,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     const goal = get().savingsGoals.find((g) => g.id === id);
     if (!goal) return;
 
+    // Record expense transaction (Alokasi Tabungan)
     await get().addTransaction({
       type: "expense",
       amount,
