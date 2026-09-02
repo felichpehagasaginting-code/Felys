@@ -153,7 +153,24 @@ export const useDataStore = create<DataState>((set, get) => ({
     // 1. Ensure categories are seeded in Firestore if brand new user
     FirestoreService.seedDefaultCategoriesIfEmpty(userId);
 
-    // 2. Subscribe to user profile (D-Day event, emergency fund)
+    // 2. Automatically sync/migrate any existing local offline data (e.g. Superbank, tasks, courses) to Cloud Firestore
+    const currentLocalAccounts = get().accounts;
+    const currentLocalCourses = get().courses;
+    const currentLocalTasks = get().tasks;
+    const currentLocalTransactions = get().transactions;
+    const currentLocalDDay = get().ddayEvent;
+    const currentEmergency = get().emergencyFund;
+
+    FirestoreService.syncLocalDataToFirestore(userId, {
+      accounts: currentLocalAccounts,
+      courses: currentLocalCourses,
+      tasks: currentLocalTasks,
+      transactions: currentLocalTransactions,
+      ddayEvent: currentLocalDDay,
+      emergencyFund: currentEmergency,
+    });
+
+    // 3. Subscribe to user profile (D-Day event, emergency fund)
     const unsubProfile = FirestoreService.subscribeUserProfile(userId, (data) => {
       if (data.ddayEvent) {
         set({ ddayEvent: data.ddayEvent });

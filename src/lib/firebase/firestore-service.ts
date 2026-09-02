@@ -162,6 +162,74 @@ export class FirestoreService {
     }
   }
 
+  /**
+   * Automatically migrate and push any local offline data (e.g. Superbank, tasks, courses) to Firestore on login
+   */
+  public static async syncLocalDataToFirestore(
+    userId: string,
+    localData: {
+      accounts?: FinancialAccount[];
+      courses?: Course[];
+      tasks?: Task[];
+      transactions?: Transaction[];
+      ddayEvent?: DDayEvent;
+      savingsGoals?: SavingsGoal[];
+      recurringBills?: RecurringBill[];
+      debts?: FriendDebt[];
+      emergencyFund?: number;
+    }
+  ): Promise<void> {
+    try {
+      // 1. Sync accounts (e.g. Superbank, SeaBank, GoPay)
+      if (localData.accounts && localData.accounts.length > 0) {
+        for (const acc of localData.accounts) {
+          const ref = doc(db, "users", userId, "accounts", acc.id);
+          await setDoc(ref, cleanFirestoreData(acc), { merge: true });
+        }
+      }
+
+      // 2. Sync courses
+      if (localData.courses && localData.courses.length > 0) {
+        for (const course of localData.courses) {
+          const ref = doc(db, "users", userId, "courses", course.id);
+          await setDoc(ref, cleanFirestoreData(course), { merge: true });
+        }
+      }
+
+      // 3. Sync tasks
+      if (localData.tasks && localData.tasks.length > 0) {
+        for (const task of localData.tasks) {
+          const ref = doc(db, "users", userId, "tasks", task.id);
+          await setDoc(ref, cleanFirestoreData(task), { merge: true });
+        }
+      }
+
+      // 4. Sync transactions
+      if (localData.transactions && localData.transactions.length > 0) {
+        for (const trx of localData.transactions) {
+          const ref = doc(db, "users", userId, "transactions", trx.id);
+          await setDoc(ref, cleanFirestoreData(trx), { merge: true });
+        }
+      }
+
+      // 5. Sync profile (dday, emergency fund)
+      if (localData.ddayEvent?.targetDate || typeof localData.emergencyFund === "number") {
+        const userRef = doc(db, "users", userId);
+        await setDoc(
+          userRef,
+          cleanFirestoreData({
+            ...(localData.ddayEvent ? { ddayEvent: localData.ddayEvent } : {}),
+            ...(typeof localData.emergencyFund === "number" ? { emergencyFund: localData.emergencyFund } : {}),
+            updatedAt: new Date().toISOString(),
+          }),
+          { merge: true }
+        );
+      }
+    } catch (e) {
+      console.warn("Error migrating local data to Firestore:", e);
+    }
+  }
+
   // --- COURSES ---
   public static subscribeCourses(userId: string, callback: (courses: Course[]) => void) {
     const ref = collection(db, "users", userId, "courses");
