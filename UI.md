@@ -12,14 +12,14 @@
 ## 2. Palet Warna
 
 ### Base (dipakai di kedua mode)
-
+ 
 | Token | Hex | Fungsi |
 | --- | --- | --- |
-| `--bg-primary` | `#FAF9FC` | Background utama |
+| `--bg-primary` | `#F8F6F2` | Background utama (Warm Cream / Oat) |
 | `--bg-surface` | `#FFFFFF` | Card, panel |
-| `--text-primary` | `#2D2A32` | Teks utama |
-| `--text-secondary` | `#8A8593` | Teks sekunder/caption |
-| `--border-soft` | `#EDEAF2` | Divider, border tipis |
+| `--text-primary` | `#26222B` | Teks utama (Espresso Charcoal) |
+| `--text-secondary` | `#7F7A85` | Teks sekunder/caption |
+| `--border-soft` | `#ECE7DF` | Divider, border tipis (Soft Sand) |
 
 ### Aksen Mode Akademik — "Lavender Pop"
 
@@ -99,9 +99,11 @@
 - Icon set: `Lucide` atau `Phosphor Icons` (rounded/duotone style, bukan sharp/outline tajam) — selaras sama vibe soft-pop.
 - Ilustrasi kosong-state (empty state) pakai gaya flat-pastel simpel, bukan foto realistis.
 
-## 7. Dark Mode (opsional, rekomendasi ada)
+## 7. Dark Mode ("Warm Espresso / Charcoal")
 
-- Background: `#1C1A22`, surface: `#26232E`, aksen tetap sama tapi sedikit di-desaturate 10% biar ga terlalu neon di background gelap.
+- Background: `#181716` (warm deep charcoal), Surface: `#23211F` (warm mocha), Border: `#33302B`.
+- Teks: `#F5F3EE` (warm off-white), Teks Muted: `#A39D94`.
+- Aksen: tetap selaras tapi di-soften agar nyaman di mata dan harmonis dengan tema Light Cream.
 
 ## 8. Referensi Visual (vibe check)
 
