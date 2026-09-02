@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="seabankGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FF6B00"/>
+      <stop offset="100%" stopColor="#FF4300"/>
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" rx="110" fill="url(#seabankGrad)"/>
+  <path d="M150 365 C178 390 216 400 255 400 C328 400 382 358 382 295 C382 188 228 212 228 156 C228 135 248 120 280 120 C310 120 340 132 364 150 L390 106 C360 84 322 72 280 72 C214 72 165 112 165 172 C165 276 320 252 320 310 C320 334 298 350 260 350 C220 350 186 335 162 310 Z" fill="#FFFFFF"/>
+</svg>
