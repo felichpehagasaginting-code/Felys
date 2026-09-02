@@ -16,16 +16,22 @@ import {
   ShieldCheck,
   Timer,
   FileText,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { ModeSwitcher } from "./ModeSwitcher";
 import { Button } from "@/components/ui/Button";
+import { IOSSlider } from "@/components/ui/IOSSlider";
+import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { usePomodoroStore } from "@/stores/use-pomodoro-store";
 import { useThemeStore } from "@/stores/use-theme-store";
+import { useSoundStore } from "@/stores/use-sound-store";
 import { PDFLectureReaderModal } from "@/components/academic/PDFLectureReaderModal";
 import { triggerHaptic } from "@/lib/haptics";
+import { playPop } from "@/lib/sounds";
 
 interface NavbarProps {
   onOpenQuickAdd?: () => void;
@@ -37,6 +43,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   const { user, signOut } = useAuthStore();
   const { toggleWidget, isRunning } = usePomodoroStore();
   const { resolvedTheme, toggleTheme } = useThemeStore();
+  const { isSoundEnabled, toggleSound, volume, setVolume } = useSoundStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPDFReaderOpen, setIsPDFReaderOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
@@ -222,34 +229,79 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                   <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     Ganti Mode
                   </span>
-                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl text-xs font-bold">
+                  <IOSSegmentedControl<"academic" | "finance">
+                    options={[
+                      {
+                        id: "academic",
+                        label: "🎓 Akademik",
+                        activeColor: "bg-[#7C5CFA]",
+                        activeTextColor: "text-white",
+                      },
+                      {
+                        id: "finance",
+                        label: "💸 Finansial",
+                        activeColor: "bg-[#7FE3C0]",
+                        activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+                      },
+                    ]}
+                    value={activeMode}
+                    onChange={(val) => {
+                      triggerHaptic("medium");
+                      setActiveMode(val);
+                    }}
+                    size="sm"
+                    className="w-full shadow-xs"
+                  />
+                </div>
+
+                {/* Apple-style Sound & Audio Feedback Controls */}
+                <div className="space-y-2 pt-1 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      {isSoundEnabled ? (
+                        <Volume2 className="w-4 h-4 text-[#7C5CFA]" />
+                      ) : (
+                        <VolumeX className="w-4 h-4 text-muted" />
+                      )}
+                      <span>Efek Suara (Sound FX)</span>
+                    </div>
+
+                    {/* Apple-style Switch Toggle */}
                     <button
+                      type="button"
                       onClick={() => {
                         triggerHaptic("light");
-                        setActiveMode("academic");
+                        toggleSound();
+                        if (!isSoundEnabled) {
+                          setTimeout(playPop, 50);
+                        }
                       }}
-                      className={`py-1.5 rounded-xl transition-all ${
-                        activeMode === "academic"
-                          ? "bg-white dark:bg-[#26232E] text-[#7C5CFA] shadow-xs"
-                          : "text-muted hover:text-foreground"
+                      className={`w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
+                        isSoundEnabled ? "bg-[#7C5CFA]" : "bg-[#DDD8E6] dark:bg-[#383430]"
                       }`}
                     >
-                      🎓 Akademik
-                    </button>
-                    <button
-                      onClick={() => {
-                        triggerHaptic("light");
-                        setActiveMode("finance");
-                      }}
-                      className={`py-1.5 rounded-xl transition-all ${
-                        activeMode === "finance"
-                          ? "bg-white dark:bg-[#26232E] text-[#1F8766] shadow-xs"
-                          : "text-muted hover:text-foreground"
-                      }`}
-                    >
-                      💸 Finansial
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                          isSoundEnabled ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
                     </button>
                   </div>
+
+                  {/* Volume Slider if sound enabled */}
+                  {isSoundEnabled && (
+                    <div className="pt-1 px-1">
+                      <IOSSlider
+                        value={Math.round(volume * 100)}
+                        min={10}
+                        max={100}
+                        step={5}
+                        label="Volume Efek"
+                        formatValue={(val) => `${val}%`}
+                        onChange={(val) => setVolume(val / 100)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Menu Items */}
