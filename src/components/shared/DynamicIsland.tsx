@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { usePomodoroStore, PomodoroMode } from "@/stores/use-pomodoro-store";
 import { triggerHaptic } from "@/lib/haptics";
 import { playPop, playWhoosh, playTick } from "@/lib/sounds";
@@ -13,10 +13,8 @@ import {
   Flame,
   PictureInPicture2,
   X,
-  ChevronDown,
   ChevronUp,
-  Sparkles,
-  Maximize2,
+  GripHorizontal,
 } from "lucide-react";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 
@@ -41,7 +39,9 @@ export function DynamicIsland() {
   } = usePomodoroStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const islandRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
 
   // Background drift-free timer ticker
   useEffect(() => {
@@ -76,6 +76,8 @@ export function DynamicIsland() {
 
   const toggleExpand = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (isDragging) return; // Ignore if user was dragging
+
     triggerHaptic("light");
     if (!isExpanded) {
       playPop();
@@ -151,18 +153,28 @@ export function DynamicIsland() {
   };
 
   return (
-    <div
+    <motion.div
       ref={islandRef}
-      className="fixed top-2.5 sm:top-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
-      style={{ perspective: 1000 }}
+      drag
+      dragMomentum={false}
+      dragElastic={0.12}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={() => {
+        triggerHaptic("light");
+        // small timeout to prevent onClick from firing right after drag release
+        setTimeout(() => setIsDragging(false), 120);
+      }}
+      /* Default Position: Floating safely below the navbar on the top right/center without blocking anything */
+      className="fixed top-20 right-4 sm:right-8 z-50 pointer-events-auto touch-none"
+      style={{ touchAction: "none" }}
     >
       <motion.div
         layout
         initial={false}
         animate={{
-          width: isExpanded ? "min(92vw, 360px)" : isRunning ? 210 : 160,
-          height: isExpanded ? "auto" : 38,
-          borderRadius: isExpanded ? 28 : 20,
+          width: isExpanded ? "min(90vw, 360px)" : isRunning ? 215 : 165,
+          height: isExpanded ? "auto" : 40,
+          borderRadius: isExpanded ? 28 : 22,
         }}
         transition={{
           type: "spring",
@@ -170,23 +182,25 @@ export function DynamicIsland() {
           damping: 32,
         }}
         onClick={!isExpanded ? toggleExpand : undefined}
-        className="bg-black/95 dark:bg-[#121110]/98 text-white shadow-2xl border border-white/15 backdrop-blur-2xl overflow-hidden cursor-pointer select-none"
+        className={`bg-black/95 dark:bg-[#121110]/98 text-white shadow-2xl border border-white/15 backdrop-blur-2xl overflow-hidden select-none transition-shadow ${
+          isDragging ? "cursor-grabbing scale-105 shadow-2xl" : "cursor-grab"
+        }`}
         style={{
           boxShadow: isExpanded
-            ? "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.15)"
+            ? "0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.15)"
             : "0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)",
         }}
       >
         <AnimatePresence mode="wait">
           {!isExpanded ? (
-            /* COMPACT DYNAMIC ISLAND PILL */
+            /* COMPACT DYNAMIC ISLAND PILL (DRAGGABLE ANYWHERE) */
             <motion.div
               key="compact"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.15 }}
-              className="h-[38px] px-3 flex items-center justify-between gap-2.5"
+              className="h-[40px] px-3 flex items-center justify-between gap-2.5 relative group"
             >
               {/* Left Indicator */}
               <div className="flex items-center gap-1.5 shrink-0">
@@ -208,8 +222,8 @@ export function DynamicIsland() {
                 {formatTime(timeLeft)}
               </div>
 
-              {/* Right Mini Equalizer / Audio Wave */}
-              <div className="flex items-center gap-0.5 shrink-0">
+              {/* Right Mini Equalizer / Audio Wave & Drag Grip Hint */}
+              <div className="flex items-center gap-1 shrink-0">
                 {isRunning ? (
                   <div className="flex items-center gap-0.5 h-3">
                     <span className="w-0.5 h-3 bg-[#7C5CFA] rounded-full animate-pulse" />
@@ -221,6 +235,7 @@ export function DynamicIsland() {
                     {mode === "focus" ? "25m" : "5m"}
                   </span>
                 )}
+                <GripHorizontal className="w-3 h-3 text-white/30 group-hover:text-white/70 transition-colors ml-0.5" />
               </div>
             </motion.div>
           ) : (
@@ -234,8 +249,8 @@ export function DynamicIsland() {
               className="p-4 sm:p-5 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header inside Island */}
-              <div className="flex items-center justify-between">
+              {/* Header inside Island with Drag Bar */}
+              <div className="flex items-center justify-between cursor-grab active:cursor-grabbing">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-base">
                     {mode === "focus" ? "🍅" : "☕"}
@@ -258,13 +273,14 @@ export function DynamicIsland() {
                   <button
                     onClick={toggleExpand}
                     className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                    title="Kecilkan Island"
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Big Time Display & Circular/Linear Progress */}
+              {/* Big Time Display & Linear Progress */}
               <div className="text-center py-1">
                 <div className="text-3xl sm:text-4xl font-mono font-extrabold text-white tracking-tight">
                   {formatTime(timeLeft)}
@@ -357,6 +373,6 @@ export function DynamicIsland() {
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
