@@ -71,12 +71,12 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
     <header className="sticky top-0 z-40 w-full glass border-b border-border transition-colors duration-300 pt-[env(safe-area-inset-top,0px)] safe-top">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand Logo with Playful Spring Tilt & Spin on Hover */}
-        <Link href="/" className="flex items-center gap-2 group select-none shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center shadow-soft transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md shrink-0">
-            <span className="text-white font-extrabold text-sm sm:text-base tracking-wider transition-transform duration-300 group-hover:scale-105">
-              F
-            </span>
-          </div>
+        <Link href="/" className="flex items-center gap-2.5 group select-none shrink-0">
+          <img
+            src="/icon.png"
+            alt="Felys App Logo"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-soft object-cover border border-border/60 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md shrink-0"
+          />
           <div className="hidden xs:flex flex-col">
             <span className="font-extrabold text-base sm:text-lg tracking-tight text-foreground flex items-center gap-1 group-hover:text-[#7C5CFA] transition-colors">
               Felys

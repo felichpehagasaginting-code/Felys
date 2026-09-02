@@ -31,15 +31,25 @@ export const metadata: Metadata = {
     capable: true,
     title: "Felys",
     statusBarStyle: "default",
+    startupImage: [
+      "/apple-touch-icon.png",
+    ],
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/icon.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/apple-touch-icon.png"],
   },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
 };
 
 import { Toaster } from "sonner";
