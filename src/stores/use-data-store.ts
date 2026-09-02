@@ -153,21 +153,21 @@ export const useDataStore = create<DataState>((set, get) => ({
     // 1. Ensure categories are seeded in Firestore if brand new user
     FirestoreService.seedDefaultCategoriesIfEmpty(userId);
 
-    // 2. Automatically sync/migrate any existing local offline data (e.g. Superbank, tasks, courses) to Cloud Firestore
-    const currentLocalAccounts = get().accounts;
-    const currentLocalCourses = get().courses;
-    const currentLocalTasks = get().tasks;
-    const currentLocalTransactions = get().transactions;
-    const currentLocalDDay = get().ddayEvent;
-    const currentEmergency = get().emergencyFund;
+    // 2. Read directly from localStorage to ensure any offline/cached accounts (e.g. Superbank) are immediately synced
+    const localAccounts = loadLocal<FinancialAccount[]>("felys_accounts", []);
+    const localCourses = loadLocal<Course[]>("felys_courses", []);
+    const localTasks = loadLocal<Task[]>("felys_tasks", []);
+    const localTransactions = loadLocal<Transaction[]>("felys_transactions", []);
+    const localDDay = loadLocal<DDayEvent>("felys_dday", { title: "", targetDate: "" });
+    const localEmergency = loadLocal<number>("felys_emergency_fund", 0);
 
     FirestoreService.syncLocalDataToFirestore(userId, {
-      accounts: currentLocalAccounts,
-      courses: currentLocalCourses,
-      tasks: currentLocalTasks,
-      transactions: currentLocalTransactions,
-      ddayEvent: currentLocalDDay,
-      emergencyFund: currentEmergency,
+      accounts: localAccounts,
+      courses: localCourses,
+      tasks: localTasks,
+      transactions: localTransactions,
+      ddayEvent: localDDay,
+      emergencyFund: localEmergency,
     });
 
     // 3. Subscribe to user profile (D-Day event, emergency fund)
@@ -186,7 +186,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       }
     });
 
-    // 3. Subscribe to real-time collections
+    // 4. Subscribe to real-time collections
     const unsubCourses = FirestoreService.subscribeCourses(userId, (courses) => {
       set({ courses });
       saveLocal("felys_courses", courses);
@@ -200,8 +200,19 @@ export const useDataStore = create<DataState>((set, get) => ({
     });
 
     const unsubAccounts = FirestoreService.subscribeAccounts(userId, (accounts) => {
-      set({ accounts });
-      saveLocal("felys_accounts", accounts);
+      if (accounts && accounts.length > 0) {
+        set({ accounts });
+        saveLocal("felys_accounts", accounts);
+      } else {
+        const cached = loadLocal<FinancialAccount[]>("felys_accounts", []);
+        if (cached && cached.length > 0) {
+          FirestoreService.syncLocalDataToFirestore(userId, { accounts: cached });
+          set({ accounts: cached });
+        } else {
+          set({ accounts: [] });
+          saveLocal("felys_accounts", []);
+        }
+      }
     });
 
     const unsubCategories = FirestoreService.subscribeCategories(userId, (categories) => {

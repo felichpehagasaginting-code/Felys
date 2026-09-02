@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }));
 
-// Initialize listener
+// Initialize global auth listener
 if (typeof window !== "undefined") {
   onAuthStateChanged(auth, (currentUser) => {
     useAuthStore.getState().setUser(currentUser);
@@ -39,8 +39,9 @@ if (typeof window !== "undefined") {
         email: currentUser.email || "",
         photoURL: currentUser.photoURL || null,
       }).catch((e) => console.warn("Profile sync error:", e));
-    } else {
-      useDataStore.getState().resetDataStore();
+
+      // Instantly start real-time Firestore sync on any device
+      useDataStore.getState().initFirestoreSync(currentUser.uid);
     }
   });
 }
