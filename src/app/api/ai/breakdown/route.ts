@@ -1,6 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
@@ -14,9 +15,14 @@ export async function POST(req: Request) {
       });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+      "";
 
-    // Fallback if no API Key is set
+    // Fallback if no API Key is set in production
     if (!apiKey) {
       return new Response(
         JSON.stringify({
@@ -55,13 +61,31 @@ ATURAN OUTPUT:
 - Bahasa Indonesia yang santai, jelas, dan memotivasi mahasiswa.
     `.trim();
 
-    const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
-      prompt,
-    });
+    let rawOutput = "";
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+
+    for (const modelName of modelsToTry) {
+      try {
+        const { text } = await generateText({
+          model: google(modelName),
+          prompt,
+        });
+
+        if (text) {
+          rawOutput = text;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Breakdown model ${modelName} failed, trying next. Error:`, err.message || err);
+      }
+    }
+
+    if (!rawOutput) {
+      throw new Error("All Gemini models failed for task breakdown.");
+    }
 
     // Clean JSON response if wrapped in markdown codeblocks
-    const cleanedText = text
+    const cleanedText = rawOutput
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
