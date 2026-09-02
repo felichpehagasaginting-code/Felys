@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Settings, User, Moon, Sun, BookOpen, Layers, Sparkles, LogOut, LogIn } from "lucide-react";
+import { Settings, User, Moon, Sun, Laptop, Layers, Sparkles, LogOut, LogIn, ShieldCheck } from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
+import { useThemeStore } from "@/stores/use-theme-store";
 import { useAuthStore } from "@/stores/use-auth-store";
-import { useDataStore } from "@/stores/use-data-store";
 import { Button } from "@/components/ui/Button";
+import { triggerHaptic } from "@/lib/haptics";
 
 export default function SettingsPage() {
   const { activeMode, setActiveMode } = useModeStore();
+  const { theme, setTheme } = useThemeStore();
   const { user, signOut } = useAuthStore();
-  const { refreshInsights } = useDataStore();
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -22,7 +23,7 @@ export default function SettingsPage() {
           <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-[#7C5CFA] transition-transform duration-700 ease-out group-hover:rotate-180" />
         </h1>
         <p className="text-xs sm:text-sm text-muted mt-1">
-          Kelola preferensi akun Firebase, mode tampilan, dan AI assistant.
+          Kelola preferensi akun Firebase, tema tampilan perangkat, dan AI assistant.
         </p>
       </div>
 
@@ -39,17 +40,20 @@ export default function SettingsPage() {
                   {user.displayName || "Mahasiswa Felys"}
                 </h3>
                 <p className="text-xs text-muted">{user.email}</p>
-                <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E0FBF2] text-[#1F8766] border border-[#9EE9D0]">
-                  Cloud Firestore Connected (UID: {user.uid.slice(0, 8)}...)
+                <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E0FBF2] text-[#1F8766] border border-[#9EE9D0] dark:bg-[#1E332A] dark:text-[#7FE3C0] dark:border-[#2E5244]">
+                  <ShieldCheck className="w-3 h-3" /> Cloud Firestore Connected
                 </span>
               </div>
             </div>
 
             <Button
-              onClick={() => signOut()}
+              onClick={() => {
+                triggerHaptic("medium");
+                signOut();
+              }}
               variant="secondary"
               size="sm"
-              className="rounded-xl border-[#FF7A85]/40 text-[#D93D4A] hover:bg-[#FFE8EA] self-start sm:self-auto"
+              className="rounded-xl border-[#FF7A85]/40 text-[#D93D4A] hover:bg-[#FFE8EA] dark:hover:bg-[#382329] self-start sm:self-auto"
             >
               <LogOut className="w-4 h-4" />
               <span>Keluar Akun</span>
@@ -74,19 +78,97 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Mode Preference */}
+        {/* Theme Preference (Per-Device Persistence) */}
+        <div className="p-6 rounded-3xl bg-surface border border-border shadow-soft space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Sun className="w-4 h-4 text-amber-500" />
+              <span>Tema Tampilan (Tersimpan di Perangkat Ini)</span>
+            </h3>
+            <span className="text-[10px] font-semibold text-muted bg-surface border border-border px-2 py-0.5 rounded-full">
+              {theme === "dark" ? "Mode Gelap 🌙" : theme === "light" ? "Mode Terang ☀️" : "Sistem Otomatis 💻"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                setTheme("light");
+              }}
+              className={`p-4 rounded-2xl border text-left transition-all ${
+                theme === "light"
+                  ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA] shadow-soft"
+                  : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-bold text-foreground block">Mode Terang</span>
+              </div>
+              <span className="text-[11px] text-muted block">
+                Tampilan bersih & kontras cerah
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                setTheme("dark");
+              }}
+              className={`p-4 rounded-2xl border text-left transition-all ${
+                theme === "dark"
+                  ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA] shadow-soft"
+                  : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Moon className="w-4 h-4 text-[#B69CFF]" />
+                <span className="text-xs font-bold text-foreground block">Mode Gelap</span>
+              </div>
+              <span className="text-[11px] text-muted block">
+                Nyaman di mata saat malam & hemat baterai OLED
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHaptic("light");
+                setTheme("system");
+              }}
+              className={`p-4 rounded-2xl border text-left transition-all ${
+                theme === "system"
+                  ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA] shadow-soft"
+                  : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Laptop className="w-4 h-4 text-[#37B98F]" />
+                <span className="text-xs font-bold text-foreground block">Ikuti Sistem</span>
+              </div>
+              <span className="text-[11px] text-muted block">
+                Otomatis menyesuaikan mode OS HP/Laptop
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mode Preference (Last Open Persistence) */}
         <div className="p-6 rounded-3xl bg-surface border border-border shadow-soft space-y-3">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <Layers className="w-4 h-4 text-accent" />
-            <span>Mode Default Saat Buka Aplikasi</span>
+            <span>Mode Default Saat Buka Aplikasi ("Last Open")</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
-              onClick={() => setActiveMode("academic")}
+              onClick={() => {
+                triggerHaptic("light");
+                setActiveMode("academic");
+              }}
               className={`p-4 rounded-2xl border text-left transition-all ${
                 activeMode === "academic"
-                  ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA]"
-                  : "bg-[#FAF9FC] dark:bg-[#2F2B3A] border-border hover:bg-black/5"
+                  ? "bg-[#EDE5FF] dark:bg-[#383442] border-[#7C5CFA] ring-2 ring-[#7C5CFA] shadow-soft"
+                  : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               <span className="text-xs font-bold text-foreground block">Mode Akademik 🎓</span>
@@ -96,23 +178,26 @@ export default function SettingsPage() {
             </button>
 
             <button
-              onClick={() => setActiveMode("finance")}
+              onClick={() => {
+                triggerHaptic("light");
+                setActiveMode("finance");
+              }}
               className={`p-4 rounded-2xl border text-left transition-all ${
                 activeMode === "finance"
-                  ? "bg-[#E0FBF2] dark:bg-[#213831] border-[#37B98F] ring-2 ring-[#7FE3C0]"
-                  : "bg-[#FAF9FC] dark:bg-[#2F2B3A] border-border hover:bg-black/5"
+                  ? "bg-[#E0FBF2] dark:bg-[#213831] border-[#37B98F] ring-2 ring-[#7FE3C0] shadow-soft"
+                  : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               <span className="text-xs font-bold text-foreground block">Mode Keuangan 💸</span>
               <span className="text-[11px] text-muted block mt-0.5">
-                Fokus pencatatan uang saku & budget
+                Fokus pencatatan uang saku, rekening & budget
               </span>
             </button>
           </div>
         </div>
 
         {/* AI Persona Info */}
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#EDE5FF]/60 to-[#E0FBF2]/60 dark:from-[#2A2338] dark:to-[#1E2E28] border border-[#B69CFF]/30 shadow-soft space-y-2">
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-[#EDE5FF]/60 to-[#E0FBF2]/60 dark:from-[#252033] dark:to-[#1B2924] border border-[#B69CFF]/30 shadow-soft space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#7C5CFA] text-white flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
@@ -124,7 +209,7 @@ export default function SettingsPage() {
           </div>
           <p className="text-xs text-muted leading-relaxed pt-1">
             Fio terus menganalisis beban tugas dan pengeluaran kamu secara cerdas tanpa menghakimi,
-            agar kehidupan kuliah kamu tetap terkendali.
+            agar kehidupan kuliah kamu tetap terkendali dan tenang.
           </p>
         </div>
       </div>

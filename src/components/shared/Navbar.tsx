@@ -23,6 +23,7 @@ import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { usePomodoroStore } from "@/stores/use-pomodoro-store";
+import { useThemeStore } from "@/stores/use-theme-store";
 import { PDFLectureReaderModal } from "@/components/academic/PDFLectureReaderModal";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -35,20 +36,10 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   const { toggleDrawer } = useAIStore();
   const { user, signOut } = useAuthStore();
   const { toggleWidget, isRunning } = usePomodoroStore();
-  const [isDark, setIsDark] = useState(false);
+  const { resolvedTheme, toggleTheme } = useThemeStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPDFReaderOpen, setIsPDFReaderOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
-
-  const toggleDarkMode = () => {
-    triggerHaptic("light");
-    setIsDark(!isDark);
-    if (!isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
 
   const toggleSettingsMenu = () => {
     triggerHaptic("light");
@@ -127,11 +118,14 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
 
           {/* Theme Toggle */}
           <button
-            onClick={toggleDarkMode}
+            onClick={() => {
+              triggerHaptic("light");
+              toggleTheme();
+            }}
             className="group p-1.5 sm:p-2 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-90"
-            title="Ganti Tema"
+            title={resolvedTheme === "dark" ? "Beralih ke Mode Terang" : "Beralih ke Mode Gelap"}
           >
-            {isDark ? (
+            {resolvedTheme === "dark" ? (
               <Sun className="w-4 h-4 transition-transform duration-500 group-hover:rotate-90 group-hover:scale-110 text-amber-400" />
             ) : (
               <Moon className="w-4 h-4 transition-transform duration-500 group-hover:-rotate-45 group-hover:scale-110 text-[#7C5CFA]" />

@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #FAF9FC;
+  --bg-primary: #F8F7FA;
   --bg-surface: #FFFFFF;
-  --text-primary: #2D2A32;
-  --text-secondary: #8A8593;
-  --border-soft: #EDEAF2;
+  --text-primary: #231F2A;
+  --text-secondary: #7A7585;
+  --border-soft: #EBE7F2;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
 
   /* Default mode is academic */
@@ -29,11 +29,27 @@
 }
 
 .dark {
-  --bg-primary: #1C1A22;
-  --bg-surface: #26232E;
-  --text-primary: #F5F3F7;
-  --text-secondary: #A6A0B2;
-  --border-soft: #383442;
+  --bg-primary: #121016;
+  --bg-surface: #1C1824;
+  --text-primary: #F8F7FA;
+  --text-secondary: #A29CAB;
+  --border-soft: #2C2638;
+}
+
+.dark[data-mode="academic"],
+.dark [data-mode="academic"],
+[data-mode="academic"].dark {
+  --accent-current: #C5B0FF;
+  --accent-current-soft: rgba(182, 156, 255, 0.16);
+  --accent-current-deep: #9275FF;
+}
+
+.dark[data-mode="finance"],
+.dark [data-mode="finance"],
+[data-mode="finance"].dark {
+  --accent-current: #7FE3C0;
+  --accent-current-soft: rgba(127, 227, 192, 0.16);
+  --accent-current-deep: #34D399;
 }
 
 html {
@@ -48,7 +64,7 @@ body {
   color: var(--text-primary);
   background: var(--bg-primary);
   font-family: var(--font-jakarta), system-ui, sans-serif;
-  transition: background-color 300ms ease, color 300ms ease;
+  transition: background-color 250ms ease, color 250ms ease;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -109,7 +125,7 @@ button, a, input, select, textarea {
 }
 
 .dark .glass {
-  background: rgba(38, 35, 46, 0.88);
+  background: rgba(28, 24, 36, 0.88);
 }
 
 /* Custom Scrollbar */
@@ -124,8 +140,14 @@ button, a, input, select, textarea {
   background: #DDD8E6;
   border-radius: 9999px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #352F42;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #C4BDD4;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4A4259;
 }
 
 /* Micro-Interaction & Icon Animations */

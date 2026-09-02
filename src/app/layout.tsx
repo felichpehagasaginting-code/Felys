@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
+import { AntiZoomProvider } from "@/components/shared/AntiZoomProvider";
+import { PWAInstallPrompt } from "@/components/shared/PWAInstallPrompt";
+import { ThemeModeProvider } from "@/components/shared/ThemeModeProvider";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -18,7 +22,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FAF9FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#1C1A22" },
+    { media: "(prefers-color-scheme: dark)", color: "#121016" },
   ],
 };
 
@@ -30,7 +34,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Felys",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     startupImage: [
       "/apple-touch-icon.png",
     ],
@@ -52,10 +56,6 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-import { Toaster } from "sonner";
-import { AntiZoomProvider } from "@/components/shared/AntiZoomProvider";
-import { PWAInstallPrompt } from "@/components/shared/PWAInstallPrompt";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -63,11 +63,36 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" data-mode="academic" className={jakarta.variable} suppressHydrationWarning>
+      <head>
+        {/* Anti-FOUC Inline Theme Initializer: Runs synchronously before initial render */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('felys_theme_preference');
+                var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+
+                var mode = localStorage.getItem('felys_active_mode');
+                if (mode === 'academic' || mode === 'finance') {
+                  document.documentElement.setAttribute('data-mode', mode);
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={`${jakarta.className} font-sans antialiased min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 select-none`}>
-        <AntiZoomProvider />
-        {children}
-        <PWAInstallPrompt />
-        <Toaster position="top-right" richColors closeButton />
+        <ThemeModeProvider>
+          <AntiZoomProvider />
+          {children}
+          <PWAInstallPrompt />
+          <Toaster position="top-right" richColors closeButton />
+        </ThemeModeProvider>
       </body>
     </html>
   );
