@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { Course, Task, SubTask, PriorityLevel, TaskStatus } from "@/types/academic";
+import { Course, Task, SubTask, PriorityLevel, TaskStatus, DDayEvent } from "@/types/academic";
 import { Category, Transaction, MonthlyBudgetSummary, Budget, RecurringBill, FriendDebt, DailyAllowanceSummary, SavingsGoal } from "@/types/finance";
 import { AIInsight } from "@/types/ai";
 import { UrgencyService } from "@/server/services/urgency.service";
@@ -19,6 +19,7 @@ interface DataState {
   // Real Firestore Data
   courses: Course[];
   tasks: Task[];
+  ddayEvent: DDayEvent;
   categories: Category[];
   transactions: Transaction[];
   budgetLimits: { categoryId: string; monthlyLimit: number }[];
@@ -44,6 +45,8 @@ interface DataState {
   toggleTaskStatus: (id: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
+
+  updateDDayEvent: (dday: { title: string; targetDate: string }) => Promise<void>;
 
   // Finance Actions
   addCategory: (category: Omit<Category, "id">) => Promise<void>;
@@ -78,6 +81,10 @@ interface DataState {
 export const useDataStore = create<DataState>((set, get) => ({
   courses: [],
   tasks: [],
+  ddayEvent: {
+    title: "Ujian Tengah Semester (UTS)",
+    targetDate: "2026-09-21",
+  },
   categories: [],
   transactions: [],
   budgetLimits: [],
@@ -119,20 +126,18 @@ export const useDataStore = create<DataState>((set, get) => ({
   debts: [
     {
       id: "debt_1",
-      friendName: "Andi Pratama",
-      friendPhone: "081234567890",
-      amount: 35000,
-      description: "Talangan Makan Siang Nasi Padang",
+      friendName: "Rian",
+      amount: 45000,
+      description: "Makan Ayam Geprek bareng",
       type: "they_owe_me",
       isSettled: false,
       createdAt: new Date().toISOString(),
     },
     {
       id: "debt_2",
-      friendName: "Siti Rahma",
-      friendPhone: "089876543210",
-      amount: 15000,
-      description: "Patungan Print & Jilid Makalah AI",
+      friendName: "Sarah",
+      amount: 25000,
+      description: "Fotokopi Diktat Kuliah",
       type: "they_owe_me",
       isSettled: false,
       createdAt: new Date().toISOString(),
@@ -182,7 +187,21 @@ export const useDataStore = create<DataState>((set, get) => ({
     // 1. Ensure categories are seeded in Firestore if brand new user
     FirestoreService.seedDefaultCategoriesIfEmpty(userId);
 
-    // 2. Subscribe to real-time collections
+    // 2. Subscribe to user profile (D-Day event, emergency fund)
+    const unsubProfile = FirestoreService.subscribeUserProfile(userId, (data) => {
+      if (data.ddayEvent) {
+        set({ ddayEvent: data.ddayEvent });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("felys_dday_title", data.ddayEvent.title);
+          localStorage.setItem("felys_dday_date", data.ddayEvent.targetDate);
+        }
+      }
+      if (typeof data.emergencyFund === "number") {
+        set({ emergencyFund: data.emergencyFund });
+      }
+    });
+
+    // 3. Subscribe to real-time collections
     const unsubCourses = FirestoreService.subscribeCourses(userId, (courses) => {
       set({ courses });
       get().refreshInsights();
@@ -208,12 +227,34 @@ export const useDataStore = create<DataState>((set, get) => ({
       get().refreshInsights();
     });
 
+    const unsubSavings = FirestoreService.subscribeSavingsGoals(userId, (savingsGoals) => {
+      if (savingsGoals.length > 0) {
+        set({ savingsGoals });
+      }
+    });
+
+    const unsubBills = FirestoreService.subscribeRecurringBills(userId, (recurringBills) => {
+      if (recurringBills.length > 0) {
+        set({ recurringBills });
+      }
+    });
+
+    const unsubDebts = FirestoreService.subscribeDebts(userId, (debts) => {
+      if (debts.length > 0) {
+        set({ debts });
+      }
+    });
+
     return () => {
+      unsubProfile();
       unsubCourses();
       unsubTasks();
       unsubCategories();
       unsubTransactions();
       unsubBudgets();
+      unsubSavings();
+      unsubBills();
+      unsubDebts();
     };
   },
 
@@ -227,7 +268,6 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
-    // Optimistic update
     set((state) => ({ courses: [...state.courses, newCourse] }));
 
     if (userId) {
@@ -258,6 +298,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     const userId = getCurrentUserId();
     set((state) => ({
       courses: state.courses.filter((c) => c.id !== id),
+      tasks: state.tasks.filter((t) => t.courseId !== id),
     }));
 
     if (userId) {
@@ -271,31 +312,30 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   addTask: async (taskData) => {
     const userId = getCurrentUserId();
-    const taskId = `task_${Date.now()}`;
-
-    const score = UrgencyService.calculateScore({
+    const course = get().courses.find((c) => c.id === taskData.courseId);
+    const urgencyScore = UrgencyService.calculateScore({
       deadline: taskData.deadline,
       priority: taskData.priority,
       estimatedHours: taskData.estimatedHours,
     });
 
-    const course = get().courses.find((c) => c.id === taskData.courseId);
-
+    const taskId = `task_${Date.now()}`;
     const newTask: Task = {
       ...taskData,
       id: taskId,
-      courseId: course?.id || taskData.courseId || "general",
-      courseName: course?.name || (taskData.courseId === "general" ? "Umum / Kuliah" : "Kuliah"),
-      courseColor: course?.color || "#B69CFF",
-      urgencyScore: score,
-      completedSubtasksCount: taskData.subtasks?.filter((s) => s.isDone).length || 0,
+      courseName: course?.name,
+      courseColor: course?.color,
+      urgencyScore,
+      completedSubtasksCount: 0,
       totalSubtasksCount: taskData.subtasks?.length || 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    // Optimistic update
-    set((state) => ({ tasks: [newTask, ...state.tasks] }));
+    set((state) => ({
+      tasks: [...state.tasks, newTask].sort((a, b) => b.urgencyScore - a.urgencyScore),
+    }));
+
     get().refreshInsights();
 
     if (userId) {
@@ -309,30 +349,28 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateTask: async (id, updates) => {
     const userId = getCurrentUserId();
-    const task = get().tasks.find((t) => t.id === id);
-    if (!task) return;
-
-    const merged = { ...task, ...updates, updatedAt: new Date().toISOString() };
-    merged.urgencyScore = UrgencyService.calculateScore({
-      deadline: merged.deadline,
-      priority: merged.priority,
-      estimatedHours: merged.estimatedHours,
+    let updatedTasks = get().tasks.map((t) => {
+      if (t.id === id) {
+        const merged = { ...t, ...updates, updatedAt: new Date().toISOString() };
+        if (updates.deadline || updates.priority || updates.estimatedHours) {
+          merged.urgencyScore = UrgencyService.calculateScore({
+            deadline: merged.deadline,
+            priority: merged.priority,
+            estimatedHours: merged.estimatedHours,
+          });
+        }
+        return merged;
+      }
+      return t;
     });
 
-    if (merged.subtasks) {
-      merged.completedSubtasksCount = merged.subtasks.filter((s) => s.isDone).length;
-      merged.totalSubtasksCount = merged.subtasks.length;
-    }
-
-    // Optimistic update
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? merged : t)),
-    }));
+    updatedTasks.sort((a, b) => b.urgencyScore - a.urgencyScore);
+    set({ tasks: updatedTasks });
     get().refreshInsights();
 
     if (userId) {
       try {
-        await FirestoreService.updateTask(userId, id, merged);
+        await FirestoreService.updateTask(userId, id, updates);
       } catch (err: any) {
         console.warn("Firestore updateTask sync warning:", err?.message || err);
       }
@@ -358,7 +396,8 @@ export const useDataStore = create<DataState>((set, get) => ({
   toggleTaskStatus: async (id) => {
     const task = get().tasks.find((t) => t.id === id);
     if (!task) return;
-    const nextStatus = task.status === "done" ? "todo" : "done";
+
+    const nextStatus: TaskStatus = task.status === "done" ? "todo" : "done";
     await get().updateTask(id, { status: nextStatus });
   },
 
@@ -366,10 +405,17 @@ export const useDataStore = create<DataState>((set, get) => ({
     const task = get().tasks.find((t) => t.id === taskId);
     if (!task || !task.subtasks) return;
 
-    const nextSubtasks = task.subtasks.map((s) =>
-      s.id === subtaskId ? { ...s, isDone: !s.isDone } : s
+    const updatedSubtasks = task.subtasks.map((st) =>
+      st.id === subtaskId ? { ...st, isDone: !st.isDone } : st
     );
-    await get().updateTask(taskId, { subtasks: nextSubtasks });
+    const completedCount = updatedSubtasks.filter((st) => st.isDone).length;
+    const allDone = completedCount === updatedSubtasks.length && updatedSubtasks.length > 0;
+
+    await get().updateTask(taskId, {
+      subtasks: updatedSubtasks,
+      completedSubtasksCount: completedCount,
+      status: allDone ? "done" : task.status === "done" ? "in_progress" : task.status,
+    });
   },
 
   addSubtask: async (taskId, title) => {
@@ -378,16 +424,42 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     const currentSubtasks = task.subtasks || [];
     const newSubtask: SubTask = {
-      id: `sub_${Date.now()}`,
+      id: `st_${Date.now()}`,
       taskId,
       title,
       isDone: false,
-      order: currentSubtasks.length + 1,
+      order: currentSubtasks.length,
       createdAt: new Date().toISOString(),
     };
 
-    const nextSubtasks = [...currentSubtasks, newSubtask];
-    await get().updateTask(taskId, { subtasks: nextSubtasks });
+    const updatedSubtasks = [...currentSubtasks, newSubtask];
+    await get().updateTask(taskId, {
+      subtasks: updatedSubtasks,
+      totalSubtasksCount: updatedSubtasks.length,
+    });
+  },
+
+  updateDDayEvent: async (dday) => {
+    const userId = getCurrentUserId();
+    const updated: DDayEvent = {
+      ...dday,
+      updatedAt: new Date().toISOString(),
+    };
+
+    set({ ddayEvent: updated });
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("felys_dday_title", dday.title);
+      localStorage.setItem("felys_dday_date", dday.targetDate);
+    }
+
+    if (userId) {
+      try {
+        await FirestoreService.updateDDayEvent(userId, updated);
+      } catch (err) {
+        console.warn("Firestore updateDDayEvent warning:", err);
+      }
+    }
   },
 
   // Finance Actions
@@ -397,7 +469,6 @@ export const useDataStore = create<DataState>((set, get) => ({
     const newCat: Category = {
       ...categoryData,
       id: catId,
-      createdAt: new Date().toISOString(),
     };
 
     set((state) => ({ categories: [...state.categories, newCat] }));
@@ -414,24 +485,16 @@ export const useDataStore = create<DataState>((set, get) => ({
   addTransaction: async (trxData) => {
     const userId = getCurrentUserId();
     const trxId = `trx_${Date.now()}`;
-    const cat = get().categories.find(
-      (c) =>
-        c.id === trxData.categoryId ||
-        c.name.toLowerCase() === trxData.categoryName?.toLowerCase()
-    );
-
     const newTrx: Transaction = {
       ...trxData,
       id: trxId,
-      categoryId: cat?.id || trxData.categoryId,
-      categoryName: cat?.name || trxData.categoryName || "Kategori",
-      categoryIcon: cat?.icon || trxData.categoryIcon || "Sparkles",
-      categoryColor: cat?.color || trxData.categoryColor || "#7FE3C0",
       createdAt: new Date().toISOString(),
     };
 
-    // Optimistic local update (instant feedback, never hangs)
-    set((state) => ({ transactions: [newTrx, ...state.transactions] }));
+    set((state) => ({
+      transactions: [newTrx, ...state.transactions],
+    }));
+
     get().refreshInsights();
 
     if (userId) {
@@ -461,34 +524,13 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   setBudgetLimit: async (categoryId, monthlyLimit) => {
     const userId = getCurrentUserId();
-    const cat = get().categories.find((c) => c.id === categoryId);
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
+    set((state) => {
+      const existing = state.budgetLimits.filter((b) => b.categoryId !== categoryId);
+      return {
+        budgetLimits: [...existing, { categoryId, monthlyLimit }],
+      };
+    });
 
-    const newBudget: Budget = {
-      id: `${year}_${month}_${categoryId}`,
-      categoryId,
-      categoryName: cat?.name || "Kategori",
-      categoryColor: cat?.color || "#7FE3C0",
-      categoryIcon: cat?.icon || "Sparkles",
-      isEssential: cat?.isEssential ?? true,
-      monthlyLimit,
-      month,
-      year,
-      spentAmount: 0,
-      remainingAmount: monthlyLimit,
-      usedPercentage: 0,
-      status: "safe",
-      updatedAt: now.toISOString(),
-    };
-
-    set((state) => ({
-      budgetLimits: [
-        ...state.budgetLimits.filter((b) => b.categoryId !== categoryId),
-        newBudget,
-      ],
-    }));
     get().refreshInsights();
 
     if (userId) {
@@ -517,66 +559,89 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   addRecurringBill: async (billData) => {
+    const userId = getCurrentUserId();
+    const billId = `bill_${Date.now()}`;
     const newBill: RecurringBill = {
       ...billData,
-      id: `bill_${Date.now()}`,
+      id: billId,
       createdAt: new Date().toISOString(),
     };
+
     set((state) => ({
       recurringBills: [...state.recurringBills, newBill],
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.addRecurringBill(userId, newBill, billId);
+      } catch (err) {
+        console.warn("Firestore addRecurringBill warning:", err);
+      }
+    }
   },
 
   deleteRecurringBill: async (id) => {
+    const userId = getCurrentUserId();
     set((state) => ({
       recurringBills: state.recurringBills.filter((b) => b.id !== id),
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.deleteRecurringBill(userId, id);
+      } catch (err) {
+        console.warn("Firestore deleteRecurringBill warning:", err);
+      }
+    }
   },
 
   payRecurringBill: async (id) => {
     const bill = get().recurringBills.find((b) => b.id === id);
     if (!bill) return;
 
-    // Record transaction
     await get().addTransaction({
       type: "expense",
       amount: bill.amount,
       categoryId: bill.categoryId,
-      categoryName: bill.categoryName || "Tagihan",
-      note: `Bayar ${bill.name}`,
+      categoryName: bill.categoryName,
+      note: `Bayar Tagihan: ${bill.name}`,
       date: new Date().toISOString(),
     });
-
-    // Mark last paid date
-    set((state) => ({
-      recurringBills: state.recurringBills.map((b) =>
-        b.id === id ? { ...b, lastPaidDate: new Date().toISOString() } : b
-      ),
-    }));
   },
 
   addDebt: async (debtData) => {
+    const userId = getCurrentUserId();
+    const debtId = `debt_${Date.now()}`;
     const newDebt: FriendDebt = {
       ...debtData,
-      id: `debt_${Date.now()}`,
+      id: debtId,
       isSettled: false,
       createdAt: new Date().toISOString(),
     };
+
     set((state) => ({
-      debts: [newDebt, ...state.debts],
+      debts: [...state.debts, newDebt],
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.addDebt(userId, newDebt, debtId);
+      } catch (err) {
+        console.warn("Firestore addDebt warning:", err);
+      }
+    }
   },
 
   settleDebt: async (id) => {
+    const userId = getCurrentUserId();
     const debt = get().debts.find((d) => d.id === id);
-    if (!debt || debt.isSettled) return;
+    if (!debt) return;
 
-    // If they owe me money, registering repayment counts as income
     if (debt.type === "they_owe_me") {
       await get().addTransaction({
         type: "income",
         amount: debt.amount,
-        categoryId: "cat_saku",
+        categoryId: "cat_talangan",
         categoryName: "Pelunasan Talangan",
         note: `Pelunasan talangan dari ${debt.friendName} (${debt.description})`,
         date: new Date().toISOString(),
@@ -588,32 +653,60 @@ export const useDataStore = create<DataState>((set, get) => ({
         d.id === id ? { ...d, isSettled: true, settledDate: new Date().toISOString() } : d
       ),
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.updateDebt(userId, id, { isSettled: true, settledDate: new Date().toISOString() });
+      } catch (err) {
+        console.warn("Firestore settleDebt warning:", err);
+      }
+    }
   },
 
   deleteDebt: async (id) => {
+    const userId = getCurrentUserId();
     set((state) => ({
       debts: state.debts.filter((d) => d.id !== id),
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.deleteDebt(userId, id);
+      } catch (err) {
+        console.warn("Firestore deleteDebt warning:", err);
+      }
+    }
   },
 
   addSavingsGoal: async (goalData) => {
+    const userId = getCurrentUserId();
+    const goalId = `goal_${Date.now()}`;
     const newGoal: SavingsGoal = {
       ...goalData,
-      id: `goal_${Date.now()}`,
+      id: goalId,
       currentAmount: 0,
       isCompleted: false,
       createdAt: new Date().toISOString(),
     };
+
     set((state) => ({
       savingsGoals: [...state.savingsGoals, newGoal],
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.addSavingsGoal(userId, newGoal, goalId);
+      } catch (err) {
+        console.warn("Firestore addSavingsGoal warning:", err);
+      }
+    }
   },
 
   depositToSavingsGoal: async (id, amount) => {
+    const userId = getCurrentUserId();
     const goal = get().savingsGoals.find((g) => g.id === id);
     if (!goal) return;
 
-    // Record expense transaction (Alokasi Tabungan)
     await get().addTransaction({
       type: "expense",
       amount,
@@ -623,28 +716,48 @@ export const useDataStore = create<DataState>((set, get) => ({
       date: new Date().toISOString(),
     });
 
+    const newAmount = goal.currentAmount + amount;
+    const isCompleted = newAmount >= goal.targetAmount;
+
     set((state) => ({
       savingsGoals: state.savingsGoals.map((g) => {
         if (g.id === id) {
-          const newAmount = g.currentAmount + amount;
           return {
             ...g,
             currentAmount: newAmount,
-            isCompleted: newAmount >= g.targetAmount,
+            isCompleted,
           };
         }
         return g;
       }),
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.updateSavingsGoal(userId, id, { currentAmount: newAmount, isCompleted });
+      } catch (err) {
+        console.warn("Firestore depositToSavingsGoal warning:", err);
+      }
+    }
   },
 
   deleteSavingsGoal: async (id) => {
+    const userId = getCurrentUserId();
     set((state) => ({
       savingsGoals: state.savingsGoals.filter((g) => g.id !== id),
     }));
+
+    if (userId) {
+      try {
+        await FirestoreService.deleteSavingsGoal(userId, id);
+      } catch (err) {
+        console.warn("Firestore deleteSavingsGoal warning:", err);
+      }
+    }
   },
 
   depositEmergencyFund: async (amount, note) => {
+    const userId = getCurrentUserId();
     await get().addTransaction({
       type: "expense",
       amount,
@@ -654,12 +767,20 @@ export const useDataStore = create<DataState>((set, get) => ({
       date: new Date().toISOString(),
     });
 
-    set((state) => ({
-      emergencyFund: state.emergencyFund + amount,
-    }));
+    const newFund = get().emergencyFund + amount;
+    set({ emergencyFund: newFund });
+
+    if (userId) {
+      try {
+        await FirestoreService.updateEmergencyFund(userId, newFund);
+      } catch (err) {
+        console.warn("Firestore depositEmergencyFund warning:", err);
+      }
+    }
   },
 
   withdrawEmergencyFund: async (amount, note) => {
+    const userId = getCurrentUserId();
     await get().addTransaction({
       type: "income",
       amount,
@@ -669,13 +790,19 @@ export const useDataStore = create<DataState>((set, get) => ({
       date: new Date().toISOString(),
     });
 
-    set((state) => ({
-      emergencyFund: Math.max(0, state.emergencyFund - amount),
-    }));
+    const newFund = Math.max(0, get().emergencyFund - amount);
+    set({ emergencyFund: newFund });
+
+    if (userId) {
+      try {
+        await FirestoreService.updateEmergencyFund(userId, newFund);
+      } catch (err) {
+        console.warn("Firestore withdrawEmergencyFund warning:", err);
+      }
+    }
   },
 
   rolloverSurplus: async (amount) => {
-    // Rollover positive surplus to emergency fund
     await get().depositEmergencyFund(amount, "Rollover Sisa Surplus Kas Bulan Lalu");
   },
 

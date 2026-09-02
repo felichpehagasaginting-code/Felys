@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   setDoc,
   addDoc,
   updateDoc,
@@ -9,8 +10,8 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "./client";
-import { Course, Task } from "@/types/academic";
-import { Category, Transaction } from "@/types/finance";
+import { Course, Task, DDayEvent } from "@/types/academic";
+import { Category, Transaction, SavingsGoal, RecurringBill, FriendDebt } from "@/types/finance";
 import { UserProfile } from "@/types/user";
 
 /**
@@ -82,6 +83,62 @@ export class FirestoreService {
     } catch (e) {
       console.warn("Error syncing user profile to Firestore:", e);
     }
+  }
+
+  /**
+   * Subscribe to user document (D-Day event, emergency fund, preferences)
+   */
+  public static subscribeUserProfile(
+    userId: string,
+    callback: (data: { ddayEvent?: DDayEvent; emergencyFund?: number; scratchpadText?: string }) => void
+  ) {
+    const userRef = doc(db, "users", userId);
+    return onSnapshot(
+      userRef,
+      (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          callback({
+            ddayEvent: d.ddayEvent,
+            emergencyFund: typeof d.emergencyFund === "number" ? d.emergencyFund : undefined,
+            scratchpadText: d.scratchpadText,
+          });
+        }
+      },
+      (error) => console.warn("UserProfile listener error:", error)
+    );
+  }
+
+  /**
+   * Update D-Day Countdown Event in Firestore
+   */
+  public static async updateDDayEvent(userId: string, dday: DDayEvent): Promise<void> {
+    const userRef = doc(db, "users", userId);
+    await setDoc(
+      userRef,
+      cleanFirestoreData({
+        ddayEvent: {
+          ...dday,
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+      { merge: true }
+    );
+  }
+
+  /**
+   * Update Emergency Fund Balance in Firestore
+   */
+  public static async updateEmergencyFund(userId: string, amount: number): Promise<void> {
+    const userRef = doc(db, "users", userId);
+    await setDoc(
+      userRef,
+      cleanFirestoreData({
+        emergencyFund: amount,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
   }
 
   /**
@@ -287,6 +344,121 @@ export class FirestoreService {
 
   public static async deleteBudgetLimit(userId: string, categoryId: string): Promise<void> {
     const ref = doc(db, "users", userId, "budgets", categoryId);
+    await deleteDoc(ref);
+  }
+
+  // --- SAVINGS GOALS (CELENGAN IMPIAN) ---
+  public static subscribeSavingsGoals(userId: string, callback: (goals: SavingsGoal[]) => void) {
+    const ref = collection(db, "users", userId, "savings_goals");
+    return onSnapshot(
+      ref,
+      (snapshot) => {
+        const list: SavingsGoal[] = snapshot.docs.map((d) => ({
+          ...(d.data() as Omit<SavingsGoal, "id">),
+          id: d.id,
+        }));
+        callback(list);
+      },
+      (error) => console.warn("Savings goals listener error:", error)
+    );
+  }
+
+  public static async addSavingsGoal(userId: string, goal: Omit<SavingsGoal, "id">, customId?: string): Promise<string> {
+    const docId = customId || doc(collection(db, "users", userId, "savings_goals")).id;
+    const ref = doc(db, "users", userId, "savings_goals", docId);
+    const payload = cleanFirestoreData({
+      ...goal,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await setDoc(ref, payload);
+    return docId;
+  }
+
+  public static async updateSavingsGoal(userId: string, goalId: string, updates: Partial<SavingsGoal>): Promise<void> {
+    const ref = doc(db, "users", userId, "savings_goals", goalId);
+    const payload = cleanFirestoreData({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+    await updateDoc(ref, payload);
+  }
+
+  public static async deleteSavingsGoal(userId: string, goalId: string): Promise<void> {
+    const ref = doc(db, "users", userId, "savings_goals", goalId);
+    await deleteDoc(ref);
+  }
+
+  // --- RECURRING BILLS (TAGIHAN KOS/UKT/WIFI) ---
+  public static subscribeRecurringBills(userId: string, callback: (bills: RecurringBill[]) => void) {
+    const ref = collection(db, "users", userId, "recurring_bills");
+    return onSnapshot(
+      ref,
+      (snapshot) => {
+        const list: RecurringBill[] = snapshot.docs.map((d) => ({
+          ...(d.data() as Omit<RecurringBill, "id">),
+          id: d.id,
+        }));
+        callback(list);
+      },
+      (error) => console.warn("Recurring bills listener error:", error)
+    );
+  }
+
+  public static async addRecurringBill(userId: string, bill: Omit<RecurringBill, "id">, customId?: string): Promise<string> {
+    const docId = customId || doc(collection(db, "users", userId, "recurring_bills")).id;
+    const ref = doc(db, "users", userId, "recurring_bills", docId);
+    const payload = cleanFirestoreData({
+      ...bill,
+      createdAt: new Date().toISOString(),
+    });
+    await setDoc(ref, payload);
+    return docId;
+  }
+
+  public static async deleteRecurringBill(userId: string, billId: string): Promise<void> {
+    const ref = doc(db, "users", userId, "recurring_bills", billId);
+    await deleteDoc(ref);
+  }
+
+  // --- DEBTS & SPLIT BILL (TALANGAN TEMAN) ---
+  public static subscribeDebts(userId: string, callback: (debts: FriendDebt[]) => void) {
+    const ref = collection(db, "users", userId, "debts");
+    return onSnapshot(
+      ref,
+      (snapshot) => {
+        const list: FriendDebt[] = snapshot.docs.map((d) => ({
+          ...(d.data() as Omit<FriendDebt, "id">),
+          id: d.id,
+        }));
+        callback(list);
+      },
+      (error) => console.warn("Debts listener error:", error)
+    );
+  }
+
+  public static async addDebt(userId: string, debt: Omit<FriendDebt, "id">, customId?: string): Promise<string> {
+    const docId = customId || doc(collection(db, "users", userId, "debts")).id;
+    const ref = doc(db, "users", userId, "debts", docId);
+    const payload = cleanFirestoreData({
+      ...debt,
+      createdAt: new Date().toISOString(),
+    });
+    await setDoc(ref, payload);
+    return docId;
+  }
+
+  public static async updateDebt(userId: string, debtId: string, updates: Partial<FriendDebt>): Promise<void> {
+    const ref = doc(db, "users", userId, "debts", debtId);
+    const payload = cleanFirestoreData({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+    await updateDoc(ref, payload);
+  }
+
+  public static async deleteDebt(userId: string, debtId: string): Promise<void> {
+    const ref = doc(db, "users", userId, "debts", debtId);
     await deleteDoc(ref);
   }
 }

@@ -4,40 +4,39 @@ import React, { useState, useEffect } from "react";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { id } from "date-fns/locale";
 import { Calendar, Flame, Sparkles, Edit2, Check, Trophy } from "lucide-react";
+import { useDataStore } from "@/stores/use-data-store";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
 
 export function DDayCountdownBanner() {
-  const [eventTitle, setEventTitle] = useState("Ujian Tengah Semester (UTS)");
-  const [eventDate, setEventDate] = useState("2026-09-21");
+  const { ddayEvent, updateDDayEvent } = useDataStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [tempTitle, setTempTitle] = useState(eventTitle);
-  const [tempDate, setTempDate] = useState(eventDate);
+  const [tempTitle, setTempTitle] = useState(ddayEvent.title);
+  const [tempDate, setTempDate] = useState(ddayEvent.targetDate);
 
+  // Sync state when ddayEvent changes from Firestore
   useEffect(() => {
-    const savedTitle = localStorage.getItem("felys_dday_title");
-    const savedDate = localStorage.getItem("felys_dday_date");
-    if (savedTitle) setEventTitle(savedTitle);
-    if (savedDate) setEventDate(savedDate);
-  }, []);
+    setTempTitle(ddayEvent.title);
+    setTempDate(ddayEvent.targetDate);
+  }, [ddayEvent]);
 
-  const target = new Date(eventDate);
+  const target = new Date(ddayEvent.targetDate || "2026-09-21");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
 
   const daysLeft = differenceInDays(target, today);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tempTitle.trim() || !tempDate) return;
     triggerHaptic("medium");
-    setEventTitle(tempTitle.trim());
-    setEventDate(tempDate);
-    localStorage.setItem("felys_dday_title", tempTitle.trim());
-    localStorage.setItem("felys_dday_date", tempDate);
+    await updateDDayEvent({
+      title: tempTitle.trim(),
+      targetDate: tempDate,
+    });
     setIsEditing(false);
-    toast.success("Target D-Day berhasil diperbarui! 🎯");
+    toast.success("Target D-Day berhasil disimpan permanen ke Firebase! 🎯");
   };
 
   return (
@@ -55,8 +54,8 @@ export function DDayCountdownBanner() {
                 </span>
                 <button
                   onClick={() => {
-                    setTempTitle(eventTitle);
-                    setTempDate(eventDate);
+                    setTempTitle(ddayEvent.title);
+                    setTempDate(ddayEvent.targetDate);
                     setIsEditing(true);
                   }}
                   className="text-muted hover:text-foreground transition-all p-0.5"
@@ -66,7 +65,7 @@ export function DDayCountdownBanner() {
                 </button>
               </div>
               <h3 className="text-sm sm:text-base font-extrabold text-foreground mt-0.5">
-                {eventTitle}
+                {ddayEvent.title}
               </h3>
               <p className="text-[11px] text-muted">
                 Tanggal: {format(target, "EEEE, d MMMM yyyy", { locale: id })}
@@ -129,7 +128,7 @@ export function DDayCountdownBanner() {
             className="w-full py-1.5 rounded-xl bg-[#7C5CFA] text-white text-xs font-bold shadow-soft hover:bg-[#6842f5] transition-all flex items-center justify-center gap-1.5"
           >
             <Check className="w-3.5 h-3.5" />
-            <span>Simpan Target D-Day</span>
+            <span>Simpan Permanen ke Firebase</span>
           </button>
         </form>
       )}
