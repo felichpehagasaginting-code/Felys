@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useDataStore } from "@/stores/use-data-store";
 import { Course, CourseSchedule } from "@/types/academic";
 import { formatCurrencyIDR } from "@/lib/utils";
-import { Calendar, Clock, MapPin, Plus, BookOpen, Sparkles } from "lucide-react";
+import { Calendar, Clock, MapPin, Plus, BookOpen, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
@@ -215,6 +215,20 @@ export function WeeklyTimetableGrid() {
                         <span className="font-extrabold text-foreground leading-tight">
                           {course.name}
                         </span>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            triggerHaptic("warning");
+                            const nextSchedules = (course.schedules || []).filter((s) => s.id !== schedule.id);
+                            await updateCourse(course.id, { schedules: nextSchedules });
+                            toast.info(`Jadwal ${course.name} dihapus.`);
+                          }}
+                          className="p-1 rounded-md text-muted hover:text-[#FF7A85] hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                          title="Hapus Jadwal"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-[10px] text-muted">

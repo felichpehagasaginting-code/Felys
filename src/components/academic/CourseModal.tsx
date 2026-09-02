@@ -25,7 +25,7 @@ const PASTEL_COLORS = [
 ];
 
 export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps) {
-  const { addCourse, updateCourse } = useDataStore();
+  const { addCourse, updateCourse, deleteCourse } = useDataStore();
   const [name, setName] = useState("");
   const [color, setColor] = useState(PASTEL_COLORS[0]);
   const [sks, setSks] = useState<number>(3);
@@ -72,6 +72,21 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
       console.error("Error saving course:", err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!courseToEdit || isSubmitting) return;
+    if (confirm(`Hapus mata kuliah "${courseToEdit.name}" beserta semua tugas di dalamnya?`)) {
+      setIsSubmitting(true);
+      try {
+        await deleteCourse(courseToEdit.id);
+        onClose();
+      } catch (err) {
+        console.error("Error deleting course:", err);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -137,17 +152,25 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
-              Batal
-            </Button>
-            <Button type="submit" variant="academic" size="sm" disabled={isSubmitting || !name.trim()}>
-              {isSubmitting
-                ? "Menyimpan..."
-                : courseToEdit
-                ? "Simpan Perubahan"
-                : "Simpan Mata Kuliah"}
-            </Button>
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {courseToEdit ? (
+              <Button type="button" variant="ghost" size="sm" onClick={handleDelete} className="text-[#FF7A85] hover:bg-[#FFE8EA] hover:text-[#D93D4A]" disabled={isSubmitting}>
+                Hapus
+              </Button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
+                Batal
+              </Button>
+              <Button type="submit" variant="academic" size="sm" disabled={isSubmitting || !name.trim()}>
+                {isSubmitting
+                  ? "Menyimpan..."
+                  : courseToEdit
+                  ? "Simpan Perubahan"
+                  : "Simpan Mata Kuliah"}
+              </Button>
+            </div>
           </div>
         </form>
       </ModalContent>

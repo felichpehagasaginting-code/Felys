@@ -20,7 +20,7 @@ const STATIC_DEFAULT_EXPENSES: Category[] = DEFAULT_EXPENSE_CATEGORIES.map((c, i
 }));
 
 export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps) {
-  const { categories, setBudgetLimit } = useDataStore();
+  const { categories, setBudgetLimit, deleteBudgetLimit } = useDataStore();
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [limit, setLimit] = useState(500000);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +54,19 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
       onClose();
     } catch (err) {
       console.error("Error saving budget:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!budgetToEdit || isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await deleteBudgetLimit(budgetToEdit.categoryId);
+      onClose();
+    } catch (err) {
+      console.error("Error deleting budget:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -126,13 +139,21 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
-              Batal
-            </Button>
-            <Button type="submit" variant="finance" size="sm" disabled={isSubmitting || limit <= 0}>
-              {isSubmitting ? "Menyimpan..." : "Simpan Budget"}
-            </Button>
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {budgetToEdit ? (
+              <Button type="button" variant="ghost" size="sm" onClick={handleDelete} className="text-[#FF7A85] hover:bg-[#FFE8EA] hover:text-[#D93D4A]" disabled={isSubmitting}>
+                Hapus Limit
+              </Button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
+                Batal
+              </Button>
+              <Button type="submit" variant="finance" size="sm" disabled={isSubmitting || limit <= 0}>
+                {isSubmitting ? "Menyimpan..." : "Simpan Budget"}
+              </Button>
+            </div>
           </div>
         </form>
       </ModalContent>
