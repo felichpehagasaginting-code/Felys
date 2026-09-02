@@ -615,9 +615,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteTransaction: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      transactions: state.transactions.filter((t) => t.id !== id),
-    }));
+    const nextTransactions = get().transactions.filter((t) => t.id !== id);
+    set({ transactions: nextTransactions });
+    saveLocal("felys_transactions", nextTransactions);
     get().refreshInsights();
 
     if (userId) {
@@ -631,12 +631,10 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   setBudgetLimit: async (categoryId, monthlyLimit) => {
     const userId = getCurrentUserId();
-    set((state) => {
-      const existing = state.budgetLimits.filter((b) => b.categoryId !== categoryId);
-      return {
-        budgetLimits: [...existing, { categoryId, monthlyLimit }],
-      };
-    });
+    const existing = get().budgetLimits.filter((b) => b.categoryId !== categoryId);
+    const nextBudgets = [...existing, { categoryId, monthlyLimit }];
+    set({ budgetLimits: nextBudgets });
+    saveLocal("felys_budgets", nextBudgets);
 
     get().refreshInsights();
 
@@ -651,9 +649,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteBudgetLimit: async (categoryId) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      budgetLimits: state.budgetLimits.filter((b) => b.categoryId !== categoryId),
-    }));
+    const nextBudgets = get().budgetLimits.filter((b) => b.categoryId !== categoryId);
+    set({ budgetLimits: nextBudgets });
+    saveLocal("felys_budgets", nextBudgets);
     get().refreshInsights();
 
     if (userId) {
