@@ -249,7 +249,7 @@ export function DynamicIsland() {
         triggerHaptic("light");
         setTimeout(() => setIsDragging(false), 120);
       }}
-      className="fixed top-20 right-4 sm:right-8 z-50 pointer-events-auto touch-none"
+      className="fixed top-[calc(env(safe-area-inset-top,0px)+4.5rem)] right-4 sm:right-8 z-50 pointer-events-auto touch-none"
       style={{ touchAction: "none" }}
     >
       <motion.div
