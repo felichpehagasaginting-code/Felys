@@ -23,6 +23,7 @@ import { ModeSwitcher } from "./ModeSwitcher";
 import { Button } from "@/components/ui/Button";
 import { IOSSlider } from "@/components/ui/IOSSlider";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
+import { FelysLogo } from "./FelysLogo";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -76,11 +77,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group select-none shrink-0">
-          <img
-            src="/felys-logo.svg"
-            alt="Felys App Logo"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-soft object-contain border border-border/60 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md shrink-0"
-          />
+          <FelysLogo className="w-8 h-8 sm:w-9 sm:h-9 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md" />
           <div className="hidden xs:flex flex-col">
             <span className="font-extrabold text-base sm:text-lg tracking-tight text-foreground flex items-center gap-1 group-hover:text-[#7C5CFA] transition-colors">
               Felys

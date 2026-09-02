@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Download, X, Smartphone, Bell, Check, Sparkles } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
+import { FelysLogo } from "./FelysLogo";
 
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -91,11 +92,7 @@ export function PWAInstallPrompt() {
       <div className="p-4 rounded-3xl bg-white dark:bg-[#26232E] border border-border shadow-2xl space-y-3 ring-1 ring-black/10">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <img
-              src="/felys-logo.svg"
-              alt="Felys App Icon"
-              className="w-10 h-10 rounded-2xl shadow-soft object-contain border border-border/60 shrink-0"
-            />
+            <FelysLogo className="w-10 h-10 shadow-soft shrink-0" />
             <div>
               <h4 className="text-xs font-bold text-foreground">
                 Pasang Felys di HP Kamu 📲
