@@ -19,6 +19,8 @@ import { formatDateRelative, getUrgencyBadgeConfig, cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ShareTaskModal } from "./ShareTaskModal";
 import { triggerHaptic } from "@/lib/haptics";
+import { playPop, playThud } from "@/lib/sounds";
+import { SwipeableCard } from "@/components/ui/SwipeableCard";
 import { generateGoogleCalendarUrl } from "@/lib/calendar-sync";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -61,10 +63,11 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
     }
   };
 
-  const handleToggleDone = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleDone = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     triggerHaptic(isDone ? "light" : "success");
     if (!isDone) {
+      playPop();
       // Trigger confetti on completion
       confetti({
         particleCount: 40,
@@ -73,6 +76,8 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         colors: ["#B69CFF", "#7FE3C0", "#FFC978"],
       });
       toast.success("Hebat! 1 tugas kuliah berhasil diselesaikan 🎉");
+    } else {
+      playPop();
     }
     toggleTaskStatus(task.id);
   };
@@ -80,6 +85,8 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
   const handleAddSubtaskSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubtaskTitle.trim()) return;
+    triggerHaptic("light");
+    playPop();
     addSubtask(task.id, newSubtaskTitle.trim());
     setNewSubtaskTitle("");
   };
@@ -91,14 +98,20 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
 
   return (
     <>
-      <Card
-        className={cn(
-          "group relative overflow-hidden transition-all duration-200 border",
-          isDone
-            ? "opacity-60 bg-[#FAF9FC]/50 dark:bg-[#1E1C24]/50 border-border"
-            : "hover:shadow-card hover:-translate-y-0.5 bg-surface border-border"
-        )}
+      <SwipeableCard
+        onSwipeRight={() => handleToggleDone()}
+        onSwipeLeft={handleDelete}
+        rightLabel={isDone ? "Batal" : "Selesai"}
+        leftLabel="Hapus"
       >
+        <Card
+          className={cn(
+            "group relative overflow-hidden transition-all duration-200 border",
+            isDone
+              ? "opacity-60 bg-[#FAF9FC]/50 dark:bg-[#1E1C24]/50 border-border"
+              : "hover:shadow-card hover:-translate-y-0.5 bg-surface border-border"
+          )}
+        >
         {/* Left urgency vertical highlight bar */}
         <div
           className="absolute left-0 top-0 bottom-0 w-1.5"
@@ -311,6 +324,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         )}
       </div>
     </Card>
+  </SwipeableCard>
 
     <ConfirmDialog
       isOpen={isConfirmOpen}
