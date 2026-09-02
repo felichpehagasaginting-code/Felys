@@ -7,6 +7,7 @@ import { notificationService } from "@/lib/notification-service";
 import { triggerHaptic } from "@/lib/haptics";
 import { Play, Pause, RotateCcw, CheckSquare, Bell, Sparkles, X, Minimize2, Maximize2, Coffee, Flame, PictureInPicture2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { PiPCompanionModal } from "@/components/shared/PiPCompanionModal";
 
 export function PomodoroWidget() {
@@ -150,33 +151,33 @@ export function PomodoroWidget() {
           </div>
         </div>
 
-        {/* Mode Buttons */}
-        <div className="grid grid-cols-3 gap-1 p-1 bg-[#FAF9FC] dark:bg-[#342F3E] rounded-xl text-[11px] font-bold">
-          <button
-            onClick={() => handleModeChange("focus")}
-            className={`py-1.5 rounded-lg transition-all ${
-              mode === "focus" ? "bg-surface text-[#7C5CFA] shadow-xs" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Fokus (25m)
-          </button>
-          <button
-            onClick={() => handleModeChange("short_break")}
-            className={`py-1.5 rounded-lg transition-all ${
-              mode === "short_break" ? "bg-surface text-[#1F8766] shadow-xs" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Jeda (5m)
-          </button>
-          <button
-            onClick={() => handleModeChange("long_break")}
-            className={`py-1.5 rounded-lg transition-all ${
-              mode === "long_break" ? "bg-surface text-[#3B82F6] shadow-xs" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Panjang (15m)
-          </button>
-        </div>
+        {/* Apple-style Drag-to-Scrub Mode Selector */}
+        <IOSSegmentedControl<PomodoroMode>
+          options={[
+            {
+              id: "focus",
+              label: "Fokus (25m)",
+              activeColor: "bg-[#7C5CFA]",
+              activeTextColor: "text-white",
+            },
+            {
+              id: "short_break",
+              label: "Jeda (5m)",
+              activeColor: "bg-[#7FE3C0]",
+              activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+            },
+            {
+              id: "long_break",
+              label: "Panjang (15m)",
+              activeColor: "bg-[#8EC8FF]",
+              activeTextColor: "text-[#0C2D48] dark:text-[#0C2D48]",
+            },
+          ]}
+          value={mode}
+          onChange={handleModeChange}
+          size="sm"
+          className="w-full shadow-xs"
+        />
 
         {/* Big Time Display */}
         <div className="text-center py-2">
