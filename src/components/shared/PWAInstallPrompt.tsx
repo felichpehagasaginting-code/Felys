@@ -92,9 +92,9 @@ export function PWAInstallPrompt() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <img
-              src="/icon.png"
+              src="/felys-logo.svg"
               alt="Felys App Icon"
-              className="w-10 h-10 rounded-2xl shadow-soft object-cover border border-border/60 shrink-0"
+              className="w-10 h-10 rounded-2xl shadow-soft object-contain border border-border/60 shrink-0"
             />
             <div>
               <h4 className="text-xs font-bold text-foreground">
