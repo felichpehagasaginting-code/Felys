@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { IOSSlider } from "@/components/ui/IOSSlider";
+import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { useDataStore } from "@/stores/use-data-store";
 import { PriorityLevel, Task, SubTask } from "@/types/academic";
 import { Sparkles, Plus, Trash2, CheckCircle2, ListChecks, Loader2 } from "lucide-react";
@@ -334,52 +336,52 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
             />
           </div>
 
-          {/* Priority (3 visual options) */}
+          {/* Priority (3 visual options with Apple-style drag selector) */}
           <div>
             <label className="block text-xs font-bold text-foreground mb-1.5">
               Tingkat Prioritas
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(
-                [
-                  { id: "low", label: "Rendah", color: "bg-[#E5FAF2] text-[#1F8766] border-[#9EE9D0]" },
-                  { id: "medium", label: "Sedang", color: "bg-[#FFF4E5] text-[#B86B14] border-[#FFD59E]" },
-                  { id: "high", label: "Tinggi", color: "bg-[#FFE8EA] text-[#D93D4A] border-[#FFA8B0]" },
-                ] as const
-              ).map((p) => (
-                <button
-                  type="button"
-                  key={p.id}
-                  onClick={() => setPriority(p.id)}
-                  className={cn(
-                    "py-2 rounded-xl text-xs font-bold border transition-all text-center",
-                    priority === p.id
-                      ? `${p.color} ring-2 ring-offset-1 ring-accent font-extrabold shadow-sm`
-                      : "bg-[#FAF9FC] dark:bg-[#2F2B3A] border-border text-muted hover:text-foreground"
-                  )}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            <IOSSegmentedControl<PriorityLevel>
+              options={[
+                {
+                  id: "low",
+                  label: "Rendah 🟢",
+                  activeColor: "bg-[#7FE3C0]",
+                  activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+                },
+                {
+                  id: "medium",
+                  label: "Sedang 🟡",
+                  activeColor: "bg-[#FFC978]",
+                  activeTextColor: "text-[#4A2800] dark:text-[#4A2800]",
+                },
+                {
+                  id: "high",
+                  label: "Tinggi 🔴",
+                  activeColor: "bg-[#FF7A85]",
+                  activeTextColor: "text-white",
+                },
+              ]}
+              value={priority}
+              onChange={(val) => {
+                triggerHaptic("light");
+                setPriority(val);
+              }}
+              size="md"
+              className="w-full shadow-xs"
+            />
           </div>
 
           {/* Estimated Hours */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-foreground">
-                Estimasi Waktu Pengerjaan
-              </label>
-              <span className="text-xs font-bold text-[#7C5CFA]">{estimatedHours} Jam</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="20"
-              step="1"
+          <div className="p-3 rounded-2xl bg-[#FAF9FC] dark:bg-[#2A2634] border border-border">
+            <IOSSlider
               value={estimatedHours || 2}
-              onChange={(e) => setEstimatedHours(Number(e.target.value))}
-              className="w-full accent-[#7C5CFA]"
+              min={1}
+              max={20}
+              step={1}
+              label="Estimasi Waktu Pengerjaan"
+              formatValue={(val) => `${val} Jam`}
+              onChange={(val) => setEstimatedHours(val)}
             />
           </div>
 
