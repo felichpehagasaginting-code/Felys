@@ -84,67 +84,94 @@ export function AccountOverviewGrid() {
       </div>
 
       {/* Grid of Accounts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        {accounts.map((account) => {
-          return (
-            <div
-              key={account.id}
-              className="p-4 rounded-3xl bg-surface border border-border shadow-soft hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between overflow-hidden"
-            >
-              {/* Top Row: Provider Logo & Edit button */}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <AccountProviderLogo provider={account.provider} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-xs font-extrabold text-foreground truncate">
-                      {account.name}
-                    </h4>
-                    <span className="text-[10px] text-muted truncate block">
-                      {account.accountNumber ? `•••• ${account.accountNumber}` : "Penyimpanan Utama"}
-                    </span>
+      {accounts.length === 0 ? (
+        <div className="p-6 rounded-3xl bg-surface border border-dashed border-border text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] flex items-center justify-center mx-auto">
+            <Wallet className="w-6 h-6" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h4 className="text-xs font-bold text-foreground">Belum Ada Rekening / E-Wallet</h4>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Tambahkan akun penyimpananmu (GoPay, SeaBank, BCA, Uang Tunai, dll.) untuk mulai mencatat dan membagi alokasi saldo.
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              triggerHaptic("light");
+              setSelectedEditAccount(null);
+              setIsFormOpen(true);
+            }}
+            size="sm"
+            variant="finance"
+            className="rounded-xl text-xs font-bold shadow-soft inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Tambah Rekening / E-Wallet</span>
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {accounts.map((account) => {
+            return (
+              <div
+                key={account.id}
+                className="p-4 rounded-3xl bg-surface border border-border shadow-soft hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between overflow-hidden"
+              >
+                {/* Top Row: Provider Logo & Edit button */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <AccountProviderLogo provider={account.provider} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs font-extrabold text-foreground truncate">
+                        {account.name}
+                      </h4>
+                      <span className="text-[10px] text-muted truncate block">
+                        {account.accountNumber ? `•••• ${account.accountNumber}` : "Penyimpanan Utama"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setSelectedEditAccount(account);
+                      setIsFormOpen(true);
+                    }}
+                    className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all opacity-80 group-hover:opacity-100"
+                    title="Edit Akun"
+                  >
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Middle Row: Balance Display */}
+                <div className="pt-3 pb-2">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                    Saldo Saat Ini
+                  </span>
+                  <div className="text-lg font-mono font-black text-foreground tracking-tight">
+                    {formatCurrencyIDR(account.currentBalance || 0)}
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    triggerHaptic("light");
-                    setSelectedEditAccount(account);
-                    setIsFormOpen(true);
-                  }}
-                  className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all opacity-80 group-hover:opacity-100"
-                  title="Edit Akun"
-                >
-                  <MoreVertical className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Middle Row: Balance Display */}
-              <div className="pt-3 pb-2">
-                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                  Saldo Saat Ini
-                </span>
-                <div className="text-lg font-mono font-black text-foreground tracking-tight">
-                  {formatCurrencyIDR(account.currentBalance || 0)}
+                {/* Bottom Row: Quick Action 'Ubah Saldo Langsung' */}
+                <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setSelectedAdjustAccount(account);
+                    }}
+                    className="w-full py-1.5 px-2.5 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] hover:bg-[#EDE5FF] dark:hover:bg-[#383442] text-[#7C5CFA] text-[11px] font-bold transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Ubah Saldo Langsung</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Bottom Row: Quick Action 'Ubah Saldo Langsung' */}
-              <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-                <button
-                  onClick={() => {
-                    triggerHaptic("light");
-                    setSelectedAdjustAccount(account);
-                  }}
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] hover:bg-[#EDE5FF] dark:hover:bg-[#383442] text-[#7C5CFA] text-[11px] font-bold transition-all flex items-center justify-center gap-1.5"
-                >
-                  <Edit3 className="w-3 h-3" />
-                  <span>Ubah Saldo Langsung</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modals */}
       <AdjustBalanceModal

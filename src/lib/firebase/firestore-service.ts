@@ -463,35 +463,6 @@ export class FirestoreService {
   }
 
   // --- FINANCIAL ACCOUNTS (DOMPET & REKENING MULTI-PLATFORM) ---
-  public static readonly DEFAULT_ACCOUNTS: Omit<FinancialAccount, "id">[] = [
-    {
-      name: "Uang Tunai (Dompet)",
-      provider: "cash",
-      currentBalance: 150000,
-      color: "#10B981",
-      isDefault: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      name: "SeaBank Utama",
-      provider: "seabank",
-      accountNumber: "9012",
-      currentBalance: 1250000,
-      color: "#FF5722",
-      isDefault: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      name: "GoPay Jajan",
-      provider: "gopay",
-      accountNumber: "0823",
-      currentBalance: 85000,
-      color: "#00AED6",
-      isDefault: false,
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
   public static subscribeAccounts(userId: string, callback: (accounts: FinancialAccount[]) => void) {
     const ref = collection(db, "users", userId, "accounts");
     return onSnapshot(
@@ -505,21 +476,6 @@ export class FirestoreService {
       },
       (error) => console.warn("Accounts listener error:", error)
     );
-  }
-
-  public static async seedDefaultAccountsIfEmpty(userId: string): Promise<void> {
-    try {
-      const accRef = collection(db, "users", userId, "accounts");
-      const snap = await getDocs(accRef);
-
-      if (snap.empty) {
-        for (const acc of FirestoreService.DEFAULT_ACCOUNTS) {
-          await addDoc(accRef, cleanFirestoreData(acc));
-        }
-      }
-    } catch (e) {
-      console.warn("Error seeding default accounts to Firestore:", e);
-    }
   }
 
   public static async addAccount(userId: string, account: Omit<FinancialAccount, "id">, customId?: string): Promise<string> {
