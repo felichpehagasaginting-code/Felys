@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePomodoroStore, PomodoroMode } from "@/stores/use-pomodoro-store";
 import { triggerHaptic } from "@/lib/haptics";
-import { playPop, playWhoosh, playTick } from "@/lib/sounds";
+import { playPop, playWhoosh } from "@/lib/sounds";
 import {
   Play,
   Pause,
   RotateCcw,
-  Coffee,
   Flame,
-  PictureInPicture2,
-  X,
   ChevronUp,
   GripHorizontal,
+  ExternalLink,
+  Layers,
 } from "lucide-react";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 
@@ -40,8 +39,9 @@ export function DynamicIsland() {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [autoPopOut, setAutoPopOut] = useState(true);
   const islandRef = useRef<HTMLDivElement>(null);
-  const dragControls = useDragControls();
+  const pipWindowRef = useRef<any>(null);
 
   // Background drift-free timer ticker
   useEffect(() => {
@@ -53,6 +53,26 @@ export function DynamicIsland() {
     }
     return () => clearInterval(interval);
   }, [isRunning, tick]);
+
+  // Update Pop-Out window content whenever state changes
+  useEffect(() => {
+    if (pipWindowRef.current && !pipWindowRef.current.closed) {
+      const doc = pipWindowRef.current.document;
+      const timeEl = doc.getElementById("pip-time");
+      const titleEl = doc.getElementById("pip-title");
+      const statusEl = doc.getElementById("pip-status");
+      const playBtn = doc.getElementById("pip-play-btn");
+
+      if (timeEl) timeEl.textContent = formatTime(timeLeft);
+      if (titleEl) titleEl.textContent = activeTaskTitle || "Felys Workspace";
+      if (statusEl) statusEl.textContent = mode === "focus" ? "🍅 Fokus Belajar" : "☕ Waktu Istirahat";
+      if (playBtn) {
+        playBtn.textContent = isRunning ? "⏸️ Jeda" : "▶️ Mulai";
+        playBtn.style.backgroundColor = isRunning ? "#FF7A85" : "#7FE3C0";
+        playBtn.style.color = isRunning ? "#FFFFFF" : "#0F3E30";
+      }
+    }
+  }, [timeLeft, isRunning, mode, activeTaskTitle]);
 
   // Click outside to collapse
   useEffect(() => {
@@ -76,7 +96,7 @@ export function DynamicIsland() {
 
   const toggleExpand = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (isDragging) return; // Ignore if user was dragging
+    if (isDragging) return;
 
     triggerHaptic("light");
     if (!isExpanded) {
@@ -87,8 +107,8 @@ export function DynamicIsland() {
     setIsExpanded(!isExpanded);
   };
 
-  const handleToggleTimer = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleTimer = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     triggerHaptic("medium");
     if (isRunning) {
       playPop();
@@ -99,8 +119,8 @@ export function DynamicIsland() {
     }
   };
 
-  const handleReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleReset = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     triggerHaptic("warning");
     playPop();
     resetTimer();
@@ -111,46 +131,112 @@ export function DynamicIsland() {
     setMode(newMode);
   };
 
-  const handleOpenPiP = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    triggerHaptic("light");
+  // Launch Built-In Floating Island Window (Always On Top)
+  const openFloatingIsland = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
     try {
       if ("documentPictureInPicture" in window) {
+        if (pipWindowRef.current && !pipWindowRef.current.closed) {
+          pipWindowRef.current.focus();
+          return;
+        }
+
         // @ts-ignore
-        const pipWindow = await window.documentPictureInPicture.requestWindow({
-          width: 320,
-          height: 240,
+        const pip = await window.documentPictureInPicture.requestWindow({
+          width: 250,
+          height: 105,
         });
 
-        const doc = pipWindow.document;
-        doc.title = "🍅 Felys Pomodoro Companion";
+        pipWindowRef.current = pip;
+
+        const doc = pip.document;
+        doc.title = "🍅 Felys Dynamic Island";
         doc.body.style.margin = "0";
-        doc.body.style.fontFamily = "system-ui, sans-serif";
-        doc.body.style.background = "#181716";
-        doc.body.style.color = "#F8F6F2";
+        doc.body.style.padding = "10px";
+        doc.body.style.boxSizing = "border-box";
+        doc.body.style.fontFamily = "system-ui, -apple-system, sans-serif";
+        doc.body.style.backgroundColor = "#000000";
+        doc.body.style.color = "#FFFFFF";
         doc.body.style.display = "flex";
         doc.body.style.flexDirection = "column";
-        doc.body.style.alignItems = "center";
-        doc.body.style.justifyContent = "center";
+        doc.body.style.justifyContent = "space-between";
         doc.body.style.height = "100vh";
-        doc.body.style.padding = "16px";
+        doc.body.style.userSelect = "none";
+        doc.body.style.overflow = "hidden";
 
         doc.body.innerHTML = `
-          <div style="font-size: 32px; font-weight: 800; font-family: monospace; letter-spacing: -1px; margin-bottom: 8px;">
-            ${formatTime(timeLeft)}
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 14px;">${mode === "focus" ? "🍅" : "☕"}</span>
+              <span id="pip-status" style="font-size: 11px; font-weight: 700; color: #B69CFF;">
+                ${mode === "focus" ? "Fokus Belajar" : "Istirahat"}
+              </span>
+            </div>
+            <span id="pip-title" style="font-size: 10px; color: #A39D94; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${activeTaskTitle || "Felys"}
+            </span>
           </div>
-          <div style="font-size: 12px; font-weight: bold; color: #B69CFF; margin-bottom: 12px;">
-            ${mode === "focus" ? "🍅 Sesi Fokus Belajar" : "☕ Waktu Istirahat"}
-          </div>
-          <div style="font-size: 11px; opacity: 0.8; max-width: 200px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${activeTaskTitle || "Felys Workspace"}
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+            <div id="pip-time" style="font-size: 26px; font-weight: 800; font-family: monospace; letter-spacing: -1px; color: #FFFFFF;">
+              ${formatTime(timeLeft)}
+            </div>
+
+            <div style="display: flex; gap: 6px;">
+              <button id="pip-reset-btn" style="background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 12px; padding: 6px 8px; font-size: 11px; cursor: pointer; font-weight: bold;">
+                🔄
+              </button>
+              <button id="pip-play-btn" style="background: ${isRunning ? "#FF7A85" : "#7FE3C0"}; border: none; color: ${isRunning ? "#FFFFFF" : "#0F3E30"}; border-radius: 12px; padding: 6px 12px; font-size: 11px; cursor: pointer; font-weight: 800;">
+                ${isRunning ? "⏸️ Jeda" : "▶️ Mulai"}
+              </button>
+            </div>
           </div>
         `;
+
+        // Attach listeners inside PiP
+        const playBtn = doc.getElementById("pip-play-btn");
+        const resetBtn = doc.getElementById("pip-reset-btn");
+
+        if (playBtn) {
+          playBtn.onclick = () => {
+            const currentRunning = usePomodoroStore.getState().isRunning;
+            if (currentRunning) {
+              pauseTimer();
+            } else {
+              startTimer();
+            }
+          };
+        }
+
+        if (resetBtn) {
+          resetBtn.onclick = () => {
+            resetTimer();
+          };
+        }
+
+        pip.addEventListener("pagehide", () => {
+          pipWindowRef.current = null;
+        });
       }
     } catch (err) {
-      console.warn("PiP not supported or cancelled:", err);
+      console.warn("Floating Island Pop-Out notice:", err);
     }
-  };
+  }, [mode, activeTaskTitle, timeLeft, isRunning, pauseTimer, startTimer, resetTimer]);
+
+  // Seamless Auto-Pop Out on App Switch / Tab Visibility Change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && isRunning && autoPopOut) {
+        if (!pipWindowRef.current || pipWindowRef.current.closed) {
+          openFloatingIsland();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isRunning, autoPopOut, openFloatingIsland]);
 
   return (
     <motion.div
@@ -161,10 +247,8 @@ export function DynamicIsland() {
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => {
         triggerHaptic("light");
-        // small timeout to prevent onClick from firing right after drag release
         setTimeout(() => setIsDragging(false), 120);
       }}
-      /* Default Position: Floating safely below the navbar on the top right/center without blocking anything */
       className="fixed top-20 right-4 sm:right-8 z-50 pointer-events-auto touch-none"
       style={{ touchAction: "none" }}
     >
@@ -172,7 +256,7 @@ export function DynamicIsland() {
         layout
         initial={false}
         animate={{
-          width: isExpanded ? "min(90vw, 360px)" : isRunning ? 215 : 165,
+          width: isExpanded ? "min(90vw, 360px)" : isRunning ? 220 : 170,
           height: isExpanded ? "auto" : 40,
           borderRadius: isExpanded ? 28 : 22,
         }}
@@ -193,7 +277,7 @@ export function DynamicIsland() {
       >
         <AnimatePresence mode="wait">
           {!isExpanded ? (
-            /* COMPACT DYNAMIC ISLAND PILL (DRAGGABLE ANYWHERE) */
+            /* COMPACT DYNAMIC ISLAND PILL */
             <motion.div
               key="compact"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -222,7 +306,7 @@ export function DynamicIsland() {
                 {formatTime(timeLeft)}
               </div>
 
-              {/* Right Mini Equalizer / Audio Wave & Drag Grip Hint */}
+              {/* Right Mini Equalizer & Pop-Out Quick Button */}
               <div className="flex items-center gap-1 shrink-0">
                 {isRunning ? (
                   <div className="flex items-center gap-0.5 h-3">
@@ -235,7 +319,18 @@ export function DynamicIsland() {
                     {mode === "focus" ? "25m" : "5m"}
                   </span>
                 )}
-                <GripHorizontal className="w-3 h-3 text-white/30 group-hover:text-white/70 transition-colors ml-0.5" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openFloatingIsland();
+                  }}
+                  className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/15 transition-all"
+                  title="Lepas Kapsul Melayang ke Luar App (Always-On-Top)"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+                <GripHorizontal className="w-3 h-3 text-white/30 group-hover:text-white/70 transition-colors" />
               </div>
             </motion.div>
           ) : (
@@ -325,6 +420,20 @@ export function DynamicIsland() {
                 />
               </div>
 
+              {/* Seamless Auto-Pop Out Toggle */}
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 border border-white/10 text-[11px]">
+                <div className="flex items-center gap-1.5 text-white/80">
+                  <Layers className="w-3.5 h-3.5 text-[#7FE3C0]" />
+                  <span>Kapsul tetap melayang saat pindah app</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={autoPopOut}
+                  onChange={(e) => setAutoPopOut(e.target.checked)}
+                  className="rounded text-[#7C5CFA] focus:ring-0 cursor-pointer accent-[#7C5CFA] w-3.5 h-3.5"
+                />
+              </div>
+
               {/* Quick Action Controls */}
               <div className="flex items-center justify-between gap-2 pt-1">
                 <button
@@ -358,16 +467,14 @@ export function DynamicIsland() {
                   )}
                 </button>
 
-                {"documentPictureInPicture" in (typeof window !== "undefined" ? window : {}) && (
-                  <button
-                    type="button"
-                    onClick={handleOpenPiP}
-                    className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
-                    title="Buka Jendela Mengambang (PiP)"
-                  >
-                    <PictureInPicture2 className="w-4 h-4" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={openFloatingIsland}
+                  className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
+                  title="Lepas Kapsul ke Luar Layar"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </button>
               </div>
             </motion.div>
           )}
