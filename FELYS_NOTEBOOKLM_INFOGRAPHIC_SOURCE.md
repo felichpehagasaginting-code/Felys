@@ -169,7 +169,12 @@ Felys mengadopsi standar interaksi sistem operasi Apple (iOS 18) untuk menghadir
    - **Swipe Kanan (>85px):** Mengungkap layer hijau mint dengan ikon centang. Memicu aksi selesai, suara pop renyah `playPop()`, haptik halus, dan semburan konfeti pastel.
    - **Swipe Kiri (<-85px):** Mengungkap layer merah coral dengan ikon sampah. Memicu aksi hapus dengan suara thud redam `playThud()`, disertai **Toast Undo 5 detik** di bagian bawah layar.
    - **Fisika Pegas:** *Elastic rubber-band resistance* saat ditarik dan *spring snap back* saat dilepas sebelum ambang batas.
-2. **🎛️ Interactive Drag-to-Scrub Segmented Control (`IOSSegmentedControl.tsx`):**
+2. **🏝️ Freely Draggable Dynamic Island (`DynamicIsland.tsx`):**
+   - **Bebas Digeser ke Mana Saja (*Free-Floating Drag*):** Kapsul Dynamic Island dapat di-drag & drop dengan jari/mouse ke sudut manapun pada layar tanpa menghalangi komponen navigasi atau tombol utama.
+   - **Posisi Default Aman:** Melayang rapi di bawah area navbar dengan safe padding sehingga tidak menutupi logo ataupun tab menu.
+   - **Compact Mode:** Menampilkan ikon tomat `🍅` berdenyut, live countdown digital, visualizer audio gelombang, dan grip drag.
+   - **Spring Morphing:** Di-tap untuk membesar menjadi panel kontrol fokus (Play/Pause, Reset, Drag Mode Tabs, dan tombol Picture-in-Picture).
+3. **🎛️ Interactive Drag-to-Scrub Segmented Control (`IOSSegmentedControl.tsx`):**
    - **Press & Hold:** Kapsul pemilih membesar dinamis dan menempel pada posisi jempol pengguna.
    - **Live Dragging:** Pengguna menggeser jempol secara bebas ke kiri/kanan. Kapsul mengalir mulus mengikuti posisi jempol dengan efek getar (*haptic tick*) dan audio klik mikro setiap kali menyeberangi opsi.
    - **Release to Select:** Begitu jempol diangkat, sistem otomatis memilih dan mengaktifkan opsi yang dituju.
