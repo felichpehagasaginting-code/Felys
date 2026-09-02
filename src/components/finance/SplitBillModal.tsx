@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatCurrencyIDR, formatDateRelative } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
@@ -128,36 +129,39 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
             </button>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setActiveTab("calculator")}
-              className={`py-2 rounded-xl transition-all ${
-                activeTab === "calculator"
-                  ? "bg-surface text-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              Kalkulator Patungan 🧮
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("list")}
-              className={`py-2 rounded-xl transition-all flex items-center justify-center gap-1 ${
-                activeTab === "list"
-                  ? "bg-surface text-foreground shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              <span>Daftar Talangan</span>
-              {unsettledDebts.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#FF7A85] text-white text-[10px] flex items-center justify-center">
-                  {unsettledDebts.length}
-                </span>
-              )}
-            </button>
-          </div>
+          {/* Apple-style Drag Tab Switcher */}
+          <IOSSegmentedControl<"calculator" | "list">
+            options={[
+              {
+                id: "calculator",
+                label: "Kalkulator Patungan 🧮",
+                activeColor: "bg-[#7FE3C0]",
+                activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+              },
+              {
+                id: "list",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    <span>Daftar Talangan</span>
+                    {unsettledDebts.length > 0 && (
+                      <span className="w-4 h-4 rounded-full bg-[#FF7A85] text-white text-[10px] flex items-center justify-center font-extrabold">
+                        {unsettledDebts.length}
+                      </span>
+                    )}
+                  </span>
+                ),
+                activeColor: "bg-[#7C5CFA]",
+                activeTextColor: "text-white",
+              },
+            ]}
+            value={activeTab}
+            onChange={(val) => {
+              triggerHaptic("light");
+              setActiveTab(val);
+            }}
+            size="md"
+            className="w-full shadow-xs"
+          />
 
           {/* TAB 1: CALCULATOR */}
           {activeTab === "calculator" ? (
