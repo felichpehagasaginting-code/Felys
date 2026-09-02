@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/client";
 import { FirestoreService } from "@/lib/firebase/firestore-service";
+import { useDataStore } from "@/stores/use-data-store";
 import { Button } from "@/components/ui/Button";
 import { Mail, Lock, User, AlertCircle } from "lucide-react";
 
@@ -44,6 +45,8 @@ export default function RegisterPage() {
         FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
       ]).catch((e) => console.warn("Firestore sync error:", e));
 
+      useDataStore.getState().initFirestoreSync(userCredential.user.uid);
+
       router.push("/");
       router.refresh();
     } catch (err: any) {
@@ -76,6 +79,8 @@ export default function RegisterPage() {
         }),
         FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
       ]).catch((e) => console.warn("Firestore sync error:", e));
+
+      useDataStore.getState().initFirestoreSync(userCredential.user.uid);
 
       router.push("/");
       router.refresh();

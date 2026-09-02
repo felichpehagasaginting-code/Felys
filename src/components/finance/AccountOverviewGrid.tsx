@@ -2,11 +2,13 @@
 
 import React, { useState } from "react";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { FinancialAccount } from "@/types/finance";
 import { AccountProviderLogo } from "./AccountProviderLogo";
 import { AdjustBalanceModal } from "./AdjustBalanceModal";
 import { AccountFormModal } from "./AccountFormModal";
 import { AccountTransferModal } from "./AccountTransferModal";
+import { FirestoreService } from "@/lib/firebase/firestore-service";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
 import {
@@ -16,20 +18,45 @@ import {
   Edit3,
   MoreVertical,
   ShieldCheck,
+  RotateCw,
   Sparkles,
-  TrendingUp,
+  Cloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { toast } from "sonner";
 
 export function AccountOverviewGrid() {
-  const { accounts, getTotalNetWorth, emergencyFund } = useDataStore();
+  const { accounts, getTotalNetWorth, initFirestoreSync } = useDataStore();
+  const { user } = useAuthStore();
 
   const [selectedAdjustAccount, setSelectedAdjustAccount] = useState<FinancialAccount | null>(null);
   const [selectedEditAccount, setSelectedEditAccount] = useState<FinancialAccount | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const totalNetWorth = getTotalNetWorth();
+
+  const handleManualSync = async () => {
+    triggerHaptic("medium");
+    if (!user) {
+      toast.error("Kamu sedang dalam mode pratinjau lokal. Silakan masuk akun di menu Pengaturan agar data tersinkron antar HP & Laptop.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      await FirestoreService.syncLocalDataToFirestore(user.uid, {
+        accounts,
+      });
+      initFirestoreSync(user.uid);
+      toast.success(`Sinkronisasi Cloud Berhasil! (${accounts.length} rekening aktif) ✨`);
+    } catch (err) {
+      toast.error("Gagal melakukan sinkronisasi cloud. Periksa koneksi internet.");
+    } finally {
+      setTimeout(() => setIsSyncing(false), 500);
+    }
+  };
 
   return (
     <section className="space-y-4">
@@ -40,9 +67,20 @@ export function AccountOverviewGrid() {
             <Wallet className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-base font-extrabold text-foreground">
-              Alokasi Rekening & E-Wallet
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-extrabold text-foreground">
+                Alokasi Rekening & E-Wallet
+              </h3>
+              {user ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1F8766] bg-[#E0FBF2] dark:bg-[#1E332A] px-2 py-0.5 rounded-full">
+                  <Cloud className="w-3 h-3" /> Live Cloud
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                  Lokal (Belum Login)
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-muted">
               Total Saldo Aktif:{" "}
               <b className="text-foreground font-mono">{formatCurrencyIDR(totalNetWorth)}</b>
@@ -51,7 +89,20 @@ export function AccountOverviewGrid() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Sync Button */}
+          <Button
+            onClick={handleManualSync}
+            size="sm"
+            variant="secondary"
+            disabled={isSyncing}
+            className="rounded-xl text-xs font-semibold flex items-center gap-1.5"
+            title="Paksa Sinkronkan Cloud Firestore"
+          >
+            <RotateCw className={`w-3.5 h-3.5 text-muted ${isSyncing ? "animate-spin text-[#7C5CFA]" : ""}`} />
+            <span className="hidden xs:inline">Sinkronkan</span>
+          </Button>
+
           {accounts.length >= 2 && (
             <Button
               onClick={() => {
@@ -92,7 +143,7 @@ export function AccountOverviewGrid() {
           <div className="max-w-md mx-auto space-y-1">
             <h4 className="text-xs font-bold text-foreground">Belum Ada Rekening / E-Wallet</h4>
             <p className="text-[11px] text-muted leading-relaxed">
-              Tambahkan akun penyimpananmu (GoPay, SeaBank, BCA, Uang Tunai, dll.) untuk mulai mencatat dan membagi alokasi saldo.
+              Tambahkan akun penyimpananmu (Superbank, GoPay, SeaBank, BCA, Uang Tunai, dll.) untuk mulai mencatat dan membagi alokasi saldo.
             </p>
           </div>
           <Button

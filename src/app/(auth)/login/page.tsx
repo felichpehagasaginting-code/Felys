@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/client";
 import { FirestoreService } from "@/lib/firebase/firestore-service";
+import { useDataStore } from "@/stores/use-data-store";
 import { Button } from "@/components/ui/Button";
 import { Mail, Lock, AlertCircle } from "lucide-react";
 
@@ -30,7 +31,7 @@ export default function LoginPage() {
 
       const userCredential: any = await Promise.race([loginPromise, timeoutPromise]);
       
-      // Sync user profile & categories to Firestore
+      // Sync user profile, categories, and push local data to Firestore
       await Promise.all([
         FirestoreService.syncUserProfile(userCredential.user.uid, {
           id: userCredential.user.uid,
@@ -39,6 +40,8 @@ export default function LoginPage() {
         }),
         FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
       ]).catch((e) => console.warn("Firestore sync error:", e));
+
+      useDataStore.getState().initFirestoreSync(userCredential.user.uid);
 
       router.push("/");
       router.refresh();
@@ -74,6 +77,8 @@ export default function LoginPage() {
         }),
         FirestoreService.seedDefaultCategoriesIfEmpty(userCredential.user.uid),
       ]).catch((e) => console.warn("Firestore sync error:", e));
+
+      useDataStore.getState().initFirestoreSync(userCredential.user.uid);
 
       router.push("/");
       router.refresh();
