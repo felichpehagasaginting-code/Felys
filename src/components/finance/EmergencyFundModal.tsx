@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
@@ -112,31 +113,30 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
             </div>
           )}
 
-          {/* Deposit & Withdraw Tabs */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setActionType("deposit")}
-              className={`py-2 rounded-xl transition-all ${
-                actionType === "deposit"
-                  ? "bg-surface text-[#1F8766] shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              + Setor Dana Darurat
-            </button>
-            <button
-              type="button"
-              onClick={() => setActionType("withdraw")}
-              className={`py-2 rounded-xl transition-all ${
-                actionType === "withdraw"
-                  ? "bg-surface text-[#D93D4A] shadow-xs"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              - Tarik Dana Darurat
-            </button>
-          </div>
+          {/* Deposit & Withdraw Apple-style Drag Tabs */}
+          <IOSSegmentedControl<"deposit" | "withdraw">
+            options={[
+              {
+                id: "deposit",
+                label: "+ Setor Dana Darurat",
+                activeColor: "bg-[#7FE3C0]",
+                activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+              },
+              {
+                id: "withdraw",
+                label: "- Tarik Dana Darurat",
+                activeColor: "bg-[#FF7A85]",
+                activeTextColor: "text-white",
+              },
+            ]}
+            value={actionType}
+            onChange={(val) => {
+              triggerHaptic("light");
+              setActionType(val);
+            }}
+            size="md"
+            className="w-full shadow-xs"
+          />
 
           {/* Transaction Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
