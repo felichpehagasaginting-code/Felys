@@ -33,6 +33,22 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
+      match /accounts/{accountId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /savings_goals/{goalId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /recurring_bills/{billId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /debts/{debtId} {
+        allow read, write: if isOwner(userId);
+      }
+
       match /ai_insights/{insightId} {
         allow read, write: if isOwner(userId);
       }

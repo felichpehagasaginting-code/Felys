@@ -26,6 +26,23 @@ function getCurrentUserId(): string | null {
   return auth.currentUser?.uid || useAuthStore.getState().user?.uid || null;
 }
 
+function loadLocal<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveLocal(key: string, data: any): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {}
+}
+
 interface DataState {
   // Real Firestore Data
   courses: Course[];
@@ -99,20 +116,20 @@ interface DataState {
 }
 
 export const useDataStore = create<DataState>((set, get) => ({
-  courses: [],
-  tasks: [],
-  ddayEvent: {
-    title: typeof window !== "undefined" ? localStorage.getItem("felys_dday_title") || "Target Ujian / Sidang" : "Target Ujian / Sidang",
-    targetDate: typeof window !== "undefined" ? localStorage.getItem("felys_dday_date") || "" : "",
-  },
-  accounts: [],
-  categories: [],
-  transactions: [],
-  budgetLimits: [],
-  recurringBills: [],
-  debts: [],
-  savingsGoals: [],
-  emergencyFund: 0,
+  courses: loadLocal<Course[]>("felys_courses", []),
+  tasks: loadLocal<Task[]>("felys_tasks", []),
+  ddayEvent: loadLocal<DDayEvent>("felys_dday", {
+    title: "Target Ujian / Sidang",
+    targetDate: "",
+  }),
+  accounts: loadLocal<FinancialAccount[]>("felys_accounts", []),
+  categories: loadLocal<Category[]>("felys_categories", []),
+  transactions: loadLocal<Transaction[]>("felys_transactions", []),
+  budgetLimits: loadLocal<{ categoryId: string; monthlyLimit: number }[]>("felys_budgets", []),
+  recurringBills: loadLocal<RecurringBill[]>("felys_bills", []),
+  debts: loadLocal<FriendDebt[]>("felys_debts", []),
+  savingsGoals: loadLocal<SavingsGoal[]>("felys_savings", []),
+  emergencyFund: loadLocal<number>("felys_emergency_fund", 0),
   insights: [],
   isLoaded: false,
 
@@ -140,6 +157,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     const unsubProfile = FirestoreService.subscribeUserProfile(userId, (data) => {
       if (data.ddayEvent) {
         set({ ddayEvent: data.ddayEvent });
+        saveLocal("felys_dday", data.ddayEvent);
         if (typeof window !== "undefined") {
           localStorage.setItem("felys_dday_title", data.ddayEvent.title);
           localStorage.setItem("felys_dday_date", data.ddayEvent.targetDate);
@@ -147,57 +165,59 @@ export const useDataStore = create<DataState>((set, get) => ({
       }
       if (typeof data.emergencyFund === "number") {
         set({ emergencyFund: data.emergencyFund });
+        saveLocal("felys_emergency_fund", data.emergencyFund);
       }
     });
 
     // 3. Subscribe to real-time collections
     const unsubCourses = FirestoreService.subscribeCourses(userId, (courses) => {
       set({ courses });
+      saveLocal("felys_courses", courses);
       get().refreshInsights();
     });
 
     const unsubTasks = FirestoreService.subscribeTasks(userId, (tasks) => {
       set({ tasks });
+      saveLocal("felys_tasks", tasks);
       get().refreshInsights();
     });
 
     const unsubAccounts = FirestoreService.subscribeAccounts(userId, (accounts) => {
-      if (accounts.length > 0) {
-        set({ accounts });
-      }
+      set({ accounts });
+      saveLocal("felys_accounts", accounts);
     });
 
     const unsubCategories = FirestoreService.subscribeCategories(userId, (categories) => {
       set({ categories });
+      saveLocal("felys_categories", categories);
       get().refreshInsights();
     });
 
     const unsubTransactions = FirestoreService.subscribeTransactions(userId, (transactions) => {
       set({ transactions });
+      saveLocal("felys_transactions", transactions);
       get().refreshInsights();
     });
 
     const unsubBudgets = FirestoreService.subscribeBudgets(userId, (budgetLimits) => {
       set({ budgetLimits, isLoaded: true });
+      saveLocal("felys_budgets", budgetLimits);
       get().refreshInsights();
     });
 
     const unsubSavings = FirestoreService.subscribeSavingsGoals(userId, (savingsGoals) => {
-      if (savingsGoals.length > 0) {
-        set({ savingsGoals });
-      }
+      set({ savingsGoals });
+      saveLocal("felys_savings", savingsGoals);
     });
 
     const unsubBills = FirestoreService.subscribeRecurringBills(userId, (recurringBills) => {
-      if (recurringBills.length > 0) {
-        set({ recurringBills });
-      }
+      set({ recurringBills });
+      saveLocal("felys_bills", recurringBills);
     });
 
     const unsubDebts = FirestoreService.subscribeDebts(userId, (debts) => {
-      if (debts.length > 0) {
-        set({ debts });
-      }
+      set({ debts });
+      saveLocal("felys_debts", debts);
     });
 
     return () => {
@@ -224,7 +244,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
-    set((state) => ({ courses: [...state.courses, newCourse] }));
+    const nextCourses = [...get().courses, newCourse];
+    set({ courses: nextCourses });
+    saveLocal("felys_courses", nextCourses);
 
     if (userId) {
       try {
@@ -237,9 +259,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateCourse: async (id, updates) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      courses: state.courses.map((c) => (c.id === id ? { ...c, ...updates } : c)),
-    }));
+    const nextCourses = get().courses.map((c) => (c.id === id ? { ...c, ...updates } : c));
+    set({ courses: nextCourses });
+    saveLocal("felys_courses", nextCourses);
 
     if (userId) {
       try {
@@ -252,10 +274,14 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteCourse: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      courses: state.courses.filter((c) => c.id !== id),
-      tasks: state.tasks.filter((t) => t.courseId !== id),
-    }));
+    const nextCourses = get().courses.filter((c) => c.id !== id);
+    const nextTasks = get().tasks.filter((t) => t.courseId !== id);
+    set({
+      courses: nextCourses,
+      tasks: nextTasks,
+    });
+    saveLocal("felys_courses", nextCourses);
+    saveLocal("felys_tasks", nextTasks);
 
     if (userId) {
       try {
@@ -288,9 +314,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       updatedAt: new Date().toISOString(),
     };
 
-    set((state) => ({
-      tasks: [...state.tasks, newTask].sort((a, b) => b.urgencyScore - a.urgencyScore),
-    }));
+    const nextTasks = [...get().tasks, newTask].sort((a, b) => b.urgencyScore - a.urgencyScore);
+    set({ tasks: nextTasks });
+    saveLocal("felys_tasks", nextTasks);
 
     get().refreshInsights();
 
@@ -322,6 +348,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     updatedTasks.sort((a, b) => b.urgencyScore - a.urgencyScore);
     set({ tasks: updatedTasks });
+    saveLocal("felys_tasks", updatedTasks);
     get().refreshInsights();
 
     if (userId) {
@@ -335,9 +362,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteTask: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
-    }));
+    const nextTasks = get().tasks.filter((t) => t.id !== id);
+    set({ tasks: nextTasks });
+    saveLocal("felys_tasks", nextTasks);
     get().refreshInsights();
 
     if (userId) {
@@ -429,7 +456,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       updatedAt: new Date().toISOString(),
     };
 
-    set((state) => ({ accounts: [...state.accounts, newAccount] }));
+    const nextAccounts = [...get().accounts, newAccount];
+    set({ accounts: nextAccounts });
+    saveLocal("felys_accounts", nextAccounts);
 
     if (userId) {
       try {
@@ -442,11 +471,11 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateAccount: async (id, updates) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      accounts: state.accounts.map((a) =>
-        a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a
-      ),
-    }));
+    const nextAccounts = get().accounts.map((a) =>
+      a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a
+    );
+    set({ accounts: nextAccounts });
+    saveLocal("felys_accounts", nextAccounts);
 
     if (userId) {
       try {
@@ -459,11 +488,11 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   adjustAccountBalance: async (id, newBalance) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      accounts: state.accounts.map((a) =>
-        a.id === id ? { ...a, currentBalance: newBalance, updatedAt: new Date().toISOString() } : a
-      ),
-    }));
+    const nextAccounts = get().accounts.map((a) =>
+      a.id === id ? { ...a, currentBalance: newBalance, updatedAt: new Date().toISOString() } : a
+    );
+    set({ accounts: nextAccounts });
+    saveLocal("felys_accounts", nextAccounts);
 
     if (userId) {
       try {
@@ -483,13 +512,14 @@ export const useDataStore = create<DataState>((set, get) => ({
     const newFromBal = Math.max(0, fromAcc.currentBalance - amount);
     const newToBal = toAcc.currentBalance + amount;
 
-    set((state) => ({
-      accounts: state.accounts.map((a) => {
-        if (a.id === fromId) return { ...a, currentBalance: newFromBal, updatedAt: new Date().toISOString() };
-        if (a.id === toId) return { ...a, currentBalance: newToBal, updatedAt: new Date().toISOString() };
-        return a;
-      }),
-    }));
+    const nextAccounts = get().accounts.map((a) => {
+      if (a.id === fromId) return { ...a, currentBalance: newFromBal, updatedAt: new Date().toISOString() };
+      if (a.id === toId) return { ...a, currentBalance: newToBal, updatedAt: new Date().toISOString() };
+      return a;
+    });
+
+    set({ accounts: nextAccounts });
+    saveLocal("felys_accounts", nextAccounts);
 
     if (userId) {
       try {
@@ -503,9 +533,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteAccount: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      accounts: state.accounts.filter((a) => a.id !== id),
-    }));
+    const nextAccounts = get().accounts.filter((a) => a.id !== id);
+    set({ accounts: nextAccounts });
+    saveLocal("felys_accounts", nextAccounts);
 
     if (userId) {
       try {
@@ -530,7 +560,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       id: catId,
     };
 
-    set((state) => ({ categories: [...state.categories, newCat] }));
+    const nextCategories = [...get().categories, newCat];
+    set({ categories: nextCategories });
+    saveLocal("felys_categories", nextCategories);
 
     if (userId) {
       try {
@@ -556,9 +588,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (targetAcc) {
         const delta = trxData.type === "income" ? trxData.amount : -trxData.amount;
         const newBal = Math.max(0, targetAcc.currentBalance + delta);
-        set((state) => ({
-          accounts: state.accounts.map((a) => (a.id === trxData.accountId ? { ...a, currentBalance: newBal } : a)),
-        }));
+        const nextAccounts = get().accounts.map((a) => (a.id === trxData.accountId ? { ...a, currentBalance: newBal } : a));
+        set({ accounts: nextAccounts });
+        saveLocal("felys_accounts", nextAccounts);
 
         if (userId) {
           FirestoreService.adjustAccountBalance(userId, trxData.accountId, newBal);
@@ -566,9 +598,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       }
     }
 
-    set((state) => ({
-      transactions: [newTrx, ...state.transactions],
-    }));
+    const nextTransactions = [newTrx, ...get().transactions];
+    set({ transactions: nextTransactions });
+    saveLocal("felys_transactions", nextTransactions);
 
     get().refreshInsights();
 
@@ -642,9 +674,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
-    set((state) => ({
-      recurringBills: [...state.recurringBills, newBill],
-    }));
+    const nextBills = [...get().recurringBills, newBill];
+    set({ recurringBills: nextBills });
+    saveLocal("felys_bills", nextBills);
 
     if (userId) {
       try {
@@ -657,9 +689,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteRecurringBill: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      recurringBills: state.recurringBills.filter((b) => b.id !== id),
-    }));
+    const nextBills = get().recurringBills.filter((b) => b.id !== id);
+    set({ recurringBills: nextBills });
+    saveLocal("felys_bills", nextBills);
 
     if (userId) {
       try {
@@ -694,9 +726,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
-    set((state) => ({
-      debts: [...state.debts, newDebt],
-    }));
+    const nextDebts = [...get().debts, newDebt];
+    set({ debts: nextDebts });
+    saveLocal("felys_debts", nextDebts);
 
     if (userId) {
       try {
@@ -723,11 +755,11 @@ export const useDataStore = create<DataState>((set, get) => ({
       });
     }
 
-    set((state) => ({
-      debts: state.debts.map((d) =>
-        d.id === id ? { ...d, isSettled: true, settledDate: new Date().toISOString() } : d
-      ),
-    }));
+    const nextDebts = get().debts.map((d) =>
+      d.id === id ? { ...d, isSettled: true, settledDate: new Date().toISOString() } : d
+    );
+    set({ debts: nextDebts });
+    saveLocal("felys_debts", nextDebts);
 
     if (userId) {
       try {
@@ -740,9 +772,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteDebt: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      debts: state.debts.filter((d) => d.id !== id),
-    }));
+    const nextDebts = get().debts.filter((d) => d.id !== id);
+    set({ debts: nextDebts });
+    saveLocal("felys_debts", nextDebts);
 
     if (userId) {
       try {
@@ -764,9 +796,9 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
-    set((state) => ({
-      savingsGoals: [...state.savingsGoals, newGoal],
-    }));
+    const nextGoals = [...get().savingsGoals, newGoal];
+    set({ savingsGoals: nextGoals });
+    saveLocal("felys_savings", nextGoals);
 
     if (userId) {
       try {
@@ -795,18 +827,18 @@ export const useDataStore = create<DataState>((set, get) => ({
     const newAmount = goal.currentAmount + amount;
     const isCompleted = newAmount >= goal.targetAmount;
 
-    set((state) => ({
-      savingsGoals: state.savingsGoals.map((g) => {
-        if (g.id === id) {
-          return {
-            ...g,
-            currentAmount: newAmount,
-            isCompleted,
-          };
-        }
-        return g;
-      }),
-    }));
+    const nextGoals = get().savingsGoals.map((g) => {
+      if (g.id === id) {
+        return {
+          ...g,
+          currentAmount: newAmount,
+          isCompleted,
+        };
+      }
+      return g;
+    });
+    set({ savingsGoals: nextGoals });
+    saveLocal("felys_savings", nextGoals);
 
     if (userId) {
       try {
@@ -819,9 +851,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteSavingsGoal: async (id) => {
     const userId = getCurrentUserId();
-    set((state) => ({
-      savingsGoals: state.savingsGoals.filter((g) => g.id !== id),
-    }));
+    const nextGoals = get().savingsGoals.filter((g) => g.id !== id);
+    set({ savingsGoals: nextGoals });
+    saveLocal("felys_savings", nextGoals);
 
     if (userId) {
       try {
@@ -845,6 +877,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     const newFund = get().emergencyFund + amount;
     set({ emergencyFund: newFund });
+    saveLocal("felys_emergency_fund", newFund);
 
     if (userId) {
       try {
@@ -868,6 +901,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     const newFund = Math.max(0, get().emergencyFund - amount);
     set({ emergencyFund: newFund });
+    saveLocal("felys_emergency_fund", newFund);
 
     if (userId) {
       try {
