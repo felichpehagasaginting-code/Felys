@@ -31,6 +31,9 @@ import {
   Delete,
   Check,
 } from "lucide-react";
+import { triggerHaptic } from "@/lib/haptics";
+import { playTick, playSuccessChime } from "@/lib/sounds";
+import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { formatCurrencyIDR, cn } from "@/lib/utils";
 
 interface NumpadQuickEntryProps {
@@ -106,20 +109,27 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   const numAmount = parseInt(amountStr, 10) || 0;
 
   const handleNumpadPress = (val: string) => {
+    triggerHaptic("light");
+    playTick();
     if (amountStr === "0") {
       setAmountStr(val);
-    } else if (amountStr.length < 10) {
+    } else {
+      if (amountStr.length >= 10) return;
       setAmountStr(amountStr + val);
     }
   };
 
   const handleQuickAddZeroes = (zeroes: string) => {
+    triggerHaptic("light");
+    playTick();
     if (amountStr !== "0" && amountStr.length + zeroes.length <= 11) {
       setAmountStr(amountStr + zeroes);
     }
   };
 
   const handleBackspace = () => {
+    triggerHaptic("light");
+    playTick();
     if (amountStr.length <= 1) {
       setAmountStr("0");
     } else {
@@ -147,6 +157,9 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
         date: new Date().toISOString(),
       });
 
+      triggerHaptic("success");
+      playSuccessChime();
+
       // Reset & Close
       setAmountStr("0");
       setNote("");
@@ -167,32 +180,29 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
       >
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* Income vs Expense Toggle */}
-          <div className="grid grid-cols-2 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl">
-            <button
-              type="button"
-              onClick={() => setType("expense")}
-              className={cn(
-                "py-2 rounded-xl text-xs font-bold transition-all",
-                type === "expense"
-                  ? "bg-[#FF7A85] text-white shadow-sm"
-                  : "text-muted hover:text-foreground"
-              )}
-            >
-              Pengeluaran 💸
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("income")}
-              className={cn(
-                "py-2 rounded-xl text-xs font-bold transition-all",
-                type === "income"
-                  ? "bg-[#7FE3C0] text-[#1F8766] shadow-sm"
-                  : "text-muted hover:text-foreground"
-              )}
-            >
-              Pemasukan 💰
-            </button>
-          </div>
+          <IOSSegmentedControl<TransactionType>
+            options={[
+              {
+                id: "expense",
+                label: "Pengeluaran 💸",
+                activeColor: "bg-[#FF7A85]",
+                activeTextColor: "text-white",
+              },
+              {
+                id: "income",
+                label: "Pemasukan 💰",
+                activeColor: "bg-[#7FE3C0]",
+                activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+              },
+            ]}
+            value={type}
+            onChange={(val) => {
+              triggerHaptic("light");
+              setType(val);
+            }}
+            size="md"
+            className="w-full shadow-xs"
+          />
 
           {/* Big Amount Display */}
           <div className="text-center py-2.5 bg-[#FAF9FC] dark:bg-[#2F2B3A] rounded-2xl border border-border">
