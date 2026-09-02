@@ -5,8 +5,9 @@ import { usePomodoroStore, PomodoroMode } from "@/stores/use-pomodoro-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { notificationService } from "@/lib/notification-service";
 import { triggerHaptic } from "@/lib/haptics";
-import { Play, Pause, RotateCcw, CheckSquare, Bell, Sparkles, X, Minimize2, Maximize2, Coffee, Flame } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckSquare, Bell, Sparkles, X, Minimize2, Maximize2, Coffee, Flame, PictureInPicture2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PiPCompanionModal } from "@/components/shared/PiPCompanionModal";
 
 export function PomodoroWidget() {
   const {
@@ -136,6 +137,7 @@ export function PomodoroWidget() {
           </div>
 
           <div className="flex items-center gap-1">
+            <PiPCompanionModal />
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EDE5FF] dark:bg-[#342F3E] text-[#7C5CFA]">
               {completedSessions} Selesai
             </span>

@@ -14,6 +14,8 @@ import {
   ChevronRight,
   ExternalLink,
   ShieldCheck,
+  Timer,
+  FileText,
 } from "lucide-react";
 import { ModeSwitcher } from "./ModeSwitcher";
 import { Button } from "@/components/ui/Button";
@@ -21,10 +23,8 @@ import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { usePomodoroStore } from "@/stores/use-pomodoro-store";
-import { PiPCompanionModal } from "./PiPCompanionModal";
 import { PDFLectureReaderModal } from "@/components/academic/PDFLectureReaderModal";
 import { triggerHaptic } from "@/lib/haptics";
-import { Timer, FileText } from "lucide-react";
 
 interface NavbarProps {
   onOpenQuickAdd?: () => void;
@@ -34,7 +34,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   const { activeMode, setActiveMode } = useModeStore();
   const { toggleDrawer } = useAIStore();
   const { user, signOut } = useAuthStore();
-  const { toggleWidget, isRunning, mode } = usePomodoroStore();
+  const { toggleWidget, isRunning } = usePomodoroStore();
   const [isDark, setIsDark] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPDFReaderOpen, setIsPDFReaderOpen] = useState(false);
@@ -51,7 +51,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   };
 
   const toggleSettingsMenu = () => {
-    triggerHaptic("medium");
+    triggerHaptic("light");
     setIsSettingsOpen((prev) => !prev);
   };
 
@@ -76,7 +76,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   return (
     <header className="sticky top-0 z-40 w-full glass border-b border-border transition-colors duration-300 pt-[env(safe-area-inset-top,0px)] safe-top">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Brand Logo with Playful Spring Tilt & Spin on Hover */}
+        {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group select-none shrink-0">
           <img
             src="/icon.png"
@@ -98,8 +98,8 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
           <ModeSwitcher />
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 relative">
+        {/* Right: Clean Minimalist Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 relative">
           {/* Quick Add Button (Desktop & Tablet) */}
           {onOpenQuickAdd && (
             <Button
@@ -113,41 +113,10 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
             </Button>
           )}
 
-          {/* Pomodoro Focus Launcher */}
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              toggleWidget();
-            }}
-            className={`p-1.5 sm:p-2 rounded-xl transition-all active:scale-90 flex items-center gap-1 ${
-              isRunning
-                ? "bg-[#EDE5FF] dark:bg-[#342F3E] text-[#7C5CFA]"
-                : "text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-            }`}
-            title="Buka Timer Pomodoro Fokus"
-          >
-            <Timer className={`w-4 h-4 ${isRunning ? "animate-spin text-[#7C5CFA]" : ""}`} />
-          </button>
-
-          {/* Picture-in-Picture Mini Companion */}
-          <PiPCompanionModal />
-
-          {/* Split-Screen PDF Lecture Reader */}
-          <button
-            onClick={() => {
-              triggerHaptic("light");
-              setIsPDFReaderOpen(true);
-            }}
-            className="p-1.5 sm:p-2 rounded-xl text-muted hover:text-[#7C5CFA] hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-90"
-            title="Split-Screen PDF Lecture Reader & AI"
-          >
-            <FileText className="w-4 h-4" />
-          </button>
-
-          {/* AI Fio Trigger Button with Sparkle Micro-Interactions */}
+          {/* AI Fio Trigger Button */}
           <button
             onClick={toggleDrawer}
-            className="group relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-gradient-to-r from-[#EDE5FF] to-[#E0FBF2] dark:from-[#383442] dark:to-[#26232E] border border-[#B69CFF]/40 text-[#7C5CFA] dark:text-[#B69CFF] text-xs font-semibold hover:shadow-soft hover:scale-105 active:scale-95 transition-all select-none"
+            className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#EDE5FF] to-[#E0FBF2] dark:from-[#383442] dark:to-[#26232E] border border-[#B69CFF]/40 text-[#7C5CFA] dark:text-[#B69CFF] text-xs font-semibold hover:shadow-soft hover:scale-105 active:scale-95 transition-all select-none"
             title="Buka Asisten AI Fio"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#7C5CFA] animate-pulse transition-transform duration-300 group-hover:rotate-12 group-hover:scale-125" />
@@ -156,7 +125,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
             <span className="w-2 h-2 rounded-full bg-[#FF7A85] absolute -top-0.5 -right-0.5" />
           </button>
 
-          {/* Theme Toggle with 90° Orbit Spin on Hover */}
+          {/* Theme Toggle */}
           <button
             onClick={toggleDarkMode}
             className="group p-1.5 sm:p-2 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-90"
@@ -169,7 +138,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
             )}
           </button>
 
-          {/* Settings Menu Button with Smooth 180° Gear Spin on Hover & Toggle Popover */}
+          {/* Settings Popover Menu */}
           <div className="relative" ref={settingsMenuRef}>
             <button
               onClick={toggleSettingsMenu}
@@ -178,19 +147,16 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                   ? "bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] ring-2 ring-[#7C5CFA]/40 shadow-soft"
                   : "text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
               }`}
-              title="Pengaturan Cepat"
-              aria-expanded={isSettingsOpen}
+              title="Pengaturan & Akun"
             >
               <Settings
-                className={`w-4 h-4 transition-transform duration-500 ease-out ${
-                  isSettingsOpen
-                    ? "rotate-180 text-[#7C5CFA]"
-                    : "group-hover:rotate-180"
+                className={`w-4 h-4 transition-transform duration-500 ease-out group-hover:rotate-180 ${
+                  isSettingsOpen ? "rotate-90 text-[#7C5CFA]" : ""
                 }`}
               />
             </button>
 
-            {/* Interactive Settings Dropdown / Quick Preferences Menu */}
+            {/* Interactive Settings Dropdown */}
             {isSettingsOpen && (
               <div className="absolute right-0 top-12 w-72 sm:w-80 rounded-3xl bg-white dark:bg-[#26232E] border border-border shadow-2xl p-4 space-y-3.5 z-50 animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/10">
                 {/* Profile Header */}
@@ -219,10 +185,48 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                   </div>
                 </div>
 
-                {/* Quick Mode Toggle */}
+                {/* Study Companion Tools in Menu */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                    Mode Aplikasi
+                    Alat Pendamping Studi
+                  </span>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setIsSettingsOpen(false);
+                        setIsPDFReaderOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-2xl text-xs font-semibold text-foreground hover:bg-[#FAF9FC] dark:hover:bg-[#342F3E] transition-colors group/tool"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-[#7C5CFA]" />
+                        <span>Buka PDF Lecture Reader</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted group-hover/tool:translate-x-0.5 transition-transform" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        triggerHaptic("light");
+                        setIsSettingsOpen(false);
+                        toggleWidget();
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-2xl text-xs font-semibold text-foreground hover:bg-[#FAF9FC] dark:hover:bg-[#342F3E] transition-colors group/tool"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Timer className="w-4 h-4 text-[#1F8766]" />
+                        <span>{isRunning ? "Buka Timer Pomodoro (Aktif)" : "Buka Timer Pomodoro"}</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted group-hover/tool:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Mode Toggle */}
+                <div className="space-y-1.5 pt-1 border-t border-border">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                    Ganti Mode
                   </span>
                   <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl text-xs font-bold">
                     <button
