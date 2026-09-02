@@ -67,11 +67,14 @@ Mode Finance: Dashboard | Transaksi | Budget | Laporan
 2. Setup awal: user isi mata kuliah aktif (Mode Akademik) dan budget bulanan per kategori (Mode Finance) — bisa di-skip dan diisi nanti
 3. Langsung masuk ke dashboard dengan empty-state yang friendly, ngajak nambah tugas/transaksi pertama
 
-## 6. Micro-interactions
+## 6. Micro-interactions & Apple-Grade Experience
 
-- Checklist tugas selesai: animasi centang + strikethrough halus + confetti kecil kalau semua sub-task di 1 tugas kelar
-- Transaksi tersimpan: angka di dashboard "count up/down" animasi, bukan langsung ganti
-- Switch mode: transisi warna aksen (lavender↔mint) fade smooth, bukan cut langsung, biar berasa "pindah ruang" bukan "reload halaman"
+- **Swipeable Cards (Mobile Gestures):** Swipe kanan pada card tugas untuk selesai (+ pop sound & confetti), swipe kiri untuk hapus (+ thud sound & undo toast) dengan elastisitas pegas iOS.
+- **Drag-to-Scrub Segmented Controls:** Tekan & tahan pada segmented tab / switch, geser bebas dengan haptic tick real-time, dan lepas untuk mengaktifkan opsi.
+- **Zero-Latency Sound Design:** Feedback audio prosedural Web Audio API (pop, thud, whoosh, tick, chime) yang responsif dan dapat diatur volumenya di Settings.
+- **Fluid iOS Sliders:** Track dinamis dengan active fill, thumb scale-up saat ditekan, dan tooltip melayang.
+- **Checklist & Selesai:** Animasi centang + strikethrough halus + confetti pop saat tugas selesai.
+- **Switch Mode:** Transisi warna aksen fade smooth dan suara whoosh halus saat berpindah ruang.
 
 ## 7. Empty States
 
