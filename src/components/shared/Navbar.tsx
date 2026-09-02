@@ -77,9 +77,9 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
         {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group select-none shrink-0">
           <img
-            src="/icon.png"
+            src="/felys-logo.svg"
             alt="Felys App Logo"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-soft object-cover border border-border/60 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-soft object-contain border border-border/60 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-md shrink-0"
           />
           <div className="hidden xs:flex flex-col">
             <span className="font-extrabold text-base sm:text-lg tracking-tight text-foreground flex items-center gap-1 group-hover:text-[#7C5CFA] transition-colors">

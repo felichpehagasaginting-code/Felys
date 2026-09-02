@@ -1,0 +1,57 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1D2B"/>
+      <stop offset="100%" stop-color="#121118"/>
+    </linearGradient>
+
+    <!-- Dual Mode Primary Gradient (Lavender to Mint) -->
+    <linearGradient id="dualGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5CFA"/>
+      <stop offset="50%" stop-color="#B69CFF"/>
+      <stop offset="100%" stop-color="#7FE3C0"/>
+    </linearGradient>
+
+    <!-- Academic Lavender Gradient -->
+    <linearGradient id="acadGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7C5CFA"/>
+      <stop offset="100%" stop-color="#B69CFF"/>
+    </linearGradient>
+
+    <!-- Finance Mint Gradient -->
+    <linearGradient id="finGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FE3C0"/>
+      <stop offset="100%" stop-color="#1F8766"/>
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Container -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect x="4" y="4" width="504" height="504" rx="124" stroke="rgba(255,255,255,0.12)" stroke-width="8"/>
+
+  <!-- Glowing Aura Backlight -->
+  <circle cx="256" cy="256" r="160" fill="url(#dualGrad)" opacity="0.2" filter="url(#softGlow)"/>
+
+  <!-- Geometric Stylized "F" Monogram with Academic Wing & Finance Shield -->
+  <!-- Vertical Stem -->
+  <path d="M156 128C156 114.745 166.745 104 180 104H228C241.255 104 252 114.745 252 128V384C252 397.255 241.255 408 228 408H180C166.745 408 156 397.255 156 384V128Z" fill="url(#acadGrad)"/>
+
+  <!-- Top Horizontal Wing (Lavender Academic Bar) -->
+  <path d="M228 104H340C353.255 104 364 114.745 364 128V164C364 177.255 353.255 188 340 188H228V104Z" fill="url(#acadGrad)"/>
+
+  <!-- Middle Horizontal Bar (Mint Finance Spark) -->
+  <path d="M228 224H312C325.255 224 336 234.745 336 248V280C336 293.255 325.255 304 312 304H228V224Z" fill="url(#finGrad)"/>
+
+  <!-- AI Sparkle Star Top Right -->
+  <path d="M376 136C376 172 400 192 400 192C400 192 376 212 376 248C376 212 352 192 352 192C352 192 376 172 376 136Z" fill="#7FE3C0"/>
+  
+  <!-- Mini Diamond Dot Bottom Right -->
+  <circle cx="360" cy="360" r="24" fill="url(#finGrad)"/>
+</svg>
