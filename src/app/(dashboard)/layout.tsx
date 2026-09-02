@@ -13,6 +13,8 @@ import { useAuthStore } from "@/stores/use-auth-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { Plus, LogIn, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { PomodoroWidget } from "@/components/academic/PomodoroWidget";
+import { ScratchpadPanel } from "@/components/shared/ScratchpadPanel";
 
 export default function DashboardLayout({
   children,
@@ -89,6 +91,10 @@ export default function DashboardLayout({
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />
+
+      {/* Always-Open Companion Tools */}
+      <PomodoroWidget />
+      <ScratchpadPanel />
 
       {/* Global AI Chat Drawer */}
       <AIDrawer />

@@ -20,7 +20,11 @@ import { Button } from "@/components/ui/Button";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useAuthStore } from "@/stores/use-auth-store";
+import { usePomodoroStore } from "@/stores/use-pomodoro-store";
+import { PiPCompanionModal } from "./PiPCompanionModal";
+import { PDFLectureReaderModal } from "@/components/academic/PDFLectureReaderModal";
 import { triggerHaptic } from "@/lib/haptics";
+import { Timer, FileText } from "lucide-react";
 
 interface NavbarProps {
   onOpenQuickAdd?: () => void;
@@ -30,8 +34,10 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   const { activeMode, setActiveMode } = useModeStore();
   const { toggleDrawer } = useAIStore();
   const { user, signOut } = useAuthStore();
+  const { toggleWidget, isRunning, mode } = usePomodoroStore();
   const [isDark, setIsDark] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPDFReaderOpen, setIsPDFReaderOpen] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
 
   const toggleDarkMode = () => {
@@ -106,6 +112,37 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
               <span>{activeMode === "academic" ? "Tugas Baru" : "Catat Uang"}</span>
             </Button>
           )}
+
+          {/* Pomodoro Focus Launcher */}
+          <button
+            onClick={() => {
+              triggerHaptic("light");
+              toggleWidget();
+            }}
+            className={`p-1.5 sm:p-2 rounded-xl transition-all active:scale-90 flex items-center gap-1 ${
+              isRunning
+                ? "bg-[#EDE5FF] dark:bg-[#342F3E] text-[#7C5CFA]"
+                : "text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
+            title="Buka Timer Pomodoro Fokus"
+          >
+            <Timer className={`w-4 h-4 ${isRunning ? "animate-spin text-[#7C5CFA]" : ""}`} />
+          </button>
+
+          {/* Picture-in-Picture Mini Companion */}
+          <PiPCompanionModal />
+
+          {/* Split-Screen PDF Lecture Reader */}
+          <button
+            onClick={() => {
+              triggerHaptic("light");
+              setIsPDFReaderOpen(true);
+            }}
+            className="p-1.5 sm:p-2 rounded-xl text-muted hover:text-[#7C5CFA] hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-90"
+            title="Split-Screen PDF Lecture Reader & AI"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
 
           {/* AI Fio Trigger Button with Sparkle Micro-Interactions */}
           <button
@@ -261,6 +298,11 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
           </div>
         </div>
       </div>
+
+      <PDFLectureReaderModal
+        isOpen={isPDFReaderOpen}
+        onClose={() => setIsPDFReaderOpen(false)}
+      />
     </header>
   );
 }

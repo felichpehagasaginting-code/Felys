@@ -16,6 +16,7 @@ import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { DailyAllowanceCard } from "@/components/finance/DailyAllowanceCard";
 import { DDayCountdownBanner } from "@/components/academic/DDayCountdownBanner";
+import { LiveClassStatusCard } from "@/components/academic/LiveClassStatusCard";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
@@ -151,9 +152,12 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* D-Day Exam Countdown Banner */}
+      {/* D-Day Exam Countdown & Live Class Status */}
       {activeMode === "academic" && (
-        <DDayCountdownBanner />
+        <div className="space-y-4">
+          <LiveClassStatusCard />
+          <DDayCountdownBanner />
+        </div>
       )}
 
       {/* 3. Main Dual-Widget Grid */}
