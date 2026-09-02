@@ -1,187 +1,263 @@
-# 📘 FELYS — Master Product & Architecture Blueprint
-> **Dokumen Sumber Komprehensif untuk Pembuatan Infografis, Rangkuman Eksekutif, & Presentasi NotebookLM**
+# 📱 FELYS — Master Infographic & Product Knowledge Blueprint
+> **Dokumen Sumber Resmi (Source Blueprint) untuk Pembuatan Infografis Visual, Rangkuman Eksekutif, Visual Mockup iPhone 17, & Presentasi NotebookLM**
 
 ---
 
-## 🌟 1. Identitas Produk & Visi Utama
+## 🌟 1. Identitas & Visi Produk
 
-| Parameter | Detail Produk |
+| Parameter | Detail Spesifikasi |
 | :--- | :--- |
 | **Nama Aplikasi** | **Felys** |
-| **Persona AI Terintegrasi** | **"Fio"** (Asisten Cerdas Mahasiswa) |
-| **Tagline Utama** | *"Atur waktu, atur uang, tenang aja."* / *"Satu ruang terpadu buat tugas kuliah dan dompetmu."* |
-| **Kategori** | *Dual-Mode Productivity & Personal Finance Web App powered by Contextual AI* |
-| **Target Pengguna** | Mahasiswa aktif (D3/S1, Usia 18–24 tahun) yang tinggal mandiri/kos dengan beban tugas kuliah padat dan anggaran keuangan terbatas. |
-| **Inti Masalah (*Problem Statement*)** | Mahasiswa mengalami *app fatigue* akibat terpaksa memisahkan catatan tugas (Notion/Todoist) dan keuangan (Money Lover/Excel). Mereka tidak menyadari korelasi bahwa **ketika deadline tugas menumpuk, pengeluaran impulsif (*stress buying* seperti kopi dan jajan) ikut melonjak**. |
-| **Solusi Unik (*Unique Value Proposition*)** | Felys menyatukan manajemen tugas akademik dan manajemen keuangan dalam **1 ekosistem *Dual-Mode* yang mulus**, ditenagai kecerdasan buatan (*Cross-Mode Contextual AI*) yang mendeteksi hubungan beban tugas dan kesehatan dompet secara *real-time*. |
+| **Persona AI Terintegrasi** | **"Fio"** (Asisten Kontekstual Mahasiswa yang Cerdas, Empatis, & Solutif) |
+| **Tagline Resmi** | *"Atur waktu, atur uang, tenang aja."* / *"Satu ruang terpadu buat tugas kuliah dan dompetmu."* |
+| **Kategori Ekosistem** | *Dual-Mode Productivity & Personal Finance Web/Mobile App powered by Contextual AI* |
+| **Target Pengguna** | Mahasiswa aktif (D3/D4/S1, Usia 18–24 tahun) yang tinggal di kos/mandiri dengan beban akademik padat dan anggaran keuangan terbatas. |
+| **Inti Masalah (*Problem Statement*)** | Mahasiswa mengalami *app fatigue* akibat terpaksa memisahkan catatan tugas (Notion/Todoist) dan catatan keuangan (Money Lover/Excel). Pemisahan ini membuat mahasiswa **tidak menyadari korelasi bahwa saat deadline tugas menumpuk, pengeluaran impulsif (*stress buying* seperti kopi mahal, jajan delivery, dan nongkrong) ikut melonjak tajam**. |
+| **Solusi Revolusioner (*Unique Value Proposition*)** | Felys menyatukan manajemen tugas akademik dan manajemen keuangan dalam **1 ekosistem *Dual-Mode* yang mulus**, ditenagai kecerdasan buatan (*Cross-Mode Contextual AI*) yang menganalisis beban tugas dan sisa anggaran secara *real-time* untuk memberikan rekomendasi solutif. |
 
 ---
 
 ## 🎨 2. Sistem Desain & Estetika Visual (*Warm Aesthetic*)
 
-Felys mengusung filosofi desain modern dengan palet warna hangat (*Warm Cream & Dark Espresso*) yang nyaman di mata untuk penggunaan berjam-jam:
+Felys mengusung filosofi desain modern dengan palet warna hangat (*Warm Cream & Dark Espresso*) yang ramah di mata untuk penggunaan berjam-jam:
 
-### 🌈 Palet Warna Utama
-- **Light Mode Background:** Warm Cream / Oat (`#F8F6F2`) — Memberikan kesan sejuk, elegan, dan ramah di mata tanpa silau putih ekstrem.
-- **Dark Mode Background:** Warm Espresso / Charcoal (`#181716`) — Gelap organik dengan nuansa kopi hitam hangat, bukan hitam pekat OLED yang kontras tajam.
-- **Aksen Mode Akademik:** Lavender Pop (`#B69CFF` / `#7C5CFA`) — Menstimulasi fokus, kreativitas, dan ketenangan belajar.
-- **Aksen Mode Keuangan:** Mint Pop (`#7FE3C0` / `#1F8766`) — Melambangkan kesegaran, pertumbuhan aset, dan keamanan finansial.
-- **Warna Status & Indikator:**
-  - 🔴 Coral (`#FF7A85`): Tugas mendesak / Overbudget / Aksi Hapus
-  - 🟡 Amber / Peach (`#FFC978`): Prioritas sedang / Warning limit anggaran
-  - 🟢 Soft Mint (`#7FE3C0`): Prioritas rendah / Anggaran aman / Tugas tuntas
-  - 🔵 Sky Blue (`#8EC8FF`): Tagihan kos & kebutuhan kuliah
-
----
-
-## 🍎 3. Pengalaman Pengguna Kelas Apple (*Apple-Grade UX & Micro-Interactions*)
-
-Felys dirancang dengan interaksi taktil, fisika pegas (*spring physics*), dan umpan balik audio prosedural tanpa latensi:
+### 🌈 Palet Warna & Kode Hex Resmi
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        APPLE-GRADE INTERACTION ENGINE                  │
+│                        FELYS COLOR SYSTEM TOKENS                       │
 ├───────────────────┬────────────────────────────┬───────────────────────┤
-│ 👆 Mobile Swipe   │ 🎛️ Drag-to-Scrub Controls │ 🔊 Zero-Latency Audio │
-│    Gestures       │    (Hold-Slide-Release)    │    Web Synthesizer    │
+│ 🌾 Light Theme    │ ☕ Dark Theme              │ 🎯 Mode Accents       │
 ├───────────────────┼────────────────────────────┼───────────────────────┤
-│ • Swipe Kanan:    │ • Press & Hold:            │ • 100% Prosedural     │
-│   Tandai Selesai  │   Kapsul mengunci ke jari  │   Web Audio API       │
-│   + Pop + Confetti│ • Live Dragging:           │ • Zero MP3 File Draw  │
-│ • Swipe Kiri:     │   Geser mulus + Haptic     │ • Suara Unik:         │
-│   Hapus + Thud    │ • Release to Choose:       │   - Pop (Check task)  │
-│   + 5s Undo Toast │   Snap otomatis ke opsi    │   - Thud (Delete)     │
-│ • Rubber-Band     │ • Diterapkan pada Pomodoro,│   - Whoosh (Mode)     │
-│   Spring Physics  │   Numpad, Prioritas, Tabs  │   - Chime (Success)   │
+│ • Bg: #F8F6F2     │ • Bg: #181716 (Espresso)   │ • Akademik: #7C5CFA   │
+│   (Warm Cream)    │ • Surface: #23211F         │   (Lavender #B69CFF)  │
+│ • Surface: #FFFFFF│ • Border: #33302B          │ • Finansial: #1F8766  │
+│ • Border: #ECE7DF │ • Text Utama: #F5F3EE      │   (Mint #7FE3C0)      │
+│ • Text: #26222B   │ • Text Muted: #A39D94      │ • Urgent: #FF7A85     │
 └───────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
-1. **Mobile Swipeable Cards:**
-   - **Swipe Kanan (>85px):** Mengungkap background hijau mint, mengeksekusi *Mark as Done*, memicu suara `playPop()`, getaran haptic, dan letupan konfeti.
-   - **Swipe Kiri (<-85px):** Mengungkap background merah coral, menghapus item dengan suara `playThud()`, dan menampilkan *Undo Toast* 5 detik untuk memulihkan data jika tidak sengaja terhapus.
-2. **Interactive Drag-to-Scrub Segmented Control (`IOSSegmentedControl`):**
-   - Pengguna dapat **menekan, menahan jari, menggeser bebas antar-opsi** dengan *real-time haptic tick sound*, dan **melepaskan jari untuk memilih** opsi secara instan.
-   - Diterapkan pada: Switcher Mode (Akademik ↔ Finance), Prioritas Tugas, Timer Pomodoro, Numpad Pengeluaran/Pemasukan, dan Tab Talangan.
-3. **Fluid iOS Slider (`IOSSlider`):**
-   - Slider cairan dengan thumb membesar dinamis (*spring scale 1.25x*), *active track fill*, *floating live tooltip*, dan *tick sound* mikro.
-4. **Zero-Latency Web Audio Synthesizer:**
-   - Synthesizer prosedural tanpa unduhan file audio eksternal (0 KB memory draw) yang menghasilkan suara *crisp* dan responsif seketika.
+- **Light Mode Canvas:** Warm Cream / Oat (`#F8F6F2`) — Memberikan kesan tenang, bersih, dan tidak menyilaukan mata saat belajar malam hari.
+- **Dark Mode Canvas:** Warm Espresso / Charcoal (`#181716`) — Nuansa kopi hitam hangat organik, bukan hitam pekat OLED kontras tinggi.
+- **Aksen Akademik:** Lavender Pop (`#B69CFF` / `#7C5CFA`) — Menstimulasi fokus, ketenangan, dan manajemen waktu.
+- **Aksen Finansial:** Mint Pop (`#7FE3C0` / `#1F8766`) — Melambangkan kesegaran, pertumbuhan aset, dan kesehatan kas.
+- **Status & Indikator Semantik:**
+  - 🔴 **Coral Urgent (`#FF7A85`):** Deadline $< 24$ jam / Status Overbudget / Aksi Hapus data.
+  - 🟡 **Warm Amber (`#FFC978`):** Prioritas Sedang / Pengeluaran Mendekati Limit ($90\%$).
+  - 🟢 **Mint Secure (`#7FE3C0`):** Prioritas Rendah / Anggaran Aman / Tugas Selesai.
+  - 🔵 **Sky Blue (`#8EC8FF`):** Tagihan Kos & Kebutuhan Kuliah.
 
 ---
 
-## 🏛️ 4. Dua Pilar Utama Felys (*The Dual-Mode Architecture*)
+## 📱 3. Spesifikasi Visual Mockup Perangkat: iPhone 17 Pro Frame
 
-### 🎓 PILAR 1: Mode Akademik (Lavender Space)
-1. **Urgency Scoring Engine Otomatis:**
-   Sistem secara otomatis menghitung skor urgensi setiap tugas (skala 0–100) menggunakan formula matematis berbobot:
-   $$\text{Urgency Score } (U) = (0.5 \times D) + (0.3 \times P) + (0.2 \times E)$$
-   - **Deadline Factor ($D$ - 50%):** $\le 24$ jam (100) • $\le 3$ hari (80) • $\le 7$ hari (50) • $> 7$ hari (20) • Lewat deadline (100)
-   - **Priority Factor ($P$ - 30%):** Tinggi (100) • Sedang (60) • Rendah (30)
-   - **Effort Factor ($E$ - 20%):** $\ge 8$ jam (100) • 4–7 jam (70) • 1–3 jam (40)
-2. **Checklist & Sub-Tasks:** Memecah tugas besar (skripsi/makalah) menjadi langkah-langkah kecil dengan *progress bar* visual.
-3. **Countdown Target D-Day:** Hitung mundur hari menuju UTS, UAS, atau Sidang Skripsi yang terpampang jelas di bagian atas dashboard.
-4. **Jadwal Kuliah Mingguan (*Weekly Timetable*):** Manajemen kelas 5 hari (Senin–Jumat) lengkap dengan ruangan, jam, dan SKS.
-5. **Kalender Deadline Interaktif:** Visualisasi titik warna tugas berdasarkan mata kuliah.
+Untuk pembuatan infografis visual, semua tampilan layar Felys disajikan di dalam **Device Frame iPhone 17 Pro** dengan detail fotorealistis berikut:
+
+### 📐 Detail Frame Fisik iPhone 17
+- **Bodi & Bezel:** Bodi Titanium halus melengkung (*curved brushed titanium edges*), bezel layar ultra-tipis simetris ($1.1\text{ mm}$), sudut membulat elegan (*corner radius $55\text{px}$*).
+- **Layar:** 6.3" Super Retina XDR OLED Display dengan warna akurat dan *glass reflection* halus di bagian atas.
+- **Dynamic Island:** Pill-shaped cutout di bagian atas layar tengah yang menampilkan status timer aktif `[🍅 24:50 | Tugas AI]` atau notifikasi Fio AI.
+- **Home Bar Indicator:** Garis kapsul horizontal tipis (*iOS Home Indicator*) di bagian bawah layar tengah.
 
 ---
 
-### 💸 PILAR 2: Mode Keuangan (Mint Space)
-1. **Multi-Account Allocation (Dompet & Rekening Asli):**
-   Mahasiswa dapat membagi saldo riil ke rekening/e-wallet berlogo resmi:
-   - **GoPay / ShopeePay / DANA / OVO:** Saldo jajan harian, QRIS, & transportasi.
-   - **SeaBank / Superbank / BCA / Mandiri / BRI / BNI:** Tabungan utama & uang saku dari orang tua.
-   - **Uang Tunai (Cash):** Uang fisik di dompet untuk makan di warung/kantin.
-   - **Fitur Unggulan:** Ubah Saldo Langsung (*Reconciliation*), Transfer Antar-Akun (*0 net cashflow*), dan Pemantauan Total Kekayaan Bersih (*Net Worth*).
-2. **Numpad Quick Entry (Zero-Friction):**
-   Catat pengeluaran dalam waktu < 5 detik dengan tombol instan `+000`, pemilih sumber rekening, dan grid 18 kategori mahasiswa.
-3. **Batas Anggaran Bulanan Progresif (*Budget Limits*):**
-   Indikator dinamis 4 level: 🟢 Aman ($<70\%$) $\rightarrow$ 🟡 Perhatian ($70-89\%$) $\rightarrow$ 🟠 Warning ($90-99\%$) $\rightarrow$ 🔴 Overbudget ($\ge 100\%$).
-4. **Kalkulator Patungan & Pelacak Talangan (*Split Bill & IOU*):**
-   Hitung pembagian bill makan bersama teman (sama rata / custom), generator pesan tagihan sopan via WhatsApp, dan tombol 1-tap tandai lunas yang otomatis menambah saldo kas.
-5. **Celengan Impian (*Savings Goals*):**
-   Target tabungan khusus (laptop baru, tiket liburan semester) dengan fitur setor otomatis dari sisa jatah harian.
-6. **Kantong Dana Darurat Kos (*Emergency Fund*):**
-   Cadangan kas darurat terpisah dari jatah belanja harian + fitur *rollover* otomatis sisa surplus anggaran akhir bulan.
+## 🖼️ 4. Layout Wireframe & Mockup Layar di iPhone 17 (Presisi UI)
+
+NotebookLM dapat menggunakan deskripsi presisi berikut untuk membayangkan dan menyusun tata letak visual setiap slide infografis:
+
+### 📲 Layar 1: Mode Akademik (Lavender Theme) di iPhone 17
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [  9:41  ]                 ( ● )           [ 5G 100% ] │  <-- Status Bar & Dynamic Island
+├─────────────────────────────────────────────────────────┤
+│ 🎓 Felys          [ 🎓 Akademik ↔ 💸 Finance ]   [⚙️ 👤]│  <-- Header & Drag-to-Scrub Switcher
+├─────────────────────────────────────────────────────────┤
+│ ╔═════════════════════════════════════════════════════╗ │
+│ ║ 🎯 TARGET D-DAY: SIDANG SKRIPSI                     ║ │  <-- D-Day Countdown Banner
+│ ║    Tersisa: 42 Hari Lagi (15 Oktober 2026)          ║ │      Gradient Purple-Lavender
+│ ╚═════════════════════════════════════════════════════╝ │
+│                                                         │
+│ 📋 TUGAS KULIAH PRIORITAS (AI SORTED)                   │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔴 URGENSI: 92 (Mendesak)     Deadline: 6 Jam Lagi │ │  <-- TaskCard Utama
+│ │ 📚 Pemrograman Web Lanjut                           │ │      Swipeable Card
+│ │ Makalah REST API & Dokumentasi Swagger              │ │      (Swipe Kanan: Selesai)
+│ │ 进度 [████████░░] 80% (4/5 Subtask Selesai)         │ │      (Swipe Kiri: Hapus)
+│ └─────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🟡 URGENSI: 68 (Sedang)       Deadline: 3 Hari Lagi │ │
+│ │ 🧠 Kecerdasan Buatan                                │ │
+│ │ Laporan Analisis Model Gemini API                   │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ [🍅 24:50 | Sesi Fokus Berjalan ]  [ + Tambah Tugas ]  │  <-- Floating Pomodoro & Quick Add
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🤖 5. Kecerdasan Kontekstual AI ("Fio")
+### 📲 Layar 2: Mode Keuangan (Mint Theme) di iPhone 17
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [  9:41  ]                 ( ● )           [ 5G 100% ] │
+├─────────────────────────────────────────────────────────┤
+│ 💸 Felys          [ 🎓 Akademik ↔ 💸 Finance ]   [⚙️ 👤]│
+├─────────────────────────────────────────────────────────┤
+│ ╔═════════════════════════════════════════════════════╗ │
+│ ║ 💰 TOTAL NET WORTH KEKAYAAN AKTIF                   ║ │  <-- Net Worth Banner
+│ ║    Rp 3.450.000                                     ║ │      Gradient Mint-Emerald
+│ ║    Jatah Hari Ini: Rp 45.000 (Aman 🟢)              ║ │
+│ ╚═════════════════════════════════════════════════════╝ │
+│                                                         │
+│ 💳 ALOKASI REKENING & E-WALLET RESMI                    │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │  <-- Multi-Account Grid
+│ │ 🟢 GoPay     │ │ 🟠 SeaBank   │ │ 🏛️ Bank BCA  │      │      Logo Asli Vektor
+│ │ Rp 120.000   │ │ Rp 1.850.000 │ │ Rp 1.200.000 │      │
+│ └──────────────┘ └──────────────┘ └──────────────┘      │
+│                                                         │
+│ 📊 PROGRESS BUDGET BULANAN (70% Terpakai)              │
+│ [████████████████████░░░░░░░░] Rp 1.400.000 / 2.000.000 │  <-- Gauge Bar
+│                                                         │
+│ 💸 NUMPAD QUICK ENTRY (CATAT TRANSAKSI 3 DETIK)        │
+│ [  Pengeluaran 💸 (Active)  |  Pemasukan 💰  ]          │  <-- Drag Segmented Control
+│   Rp 25.000   [ 🍜 Makan & Minum ]  [ GoPay 🟢 ]       │
+│ [ 1 ][ 2 ][ 3 ]  [ 4 ][ 5 ][ 6 ]  [ 7 ][ 8 ][ 9 ]      │  <-- Instant Keypad
+│ [ +000 ][ 0 ][ ⌫ ]       [  SIMPAN TRANSAKSI ⚡ ]      │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 📲 Layar 3: Asisten AI "Fio" & Fitur Kontekstual di iPhone 17
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [  9:41  ]                 ( ● )           [ 5G 100% ] │
+├─────────────────────────────────────────────────────────┤
+│ 🤖 INSIGHT LINTAS MODE DARI FIO AI                      │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 💡 Fio mendeteksi korelasi:                         │ │  <-- Cross-Mode Insight Card
+│ │ "Hai! Kamu punya 2 deadline besar dalam 48 jam,     │ │
+│ │  dan budget jajan kopi sudah 75% terpakai.          │ │
+│ │  Saran Fio: Yuk nugas di kosan malam ini sambil     │ │
+│ │  seduh kopi sachet, hemat Rp 40.000 & lebih fokus!" │ │
+│ │  [ ☕ Mulai Timer Pomodoro Kos ]  [ ✖ Abaikan ]     │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ 👥 KALKULATOR PATUNGAN & TALANGAN (SPLIT BILL)          │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🍕 Makan Bersama di Warunk Upnormal (Total 120rb)   │ │  <-- Split Bill WhatsApp
+│ │ 3 Orang (Termasuk Saya) ➔ Rp 40.000 / orang         │ │
+│ │ • Budi: Rp 40.000  ➔ [ 📲 Kirim WhatsApp ]          │ │
+│ │ • Siti: Rp 40.000  ➔ [ ✅ Tandai Lunas ]            │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ 🛡️ DANA DARURAT KOSAN: Rp 650.000 (Cadangan Aman)      │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🍎 5. Interaksi Taktil Kelas Apple (*Apple-Grade UX Architecture*)
+
+Felys mengadopsi standar interaksi sistem operasi Apple (iOS 18) untuk menghadirkan rasa mewah, responsif, dan adiktif:
+
+1. **👆 Mobile Swipeable Cards (`SwipeableCard.tsx`):**
+   - **Swipe Kanan (>85px):** Mengungkap layer hijau mint dengan ikon centang. Memicu aksi selesai, suara pop renyah `playPop()`, haptik halus, dan semburan konfeti pastel.
+   - **Swipe Kiri (<-85px):** Mengungkap layer merah coral dengan ikon sampah. Memicu aksi hapus dengan suara thud redam `playThud()`, disertai **Toast Undo 5 detik** di bagian bawah layar.
+   - **Fisika Pegas:** *Elastic rubber-band resistance* saat ditarik dan *spring snap back* saat dilepas sebelum ambang batas.
+2. **🎛️ Interactive Drag-to-Scrub Segmented Control (`IOSSegmentedControl.tsx`):**
+   - **Press & Hold:** Kapsul pemilih membesar dinamis dan menempel pada posisi jempol pengguna.
+   - **Live Dragging:** Pengguna menggeser jempol secara bebas ke kiri/kanan. Kapsul mengalir mulus mengikuti posisi jempol dengan efek getar (*haptic tick*) dan audio klik mikro setiap kali menyeberangi opsi.
+   - **Release to Select:** Begitu jempol diangkat, sistem otomatis memilih dan mengaktifkan opsi yang dituju.
+   - **Diterapkan universal pada:** Mode Switcher (Akademik ↔ Finance), Prioritas Tugas (Rendah 🟢, Sedang 🟡, Tinggi 🔴), Mode Pomodoro (Fokus 25m, Jeda 5m, Panjang 15m), Jenis Transaksi (Pengeluaran 💸, Pemasukan 💰), dan Tab Patungan.
+3. **🎚️ Fluid iOS Slider (`IOSSlider.tsx`):**
+   - Track cairan dinamis dengan *active gradient fill*, thumb membesar saat ditekan (*scale 1.25x*), dan *floating tooltip* nilai yang melayang di atas slider.
+4. **🔊 Zero-Latency Web Audio Synthesizer (`sounds.ts`):**
+   - Synthesizer suara prosedural menggunakan *Web Audio API* bawaan browser.
+   - **$0\text{ KB}$ Beban File:** Tidak menggunakan file MP3/WAV eksternal sehingga 100% instan, tanpa buffering, dan offline.
+   - **Koleksi Suara:** `playPop()` (centang tugas), `playThud()` (hapus item), `playWhoosh()` (ganti mode), `playTick()` (slider & numpad), dan `playSuccessChime()` (akor nada C5-E5-G5 saat transaksi tersimpan).
+
+---
+
+## 🧠 6. Formula Matematis AI & Urgency Scoring
+
+Felys tidak menggunakan perkiraan acak, melainkan algoritma berbobot linear multi-faktor untuk memprioritaskan tugas kuliah mahasiswa:
+
+$$\text{Urgency Score } (U) = (0.5 \times D) + (0.3 \times P) + (0.2 \times E)$$
+
+| Faktor | Bobot | Parameter & Pembobotan Nilai |
+| :--- | :---: | :--- |
+| **Deadline Factor ($D$)** | **50%** | Sisa waktu $\le 24$ jam ($100$) • $\le 3$ hari ($80$) • $\le 7$ hari ($50$) • $> 7$ hari ($20$) • Lewat deadline ($100$) |
+| **Priority Factor ($P$)** | **30%** | Tinggi / Tugas Besar ($100$) • Sedang ($60$) • Rendah ($30$) |
+| **Effort Factor ($E$)** | **20%** | Estimasi jam pengerjaan $\ge 8$ jam ($100$) • $4-7$ jam ($70$) • $1-3$ jam ($40$) |
+
+---
+
+## 💳 7. Ekosistem Multi-Rekening & Alokasi Dompet Digital
+
+Mahasiswa dapat mengelola saldo uang mereka di berbagai rekening dan dompet digital dengan **Logo Asli Platform**:
+
+| Platform | Kategori | Peran Utama Bagi Mahasiswa |
+| :--- | :---: | :--- |
+| **GoPay** | E-Wallet | Sumber dana pembayaran QRIS kantin, ojol kampus, & saldo jajan |
+| **SeaBank** | Bank Digital | Rekening tabungan bunga cair harian & bebas biaya transfer |
+| **Superbank** | Bank Digital | Kantong celengan impian bunga tinggi & alokasi belanja bulanan |
+| **DANA** | E-Wallet | Pembayaran tagihan listrik/air kosan & patungan makan kelompok |
+| **OVO & ShopeePay** | E-Wallet | Belanja kebutuhan kuliah & promo pesan antar makanan |
+| **BCA, Mandiri, BRI, BNI** | Bank Konvensional | Rekening penerimaan uang saku orang tua, beasiswa, & gaji magang |
+| **Uang Tunai (Cash)** | Dompet Fisik | Uang kertas receh di saku untuk warteg, fotokopi kampus, & parkir |
+
+---
+
+## 🖥️ 8. Always-Open Web Companion (Fitur Khusus Laptop Mahasiswa)
+
+Dirancang agar tab Felys dapat dibiarkan terbuka sepanjang hari di latar belakang tanpa membebani memori dan baterai laptop:
+
+1. 🍅 **Pomodoro Focus Timer dengan Dynamic Tab Title:** Judul tab browser otomatis menampilkan waktu countdown aktif (`[🍅 24:50] Tugas | Felys`).
+2. 🪟 **Floating Picture-in-Picture (PiP) Mini Companion:** Mini window Felys mengambang di atas Microsoft Word, VS Code, Canva, atau PPT saat mahasiswa mengerjakan tugas.
+3. 📝 **Lecture Scratchpad & Sticky Notes:** Catatan coret-coret cepat dengan debounced auto-save (500ms) ke IndexedDB.
+4. ⏳ **Live Class Agenda:** Status realtime kelas yang sedang berlangsung vs kelas berikutnya dengan hitung mundur menit.
+5. 📖 **Split-Screen PDF Lecture Reader + Contextual AI:** Mahasiswa mengunggah slide materi kuliah PDF, teks diekstrak di browser (`unpdf`), dan bisa langsung ditanyakan ke Fio AI tanpa perlu berpindah tab.
+
+---
+
+## 🏗️ 9. Arsitektur Teknis & Persistensi Data (*100% Offline-First*)
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        AI CONTEXTUAL INTELLIGENCE                      │
-├───────────────────────────────────┬────────────────────────────────────┤
-│ 💡 Cross-Mode Insight Engine      │ 💬 Streaming Chat & Assistant      │
-├───────────────────────────────────┼────────────────────────────────────┤
-│ • Mendeteksi jika:                │ • Multi-Tier Production Fallback:  │
-│   - Deadline Padat (≥2 tugas ≤7d) │   Gemini 2.5 Flash                 │
-│   - & Budget Jajan Kritis (≥70%)  │     └── Gemini 2.0 Flash           │
-│ • Saran Solutif & Bersahabat:     │           └── Gemini 1.5 Flash     │
-│   "Yuk nugas di kos sambil seduh  │ • Membaca jadwal kuliah, tugas,    │
-│    kopi sachet, hemat & fokus!"   │   dan transaksi secara live        │
-└───────────────────────────────────┴────────────────────────────────────┘
+│                        FELYS TECHNICAL ARCHITECTURE                    │
+├───────────────────┬────────────────────────────┬───────────────────────┤
+│ ⚛️ Frontend Stack │ ☁️ Cloud & Auth            │ 💾 Data Pipeline      │
+├───────────────────┼────────────────────────────┼───────────────────────┤
+│ • Next.js 15.5    │ • Firebase Firestore       │ • Dual Storage Sync:  │
+│   (App Router)    │   Multi-User Security Rules│   - LocalStorage      │
+│ • React 19        │ • Firebase Authentication  │     (Instant Cache)   │
+│ • TypeScript 5.0  │ • Google Gemini API        │   - Cloud Firestore   │
+│ • Tailwind CSS 3.4│   (3-Tier Fallback Chain)  │     (Real-time Listen)│
+│ • Zustand Store   │ • Client-Side OCR & unpdf  │ • 100% Zero Data Loss │
+└───────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
-1. **Cross-Mode Insight Heuristics:**
-   Menghubungkan dua dunia mahasiswa. Menghindari "kebocoran halus" saat mahasiswa melampiaskan stres deadline tugas dengan membeli makanan/minuman mahal di luar kos.
-2. **Google Gemini Production Resilience:**
-   Menggunakan arsitektur *fallback* 3 tingkat (`gemini-2.5-flash` $\rightarrow$ `gemini-2.0-flash` $\rightarrow$ `gemini-1.5-flash`) untuk menjamin asisten AI selalu aktif 100% tanpa kendala limit kuota.
-3. **NLP Quick Input Parser:**
-   Mengetik satu kalimat santai bahasa Indonesia (misal: *"Makan siang geprek 18rb pake gopay"* atau *"Tugas AI jumat jam 23:59"*), sistem otomatis mengekstrak nominal, tanggal, kategori, dan menyimpannya.
-4. **Client-Side Real OCR Engine:**
-   Pemindaian struk belanja fisik langsung di browser menggunakan `tesseract.js` Web Worker + filter kontras kanvas tanpa mengirim foto ke server eksternal (*privacy-first*).
+- **Jaminan Persistensi 100%:** Setiap aksi CRUD (*Create, Read, Update, Delete*) langsung disimpan ke `localStorage` melalui helper `saveLocal()` dan disinkronkan ke Cloud Firestore saat online. Data tidak akan pernah hilang meski aplikasi di-refresh atau pengguna dalam mode demo offline.
 
 ---
 
-## 🖥️ 6. Always-Open Web Companion (Didesain untuk Laptop Mahasiswa)
+## 🎯 10. Prompt Siap-Pakai untuk NotebookLM (Instruksi Infografis)
 
-Felys dirancang agar dapat **dibiarkan terbuka sepanjang hari di latar belakang** tanpa memboroskan baterai laptop:
+Salin prompt di bawah ini langsung ke NotebookLM untuk menghasilkan rancangan infografis visual terbaik:
 
-1. 🍅 **Pomodoro Focus Timer dengan Dynamic Tab Title:** Judul tab browser otomatis menampilkan countdown (`[🍅 24:50] Tugas | Felys`). Dilengkapi melodi Web Audio Synth saat sesi fokus selesai.
-2. 🪟 **Floating Picture-in-Picture (PiP) Companion:** Mini window Felys mengambang di atas dokumen Word, VS Code, Canva, atau PowerPoint.
-3. 📝 **Lecture Scratchpad & Sticky Notes:** Papan coretan cepat dengan debounced auto-save (500ms).
-4. ⏳ **Live Class Agenda:** Status realtime kelas yang sedang berlangsung vs kelas berikutnya dengan countdown menit.
-5. 📖 **Split-Screen PDF Lecture Reader + AI Explainer:** Unggah slide PDF materi kuliah, teks diekstrak di browser (`unpdf`), dan bisa langsung ditanyakan ke Fio AI tanpa copas manual.
+```text
+Berdasarkan dokumen sumber FELYS_NOTEBOOKLM_INFOGRAPHIC_SOURCE.md ini, tolong buatkan rancangan infografis visual modern 4-Kuadran lengkap dengan mockup perangkat iPhone 17 Pro:
 
----
-
-## 🏗️ 7. Arsitektur Teknis & Persistensi Data (*100% Offline-First*)
-
+1. Header: Judul "Felys: Atur Waktu, Atur Uang, Tenang Aja" dengan sub-judul penjelas dual-mode.
+2. Visual Utama: Tampilkan Mockup 3 HP iPhone 17 Pro berdampingan (Bezel tipis 1.1mm titanium, Dynamic Island):
+   - HP 1 (Kiri): Layar Mode Akademik (Lavender #7C5CFA) menampilkan Urgency Score 92, Countdown D-Day 42 Hari, dan gesture swipeable card.
+   - HP 2 (Tengah): Layar Fio AI Assistant menampilkan Cross-Mode Insight (Korelasi Deadline vs Pengeluaran Kopi Kos).
+   - HP 3 (Kanan): Layar Mode Finansial (Mint #1F8766) menampilkan Net Worth Rp 3.450.000, Multi-Account (GoPay, SeaBank, BCA), dan Numpad 3 detik.
+3. Bagian Bawah: 4 Poin Fitur Unggulan Apple-Grade (Swipe Gestures, Drag-to-Scrub Segmented Controls, 0KB Audio Synthesizer, 100% Offline-First Persistence).
+4. Berikan statistik ringkas (<5s input transaksi, 0 KB MP3 draw, 10+ bank e-wallet).
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        DATA PERSISTENCE PIPELINE                       │
-├───────────────────────────────────┬────────────────────────────────────┤
-│ 📱 Mode Offline / Demo            │ ☁️ Mode Online / Terautentikasi    │
-├───────────────────────────────────┼────────────────────────────────────┤
-│ • Inisialisasi instan via         │ • Sinkronisasi real-time dua arah  │
-│   `loadLocal()` dari LocalStorage │   via Cloud Firestore onSnapshot   │
-│ • Setiap mutasi data (CRUD)       │ • Keamanan berbasis kepemilikan di │
-│   langsung di-commit via          │   `firestore.rules`                │
-│   `saveLocal()` (0% Data Loss)    │ • Backup lokal tetap aktif         │
-└───────────────────────────────────┴────────────────────────────────────┘
-```
-
-- **Frontend Framework:** Next.js 15.5 (App Router), React 19, TypeScript 5, Tailwind CSS 3.4.
-- **Interactivity & Motion:** Framer Motion (Spring Physics), Radix UI Primitives, Lucide Icons, Canvas Confetti.
-- **State Management:** Zustand dengan arsitektur reaktif dan sinkronisasi ganda (LocalStorage + Firestore).
-- **Database & Keamanan:** Google Cloud Firestore dengan isolasi multi-user `/users/{userId}/...` untuk semua subkoleksi (`courses`, `tasks`, `transactions`, `accounts`, `budgets`, `savings_goals`, `recurring_bills`, `debts`).
-- **PWA & Platform:** Progressive Web App dengan dukungan instalasi mobile & desktop, offline-first caching, dan responsivitas adaptif.
-
----
-
-## 📊 8. Panduan Elemen Kunci untuk Infografis NotebookLM
-
-Jika memasukkan file ini ke NotebookLM untuk membuat infografis atau slide ringkasan, berikut adalah visualisasi dan sorotan utama yang disarankan:
-
-### 📌 Struktur 4 Kuadran Infografis
-1. **Kuadran 1 (Problem & Solution):** Mahasiswa vs Beban Ganda $\rightarrow$ Solusi Felys Dual-Mode + Fio AI.
-2. **Kuadran 2 (Mode Akademik & Formula AI):** Urgency Score $U = 0.5D + 0.3P + 0.2E$, Countdown D-Day, Checklist tugas.
-3. **Kuadran 3 (Mode Keuangan & Multi-Account):** Alokasi Saldo Bank/E-Wallet, Numpad Quick Entry, Split Bill WhatsApp, Dana Darurat.
-4. **Kuadran 4 (Apple-Grade Experience & Tech):** Swipe Gestures, Drag-to-Scrub Segmented Control, Web Audio Synth, Always-Open Web Companion.
-
-### 🔑 Statistik & Fakta Menarik untuk Highlight Infografis
-- **Waktu Pencatatan:** $< 5$ detik dengan Numpad Cepat & NLP Parser Bahasa Indonesia.
-- **Ukuran Beban Audio:** $0\text{ KB}$ file MP3 (100% prosedural Web Audio API).
-- **Keamanan Data:** $100\%$ Offline-First Persistence (data tidak pernah hilang meski tanpa internet).
-- **Tingkat Resiliensi AI:** 3-Tier Multi-Model Fallback Chain (Gemini 2.5 $\rightarrow$ 2.0 $\rightarrow$ 1.5).
-- **Ekosistem Rekening:** Mendukung 10+ Bank & E-Wallet Nasional (GoPay, SeaBank, BCA, Superbank, DANA, dll.).
