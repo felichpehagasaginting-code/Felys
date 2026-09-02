@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { useAIStore } from "@/stores/use-ai-store";
 import { FormattedMessage } from "@/components/ai/FormattedMessage";
 import { triggerHaptic } from "@/lib/haptics";
-import { FileText, Upload, Sparkles, Send, X, BookOpen, HelpCircle, CheckCircle2 } from "lucide-react";
+import { extractText } from "unpdf";
+import { FileText, Upload, Sparkles, Send, X, BookOpen, HelpCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface PDFLectureReaderModalProps {
@@ -17,10 +17,12 @@ interface PDFLectureReaderModalProps {
 export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModalProps) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfTextContent, setPdfTextContent] = useState<string>("");
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
     {
       role: "assistant",
-      content: "Hai! Upload slide kuliah atau dokumen materi PDF kamu di sebelah kiri, lalu tanyakan apa saja yang belum kamu pahami ke Fio ✨",
+      content: "Hai! Upload slide kuliah atau dokumen materi PDF kamu di sebelah kiri, Fio akan langsung membaca seluruh isinya dan siap merangkum atau menjawab pertanyaanmu! ✨",
     },
   ]);
   const [queryInput, setQueryInput] = useState("");
@@ -28,7 +30,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
 
   if (!isOpen) return null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type === "application/pdf") {
       triggerHaptic("medium");
@@ -36,7 +38,29 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
       const url = URL.createObjectURL(file);
       setPdfFile(file);
       setPdfUrl(url);
-      toast.success(`Dokumen "${file.name}" siap dipelajari! 📖`);
+      setIsExtracting(true);
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const extracted = await extractText(new Uint8Array(arrayBuffer));
+        const fullText = Array.isArray(extracted.text)
+          ? extracted.text.join("\n\n")
+          : extracted.text || "";
+
+        setPdfTextContent(fullText);
+        setChatMessages([
+          {
+            role: "assistant",
+            content: `📖 Dokumen **"${file.name}"** (${extracted.totalPages || 1} halaman) berhasil dibaca dan dipahami oleh Fio! \n\nKamu bisa klik tombol cepat di atas untuk langsung minta rangkuman, kuis latihan, atau tanyakan bagian materi mana pun yang belum kamu pahami ✨`,
+          },
+        ]);
+        toast.success(`Dokumen "${file.name}" berhasil dipindai & dipahami AI! 📖`);
+      } catch (err) {
+        console.error("Failed to parse PDF text:", err);
+        toast.warning("Dokumen ditampilkan, namun teks otomatis perlu diproses lebih lanjut.");
+      } finally {
+        setIsExtracting(false);
+      }
     } else {
       toast.error("Pilih file berekstensi .pdf yang valid.");
     }
@@ -60,6 +84,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
           messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
           context: {
             lectureDocName: pdfFile?.name || "Dokumen Materi Kuliah",
+            lectureDocText: pdfTextContent || `Nama file: ${pdfFile?.name || "Dokumen PDF"}`,
           },
         }),
       });
@@ -72,7 +97,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
           ...prev,
           {
             role: "assistant",
-            content: `Berdasarkan materi "${pdfFile?.name || "kuliah"}", fokuslah memahami konsep dasar dan definisi intinya sebelum mengerjakan latihan soal ya!`,
+            content: `Berdasarkan isi dokumen "${pdfFile?.name || "materi"}", fokuslah memahami konsep inti dan poin-poin utamanya ya!`,
           },
         ]);
       }
@@ -81,7 +106,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
         ...prev,
         {
           role: "assistant",
-          content: "Fio siap bantu kamu membahas slide materi ini. Ada bagian yang ingin dijelaskan lebih dalam?",
+          content: "Fio siap bantu kamu membahas isi dokumen ini. Ada bagian yang ingin dijelaskan lebih dalam?",
         },
       ]);
     } finally {
@@ -102,9 +127,20 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
             {pdfUrl ? (
               <div className="flex-1 flex flex-col">
                 <div className="p-2.5 px-4 bg-surface border-b border-border flex items-center justify-between text-xs">
-                  <span className="font-bold text-foreground truncate max-w-[240px]">
-                    {pdfFile?.name}
-                  </span>
+                  <div className="flex items-center gap-2 truncate max-w-[260px]">
+                    <span className="font-bold text-foreground truncate">
+                      {pdfFile?.name}
+                    </span>
+                    {isExtracting ? (
+                      <span className="text-[10px] text-[#7C5CFA] flex items-center gap-1 font-medium">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Membaca teks...
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-[#1F8766] dark:text-[#7FE3C0] font-bold">
+                        ✓ AI Ready
+                      </span>
+                    )}
+                  </div>
                   <label className="text-[11px] text-[#7C5CFA] font-bold cursor-pointer hover:underline">
                     Ganti File
                     <input type="file" accept="application/pdf" onChange={handleFileUpload} className="hidden" />
@@ -140,29 +176,38 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
 
           {/* Right Column: Sidekick AI Fio Assistant */}
           <div className="lg:col-span-5 bg-surface border border-border rounded-3xl flex flex-col overflow-hidden shadow-soft">
-            <div className="p-3.5 px-4 bg-[#FAF9FC] dark:bg-[#2F2B3A] border-b border-border flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white text-xs shadow-xs">
-                <Sparkles className="w-3.5 h-3.5" />
+            <div className="p-3.5 px-4 bg-[#FAF9FC] dark:bg-[#2F2B3A] border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white text-xs shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-foreground">Fio AI Sidekick</h4>
+                  <p className="text-[10px] text-muted">Menganalisis isi dokumen secara real-time</p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-foreground">Fio AI Sidekick</h4>
-                <p className="text-[10px] text-muted">Tanya konsep & rangkuman materi</p>
-              </div>
+              {pdfTextContent && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0]">
+                  Teks Terbaca ✓
+                </span>
+              )}
             </div>
 
             {/* Quick Prompt Chips */}
             <div className="p-2 border-b border-border flex gap-1.5 overflow-x-auto text-[10px] font-bold">
               <button
-                onClick={() => handleSendPrompt("Rangkum poin-poin utama materi kuliah ini dalam 3 poin kunci")}
-                className="px-2.5 py-1 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] hover:bg-[#7C5CFA] hover:text-white transition-all shrink-0"
+                onClick={() => handleSendPrompt("Rangkum poin-poin utama dokumen ini secara komprehensif dan terstruktur")}
+                disabled={isAsking || isExtracting}
+                className="px-2.5 py-1 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] hover:bg-[#7C5CFA] hover:text-white disabled:opacity-50 transition-all shrink-0"
               >
-                📌 Rangkum Poin Kunci
+                📌 Rangkum Dokumen Ini
               </button>
               <button
-                onClick={() => handleSendPrompt("Buatkan 3 pertanyaan kuis pilihan ganda dari materi ini untuk latihan")}
-                className="px-2.5 py-1 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] hover:bg-[#1F8766] hover:text-white transition-all shrink-0"
+                onClick={() => handleSendPrompt("Buatkan 3 pertanyaan kuis pilihan ganda lengkap dengan opsi jawaban dan kunci jawabannya dari isi materi dokumen ini")}
+                disabled={isAsking || isExtracting}
+                className="px-2.5 py-1 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] hover:bg-[#1F8766] hover:text-white disabled:opacity-50 transition-all shrink-0"
               >
-                ❓ Buatkan Kuis Kilat
+                ❓ Buatkan Kuis Latihan
               </button>
             </div>
 
@@ -184,6 +229,14 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
                   </div>
                 </div>
               ))}
+              {isAsking && (
+                <div className="flex justify-start">
+                  <div className="p-3 rounded-2xl bg-[#FAF9FC] dark:bg-[#2A2634] text-foreground border border-border text-xs flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7C5CFA]" />
+                    <span>Fio sedang menganalisis dokumen...</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Input Form */}
@@ -198,12 +251,13 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
                 type="text"
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
-                placeholder="Tanyakan konsep di slide ini..."
-                className="flex-1 bg-[#FAF9FC] dark:bg-[#2A2634] border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
+                placeholder={isExtracting ? "Sedang memindai dokumen..." : "Tanyakan apa saja tentang isi dokumen ini..."}
+                disabled={isExtracting}
+                className="flex-1 bg-[#FAF9FC] dark:bg-[#2A2634] border border-border rounded-xl px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA] disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={isAsking || !queryInput.trim()}
+                disabled={isAsking || isExtracting || !queryInput.trim()}
                 className="p-2 rounded-xl bg-[#7C5CFA] text-white shadow-xs hover:bg-[#6842f5] disabled:opacity-50 transition-all"
               >
                 <Send className="w-3.5 h-3.5" />

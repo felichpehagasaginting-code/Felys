@@ -70,6 +70,14 @@ export async function POST(req: Request) {
           .join("\n")}`
       : "Tidak ada data budget.";
 
+    const pdfContext = context?.lectureDocText
+      ? `
+--- DOKUMEN / SLIDE MATERI KULIAH AKTIF ("${context.lectureDocName || "Dokumen Materi"}") ---
+${context.lectureDocText}
+--- AKHIR ISI DOKUMEN ---
+Instruksi Tambahan: Mahasiswa sedang membuka dan mempelajari dokumen di atas. Kamu memiliki akses PENUH ke seluruh isi teks dokumen tersebut. Jawab pertanyaan, buatkan rangkuman, kuis kilat, atau jelaskan konsep secara spesifik mengacu pada data/isi dokumen di atas.`
+      : "";
+
     const systemPrompt = `
 Kamu adalah "Fio", asisten pribadi cerdas, suportif, dan ramah di aplikasi Felys untuk mahasiswa.
 Felys menggabungkan manajemen beban akademik dan pencatatan keuangan mahasiswa dalam satu ekosistem terpadu.
@@ -86,6 +94,7 @@ ${tasksContext}
 
 --- ANGGARAN & PENGELUARAN BULAN INI ---
 ${budgetContext}
+${pdfContext}
 ---
     `.trim();
 
