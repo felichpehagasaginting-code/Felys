@@ -100,6 +100,10 @@ Dirancang khusus agar tab Felys dapat dibuka sepanjang hari di latar belakang ta
 
 | Fitur / Modul | Deskripsi & Manfaat Bagi Mahasiswa |
 | :--- | :--- |
+| 👆 **Apple-Grade Swipe Gestures** | Swipe kanan pada kartu tugas untuk **Selesai** (+ pop sound & confetti), swipe kiri untuk **Hapus** (+ thud sound & undo toast) dengan elastisitas pegas iOS asli. |
+| 🎛️ **Drag-to-Scrub Controls** | Komponen `IOSSegmentedControl` dengan interaksi **Tahan ➔ Geser Bebas ➔ Lepas untuk Memilih** dilengkapi getaran haptic tick di seluruh aplikasi. |
+| 🔊 **Zero-Latency Sound Engine** | Synthesizer prosedural *Web Audio API* untuk micro-SFX (pop, thud, whoosh, tick, chime) 100% offline tanpa delay dan tanpa beban file MP3 besar. |
+| 🎚️ **Fluid iOS Sliders** | Slider interaktif dengan thumb membesar dinamis saat di-drag, floating tooltip badge, dan audio feedback real-time. |
 | ⚡ **NLP Quick Input Bar** | Parser kalimat natural bahasa Indonesia (*contoh: "Makan siang geprek 18rb"* atau *"Makalah AI jumat jam 23:59"*) dengan *live preview chip*. |
 | 🧠 **Web Worker Real OCR Engine** | Pemindaian struk nyata dengan `tesseract.js` + Canvas contrast boost 100% di browser tanpa kirim foto ke server luar (*privacy-first*). |
 | 📅 **Google & Apple Calendar Sync** | Ekspor `.ics` standar RFC 5545 dengan pengingat otomatis H-1 & H-2 jam, serta 1-tap sinkronisasi langsung ke Google Calendar. |
@@ -132,7 +136,7 @@ $$U = (0.5 \times D) + (0.3 \times P) + (0.2 \times E)$$
 Felys/
 ├── public/
 │   ├── logos/                  # Official Bank & E-Wallet SVG Vectors (GoPay, SeaBank, BCA, dll.)
-│   ├── icon.png & apple-icon   # High-resolution PWA App Badges
+│   ├── icon.png                # High-resolution PWA App Badges
 │   └── manifest.webmanifest    # Progressive Web App Manifest
 ├── src/
 │   ├── app/                    # Next.js 15 App Router (Pages, API Routes, Layouts)
@@ -144,14 +148,15 @@ Felys/
 │   │   ├── finance/            # AccountOverviewGrid, AccountProviderLogo, AdjustBalanceModal, NumpadQuickEntry, ReceiptScanModal
 │   │   ├── ai/                 # AIDrawer, InsightCard
 │   │   ├── shared/             # NLPQuickBar, Navbar, PiPCompanionModal, ScratchpadPanel, ModeSwitcher
-│   │   └── ui/                 # Base Radix Primitives, Modals, ConfirmDialog, Skeletons
-│   ├── lib/                    # Firebase Firestore Service, Notification Service, unpdf extractor, Haptics
+│   │   └── ui/                 # SwipeableCard, IOSSegmentedControl, IOSSlider, Modals, ConfirmDialog, Skeletons
+│   ├── lib/                    # Firebase Firestore Service, sounds.ts (Web Audio Synthesizer), unpdf, Haptics
 │   ├── server/services/        # Urgency, Budget, & Cross-Mode Insight Services
-│   ├── stores/                 # Zustand State Stores (Data, Pomodoro, AI, Auth, Mode)
+│   ├── stores/                 # Zustand State Stores (Data, Sound, Pomodoro, AI, Auth, Mode, Theme)
 │   └── types/                  # TypeScript Data Models & Contracts
 ```
 
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI Primitives, Lucide React, Recharts, Sonner.
+- **Audio & Haptics:** Web Audio API Procedural Synthesizer, Web Vibration API.
 - **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + `/users/{userId}/...`), Firebase Authentication.
 - **PDF & OCR:** `unpdf` client parser, `tesseract.js` Web Worker OCR.
 - **AI Engine:** Google Gemini API (`@ai-sdk/google` + Vercel AI SDK).
