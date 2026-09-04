@@ -12,7 +12,7 @@ import { triggerHaptic } from "@/lib/haptics";
 export default function SettingsPage() {
   const { activeMode, setActiveMode } = useModeStore();
   const { theme, setTheme } = useThemeStore();
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, cachedDisplayName } = useAuthStore();
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -37,7 +37,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h3 className="text-base font-bold text-foreground">
-                  {user.displayName || "Mahasiswa Felys"}
+                  {user.displayName || cachedDisplayName || "Mahasiswa Felys"}
                 </h3>
                 <p className="text-xs text-muted">{user.email}</p>
                 <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E0FBF2] text-[#1F8766] border border-[#9EE9D0] dark:bg-[#1E332A] dark:text-[#7FE3C0] dark:border-[#2E5244]">
