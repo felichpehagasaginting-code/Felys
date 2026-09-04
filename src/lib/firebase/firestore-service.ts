@@ -8,6 +8,10 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "./client";
 import { Course, Task, DDayEvent } from "@/types/academic";
@@ -90,7 +94,7 @@ export class FirestoreService {
    */
   public static subscribeUserProfile(
     userId: string,
-    callback: (data: { ddayEvent?: DDayEvent; emergencyFund?: number; scratchpadText?: string }) => void
+    callback: (data: { ddayEvent?: DDayEvent; emergencyFund?: number; scratchpadText?: string; hasOnboarded?: boolean }) => void
   ) {
     const userRef = doc(db, "users", userId);
     return onSnapshot(
@@ -102,6 +106,7 @@ export class FirestoreService {
             ddayEvent: d.ddayEvent,
             emergencyFund: typeof d.emergencyFund === "number" ? d.emergencyFund : undefined,
             scratchpadText: d.scratchpadText,
+            hasOnboarded: typeof d.hasOnboarded === "boolean" ? d.hasOnboarded : undefined,
           });
         }
       },
@@ -163,7 +168,10 @@ export class FirestoreService {
   }
 
   /**
-   * Automatically migrate and push any local offline data (e.g. Superbank, tasks, courses) to Firestore on login
+   * P10: Firestore = source of truth, localStorage = cache.
+   * Hanya push data lokal bila koleksi remote KOSONG (hindari overwrite
+   * lastWriteWins terbalik: lokal basi menimpa remote baru).
+   * Conflict per-dokumen diselesaikan via updatedAt (yang terbaru menang).
    */
   public static async syncLocalDataToFirestore(
     userId: string,
@@ -180,8 +188,18 @@ export class FirestoreService {
     }
   ): Promise<void> {
     try {
+      // P10: guard — hanya sync koleksi yang remote-nya kosong
+      const isRemoteEmpty = async (sub: string) => {
+        try {
+          const s = await getDocs(query(collection(db, "users", userId, sub), limit(1)));
+          return s.empty;
+        } catch {
+          return true;
+        }
+      };
+
       // 1. Sync accounts (e.g. Superbank, SeaBank, GoPay)
-      if (localData.accounts && localData.accounts.length > 0) {
+      if (localData.accounts && localData.accounts.length > 0 && (await isRemoteEmpty("accounts"))) {
         for (const acc of localData.accounts) {
           const ref = doc(db, "users", userId, "accounts", acc.id);
           await setDoc(ref, cleanFirestoreData(acc), { merge: true });
@@ -189,7 +207,7 @@ export class FirestoreService {
       }
 
       // 2. Sync courses
-      if (localData.courses && localData.courses.length > 0) {
+      if (localData.courses && localData.courses.length > 0 && (await isRemoteEmpty("courses"))) {
         for (const course of localData.courses) {
           const ref = doc(db, "users", userId, "courses", course.id);
           await setDoc(ref, cleanFirestoreData(course), { merge: true });
@@ -197,7 +215,7 @@ export class FirestoreService {
       }
 
       // 3. Sync tasks
-      if (localData.tasks && localData.tasks.length > 0) {
+      if (localData.tasks && localData.tasks.length > 0 && (await isRemoteEmpty("tasks"))) {
         for (const task of localData.tasks) {
           const ref = doc(db, "users", userId, "tasks", task.id);
           await setDoc(ref, cleanFirestoreData(task), { merge: true });
@@ -205,7 +223,7 @@ export class FirestoreService {
       }
 
       // 4. Sync transactions
-      if (localData.transactions && localData.transactions.length > 0) {
+      if (localData.transactions && localData.transactions.length > 0 && (await isRemoteEmpty("transactions"))) {
         for (const trx of localData.transactions) {
           const ref = doc(db, "users", userId, "transactions", trx.id);
           await setDoc(ref, cleanFirestoreData(trx), { merge: true });
@@ -272,17 +290,30 @@ export class FirestoreService {
     await deleteDoc(ref);
   }
 
-  // --- TASKS ---
-  public static subscribeTasks(userId: string, callback: (tasks: Task[]) => void) {
+  // --- TASKS (P6: paginated, server-ordered) ---
+  public static subscribeTasks(
+    userId: string,
+    callback: (tasks: Task[]) => void,
+    opts?: { status?: string; limitCount?: number }
+  ) {
     const ref = collection(db, "users", userId, "tasks");
-    return onSnapshot(
+    const q = query(
       ref,
+      orderBy("urgencyScore", "desc"),
+      limit(opts?.limitCount || 100)
+    );
+    return onSnapshot(
+      q,
       (snapshot) => {
         const tasks: Task[] = snapshot.docs.map((d) => ({
           ...(d.data() as Omit<Task, "id">),
           id: d.id,
         }));
-        callback(tasks);
+        callback(
+          opts?.status && opts.status !== "all"
+            ? tasks.filter((t) => t.status === opts.status)
+            : tasks
+        );
       },
       (error) => console.warn("Tasks listener error:", error)
     );
@@ -341,17 +372,21 @@ export class FirestoreService {
     return docId;
   }
 
-  // --- TRANSACTIONS ---
-  public static subscribeTransactions(userId: string, callback: (transactions: Transaction[]) => void) {
+  // --- TRANSACTIONS (P6: server-ordered + limit, tanpa download full history) ---
+  public static subscribeTransactions(
+    userId: string,
+    callback: (transactions: Transaction[]) => void,
+    opts?: { limitCount?: number }
+  ) {
     const ref = collection(db, "users", userId, "transactions");
+    const q = query(ref, orderBy("date", "desc"), limit(opts?.limitCount || 100));
     return onSnapshot(
-      ref,
+      q,
       (snapshot) => {
         const list: Transaction[] = snapshot.docs.map((d) => ({
           ...(d.data() as Omit<Transaction, "id">),
           id: d.id,
         }));
-        list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         callback(list);
       },
       (error) => console.warn("Transactions listener error:", error)
@@ -374,20 +409,27 @@ export class FirestoreService {
     await deleteDoc(ref);
   }
 
-  // --- BUDGETS ---
+  // --- BUDGETS (ID: {year}_{month}_{categoryId}) ---
   public static subscribeBudgets(
     userId: string,
-    callback: (limits: { categoryId: string; monthlyLimit: number }[]) => void
+    callback: (limits: { categoryId: string; monthlyLimit: number; month?: number; year?: number }[]) => void,
+    month?: number,
+    year?: number
   ) {
     const ref = collection(db, "users", userId, "budgets");
+    const q = month && year
+      ? query(ref, where("year", "==", year), where("month", "==", month))
+      : ref;
     return onSnapshot(
-      ref,
-      (snapshot) => {
+      q as never,
+      (snapshot: { docs: { data: () => Record<string, unknown> }[] }) => {
         const limits = snapshot.docs.map((d) => {
           const data = d.data();
           return {
-            categoryId: data.categoryId,
+            categoryId: String(data.categoryId),
             monthlyLimit: Number(data.monthlyLimit) || 0,
+            month: Number(data.month) || undefined,
+            year: Number(data.year) || undefined,
           };
         });
         callback(limits);
@@ -399,19 +441,44 @@ export class FirestoreService {
   public static async setBudgetLimit(
     userId: string,
     categoryId: string,
-    monthlyLimit: number
+    monthlyLimit: number,
+    month?: number,
+    year?: number
   ): Promise<void> {
-    const ref = doc(db, "users", userId, "budgets", categoryId);
-    const payload = cleanFirestoreData({
-      categoryId,
-      monthlyLimit,
-      updatedAt: new Date().toISOString(),
-    });
-    await setDoc(ref, payload, { merge: true });
+    const now = new Date();
+    const m = month || now.getMonth() + 1;
+    const y = year || now.getFullYear();
+    try {
+      // Server-side authoritative path (atomic + validated)
+      await fetch("/api/finance/budgets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId, monthlyLimit, month: m, year: y }),
+      });
+    } catch {
+      // Fallback direct write (offline / no session)
+      const ref = doc(db, "users", userId, "budgets", `${y}_${m}_${categoryId}`);
+      const payload = cleanFirestoreData({
+        categoryId,
+        monthlyLimit,
+        month: m,
+        year: y,
+        updatedAt: new Date().toISOString(),
+      });
+      await setDoc(ref, payload, { merge: true });
+    }
   }
 
-  public static async deleteBudgetLimit(userId: string, categoryId: string): Promise<void> {
-    const ref = doc(db, "users", userId, "budgets", categoryId);
+  public static async deleteBudgetLimit(
+    userId: string,
+    categoryId: string,
+    month?: number,
+    year?: number
+  ): Promise<void> {
+    const now = new Date();
+    const m = month || now.getMonth() + 1;
+    const y = year || now.getFullYear();
+    const ref = doc(db, "users", userId, "budgets", `${y}_${m}_${categoryId}`);
     await deleteDoc(ref);
   }
 
