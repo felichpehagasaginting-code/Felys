@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Sparkles,
@@ -23,10 +24,14 @@ import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TransactionCard } from "@/components/finance/TransactionCard";
-import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
+import { ChartSkeleton, DashboardSkeleton } from "@/components/ui/Skeleton";
+// Heavy components lazy-loaded (recharts/tesseract); chart pakai skeleton anti layout-shift,
+// modal tanpa fallback (tertutup = null, tidak ada visual glitch).
+const DonutExpenseChart = dynamic(() => import("@/components/finance/DonutExpenseChart").then((m) => m.DonutExpenseChart), { ssr: false, loading: () => <ChartSkeleton /> });
+const ReceiptScanModal = dynamic(() => import("@/components/finance/ReceiptScanModal").then((m) => m.ReceiptScanModal), { ssr: false });
+const NumpadQuickEntry = dynamic(() => import("@/components/finance/NumpadQuickEntry").then((m) => m.NumpadQuickEntry), { ssr: false });
 import { InsightCard } from "@/components/ai/InsightCard";
 import { NLPQuickBar } from "@/components/shared/NLPQuickBar";
-import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { SavingsGoalModal } from "@/components/finance/SavingsGoalModal";
@@ -37,18 +42,21 @@ import { LiveClassStatusCard } from "@/components/academic/LiveClassStatusCard";
 import { AccountOverviewGrid } from "@/components/finance/AccountOverviewGrid";
 import { Button } from "@/components/ui/Button";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
-import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
 import { formatCurrencyIDR, getBudgetStatusConfig } from "@/lib/utils";
 import { Task } from "@/types/academic";
+import { Reveal } from "@/components/shared/Reveal";
+import { Collapsible } from "@/components/shared/Collapsible";
+import { ensureGsap, prefersReducedMotion } from "@/lib/motion/gsap-setup";
 
 export default function DashboardPage() {
   const { activeMode } = useModeStore();
-  const { user } = useAuthStore();
+  const { user, cachedDisplayName } = useAuthStore();
   const {
     tasks,
     courses,
     transactions,
     insights,
+    isLoaded,
     getMonthlyBudgetSummary,
     getTotalNetWorth,
   } = useDataStore();
@@ -62,6 +70,30 @@ export default function DashboardPage() {
   const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
   const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
 
+  // GSAP hero intro: badge pop → sapaan per-huruf (SplitText) → paragraf → tombol stagger
+  const heroRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // Nama instant: Auth user → cache localStorage → fallback.
+  // Tidak lagi menunggu onAuthStateChanged (1–3 dtk) dengan "Mahasiswa".
+  const displayName =
+    user?.displayName?.split(" ")[0] || cachedDisplayName || "Mahasiswa";
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    const title = titleRef.current;
+    if (!hero || !title || prefersReducedMotion()) return;
+    const { gsap, SplitText } = ensureGsap();
+    const ctx = gsap.context(() => {
+      const split = SplitText.create(title, { type: "chars", mask: "chars" });
+      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+      tl.from(".hero-badge", { y: -16, opacity: 0, scale: 0.85, duration: 0.6 }, 0.05)
+        .from(split.chars, { yPercent: 110, duration: 0.7, stagger: 0.02 }, 0.15)
+        .from(".hero-sub", { y: 14, opacity: 0, duration: 0.6 }, 0.5)
+        .from(".hero-actions > *", { y: 16, opacity: 0, scale: 0.92, duration: 0.5, stagger: 0.07 }, 0.6);
+    }, hero);
+    return () => ctx.revert();
+  }, [displayName]);
+
   // Time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -71,9 +103,6 @@ export default function DashboardPage() {
     return "Selamat Malam";
   };
 
-  const displayName = user?.displayName ? user.displayName.split(" ")[0] : "Mahasiswa";
-
-  // Active top urgent tasks (sorted by urgencyScore desc)
   const activeTasks = tasks
     .filter((t) => t.status !== "done")
     .sort((a, b) => b.urgencyScore - a.urgencyScore);
@@ -88,6 +117,12 @@ export default function DashboardPage() {
   // Recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
 
+  // Fresh-boot: sync Firestore belum tiba + tidak ada cache lokal → skeleton.
+  // User dengan cache tidak pernah melihat ini (paint instant dari localStorage).
+  if (!isLoaded && tasks.length === 0 && transactions.length === 0) {
+    return <DashboardSkeleton />;
+  }
+
   const handleEditTask = (task: Task) => {
     setTaskToEdit(task);
     setIsTaskModalOpen(true);
@@ -101,16 +136,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* 1. Welcoming Hero Banner (Apple Minimalist Aesthetics) */}
-      <section className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-surface to-background border border-border shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <section ref={heroRef} className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-surface to-background border border-border shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">
+          <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Felys Student Space</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">
+          <h1 ref={titleRef} className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">
             {getGreeting()}, {displayName}! ✨
           </h1>
-          <p className="text-xs sm:text-sm text-muted max-w-xl leading-relaxed">
+          <p className="hero-sub text-xs sm:text-sm text-muted max-w-xl leading-relaxed">
             {activeMode === "academic"
               ? `Kamu memiliki ${activeTasks.length} tugas aktif dan ${completedTodayCount} tugas tuntas. Fokus satu per satu, ya!`
               : `Total aset bersih aktifmu ${formatCurrencyIDR(totalNetWorth)}. Jaga pengeluaran tetap terkontrol hari ini.`}
@@ -118,7 +153,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Action Bar Pills */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="hero-actions flex items-center gap-2 flex-wrap">
           {activeMode === "academic" ? (
             <>
               <Link href="/academic/calendar">
@@ -194,15 +229,15 @@ export default function DashboardPage() {
       </section>
 
       {/* 2. Natural Language Quick Input Bar */}
-      <section>
+      <Reveal blur>
         <NLPQuickBar />
-      </section>
+      </Reveal>
 
       {/* 3. AI Contextual Insight Card (if available) */}
       {insights.length > 0 && (
-        <section>
+        <Reveal y={36} blur>
           <InsightCard insight={insights[0]} />
-        </section>
+        </Reveal>
       )}
 
       {/* ========================================================================= */}
@@ -211,37 +246,41 @@ export default function DashboardPage() {
       {activeMode === "academic" && (
         <div className="space-y-8 animate-in fade-in-50 duration-300">
           {/* Top Status Grid: Live Class & D-Day Banner */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-6" y={36}>
             <LiveClassStatusCard />
             <DDayCountdownBanner />
-          </section>
+          </Reveal>
 
           {/* Main Tasks Board */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-2xl bg-[#EDE5FF] dark:bg-[#383442] flex items-center justify-center text-[#7C5CFA]">
-                  <CheckSquare className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">
-                    Daftar Tugas Prioritas
-                  </h2>
-                  <p className="text-xs text-muted">
-                    Diurutkan otomatis oleh AI berdasarkan deadline, bobot, dan estimasi waktu.
-                  </p>
-                </div>
-              </div>
+          <Reveal className="space-y-4">
+            <Collapsible
+              storageKey="dash-tasks"
+              header={
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-2xl bg-[#EDE5FF] dark:bg-[#383442] flex items-center justify-center text-[#7C5CFA]">
+                      <CheckSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-foreground">
+                        Daftar Tugas Prioritas
+                      </h2>
+                      <p className="text-xs text-muted">
+                        Diurutkan otomatis oleh AI berdasarkan deadline, bobot, dan estimasi waktu.
+                      </p>
+                    </div>
+                  </div>
 
-              <Link
-                href="/academic"
-                className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1 bg-[#EDE5FF]/60 dark:bg-[#383442]/60 px-3 py-1.5 rounded-full transition-all"
-              >
-                <span>Lihat Semua ({tasks.length})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
+                  <Link
+                    href="/academic"
+                    className="text-xs font-bold text-[#7C5CFA] hover:underline hidden sm:flex items-center gap-1 bg-[#EDE5FF]/60 dark:bg-[#383442]/60 px-3 py-1.5 rounded-full transition-all"
+                  >
+                    <span>Lihat Semua ({tasks.length})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              }
+            >
             {activeTasks.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeTasks.map((task) => (
@@ -268,25 +307,31 @@ export default function DashboardPage() {
                 </Button>
               </div>
             )}
-          </section>
+            </Collapsible>
+          </Reveal>
 
           {/* Mata Kuliah Quick Badges */}
           {courses.length > 0 && (
-            <section className="p-6 rounded-[32px] bg-surface border border-border shadow-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-[#7C5CFA]" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
-                    Mata Kuliah Aktif Semester Ini
-                  </h3>
-                </div>
-                <Link
-                  href="/academic/courses"
-                  className="text-xs font-bold text-[#7C5CFA] hover:underline"
-                >
-                  Kelola Mata Kuliah
-                </Link>
-              </div>
+            <Reveal className="p-6 rounded-[32px] bg-surface border border-border shadow-soft space-y-3">
+              <Collapsible
+                storageKey="dash-courses"
+                header={
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-[#7C5CFA]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+                        Mata Kuliah Aktif Semester Ini
+                      </h3>
+                    </div>
+                    <Link
+                      href="/academic/courses"
+                      className="text-xs font-bold text-[#7C5CFA] hover:underline hidden sm:inline"
+                    >
+                      Kelola Mata Kuliah
+                    </Link>
+                  </div>
+                }
+              >
               <div className="flex items-center gap-2 flex-wrap">
                 {courses.map((course) => (
                   <div
@@ -309,7 +354,8 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </section>
+              </Collapsible>
+            </Reveal>
           )}
         </div>
       )}
@@ -320,12 +366,35 @@ export default function DashboardPage() {
       {activeMode === "finance" && (
         <div className="space-y-8 animate-in fade-in-50 duration-300">
           {/* 1. Multi-Account Grid (Dompet & E-Wallet) */}
-          <section>
+          <Reveal>
             <AccountOverviewGrid />
-          </section>
+          </Reveal>
 
           {/* 2. Dual Analytics Columns: Budget Status vs Daily Allowance */}
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <Reveal y={36}>
+            <Collapsible
+              storageKey="dash-analytics"
+              header={
+                <div className="flex items-center gap-2 px-1">
+                  <div className="w-8 h-8 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
+                    <Receipt className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground">Analitik Keuangan</h3>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${
+                        summary.isDeficit
+                          ? "bg-[#FFE8EA] text-[#D93D4A]"
+                          : `${budgetConfig.badgeBg} ${budgetConfig.textColor}`
+                      }`}
+                    >
+                      {summary.isDeficit ? "Defisit" : `${summary.overallPercentage}%`}
+                    </span>
+                  </div>
+                </div>
+              }
+            >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left: Monthly Budget & Expense Distribution */}
             <div className="lg:col-span-7 space-y-6">
               <div className="p-6 sm:p-7 rounded-[32px] bg-surface border border-border space-y-5 shadow-soft">
@@ -452,28 +521,34 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
-          </section>
+            </div>
+            </Collapsible>
+          </Reveal>
 
           {/* 3. Recent Transactions Feed */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
-                  <Receipt className="w-3.5 h-3.5" />
+          <Reveal className="space-y-4">
+            <Collapsible
+              storageKey="dash-feed"
+              header={
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
+                      <Receipt className="w-3.5 h-3.5" />
+                    </div>
+                    <h3 className="text-base font-bold text-foreground">
+                      Transaksi Keuangan Terkini
+                    </h3>
+                  </div>
+                  <Link
+                    href="/finance"
+                    className="text-xs font-bold text-[#1F8766] hover:underline hidden sm:flex items-center gap-1"
+                  >
+                    <span>Buka Riwayat Lengkap ({transactions.length})</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
-                <h3 className="text-base font-bold text-foreground">
-                  Transaksi Keuangan Terkini
-                </h3>
-              </div>
-              <Link
-                href="/finance"
-                className="text-xs font-bold text-[#1F8766] hover:underline flex items-center gap-1"
-              >
-                <span>Buka Riwayat Lengkap ({transactions.length})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
+              }
+            >
             {recentTransactions.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {recentTransactions.map((trx) => (
@@ -494,7 +569,8 @@ export default function DashboardPage() {
                 </Button>
               </div>
             )}
-          </section>
+            </Collapsible>
+          </Reveal>
         </div>
       )}
 
