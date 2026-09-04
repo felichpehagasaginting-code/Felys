@@ -48,7 +48,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   signOut: async () => {
     try {
+      if (activeSyncUnsubscribe) {
+        activeSyncUnsubscribe();
+        activeSyncUnsubscribe = null;
+      }
       await fbSignOut(auth);
+      await clearSession().catch(() => {});
       saveCachedName(null);
       set({ user: null, cachedDisplayName: null });
       useDataStore.getState().resetDataStore();
@@ -57,6 +62,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+let activeSyncUnsubscribe: (() => void) | null = null;
 
 // Initialize global auth listener
 if (typeof window !== "undefined") {
@@ -70,8 +77,19 @@ if (typeof window !== "undefined") {
         photoURL: currentUser.photoURL || null,
       }).catch((e) => console.warn("Profile sync error:", e));
 
+      // Hentikan listener lama jika ada
+      if (activeSyncUnsubscribe) {
+        activeSyncUnsubscribe();
+      }
       // Instantly start real-time Firestore sync on any device
-      useDataStore.getState().initFirestoreSync(currentUser.uid);
+      activeSyncUnsubscribe = useDataStore.getState().initFirestoreSync(currentUser.uid);
+    } else {
+      // User sudah logout / belum login: hentikan sync listener dan hapus data sensitif
+      if (activeSyncUnsubscribe) {
+        activeSyncUnsubscribe();
+        activeSyncUnsubscribe = null;
+      }
+      useDataStore.getState().resetDataStore();
     }
   });
 }

@@ -42,13 +42,7 @@ export default function DashboardLayout({
   // P6-B: FAB sembunyi saat scroll ke bawah, muncul saat scroll ke atas
   const [isFabVisible, setIsFabVisible] = useState(true);
 
-  // Synchronize with real Firestore whenever user is logged in
-  useEffect(() => {
-    if (user) {
-      const unsubscribe = initFirestoreSync(user.uid);
-      return () => unsubscribe();
-    }
-  }, [user, initFirestoreSync]);
+  // Synchronize with real Firestore handled globally by useAuthStore with automatic unsubscription on logout
 
   // P6-B: auto-hide FAB (pakai event Lenis bila ada, fallback scroll native)
   useEffect(() => {

@@ -156,18 +156,49 @@ export const useDataStore = create<DataState>((set, get) => ({
   },
 
   resetDataStore: () => {
+    // 1. Bersihkan seluruh state memori
     set({
       courses: [],
       tasks: [],
+      accounts: [],
       categories: [],
       transactions: [],
       budgetLimits: [],
+      recurringBills: [],
       debts: [],
       savingsGoals: [],
       emergencyFund: 0,
       insights: [],
       isLoaded: false,
+      hasOnboarded: false,
+      ddayEvent: { title: "Target Ujian / Sidang", targetDate: "" },
     });
+
+    // 2. Bersihkan seluruh data personal pengguna dari localStorage browser
+    if (typeof window !== "undefined") {
+      try {
+        const keysToRemove = [
+          "felys_accounts",
+          "felys_courses",
+          "felys_tasks",
+          "felys_categories",
+          "felys_transactions",
+          "felys_budgets",
+          "felys_bills",
+          "felys_debts",
+          "felys_savings",
+          "felys_emergency_fund",
+          "felys_dday",
+          "felys_dday_title",
+          "felys_dday_date",
+          "felys_onboarded",
+          "felys_display_name",
+        ];
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+      } catch (err) {
+        console.warn("Storage cleanup warning:", err);
+      }
+    }
   },
 
   // Real-time Firestore synchronizer
