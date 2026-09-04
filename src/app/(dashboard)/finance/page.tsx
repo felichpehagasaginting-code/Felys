@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon, Camera, CalendarClock, Users } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { TransactionCard } from "@/components/finance/TransactionCard";
-import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
-import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
-import { ReceiptScanModal } from "@/components/finance/ReceiptScanModal";
+import { MetricCardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/ui/Skeleton";
+// P10: heavy components lazy-loaded (recharts/tesseract/unpdf hanya saat dibuka)
+const DonutExpenseChart = dynamic(() => import("@/components/finance/DonutExpenseChart").then((m) => m.DonutExpenseChart), { ssr: false, loading: () => <ChartSkeleton /> });
+const NumpadQuickEntry = dynamic(() => import("@/components/finance/NumpadQuickEntry").then((m) => m.NumpadQuickEntry), { ssr: false });
+const ReceiptScanModal = dynamic(() => import("@/components/finance/ReceiptScanModal").then((m) => m.ReceiptScanModal), { ssr: false });
 import { RecurringBillsModal } from "@/components/finance/RecurringBillsModal";
 import { SplitBillModal } from "@/components/finance/SplitBillModal";
 import { SavingsGoalModal } from "@/components/finance/SavingsGoalModal";
@@ -19,7 +22,7 @@ import { formatCurrencyIDR, cn } from "@/lib/utils";
 import { Target, Shield } from "lucide-react";
 
 export default function FinanceTransactionsPage() {
-  const { transactions, categories, getMonthlyBudgetSummary, emergencyFund } = useDataStore();
+  const { transactions, categories, getMonthlyBudgetSummary, emergencyFund, isLoaded } = useDataStore();
 
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "expense" | "income">("all");
@@ -30,6 +33,21 @@ export default function FinanceTransactionsPage() {
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
   const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
+
+  // Fresh-boot: sync belum tiba + cache kosong → skeleton (bukan empty state palsu)
+  if (!isLoaded && transactions.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+        </div>
+        <ChartSkeleton />
+        <ListSkeleton rows={4} variant="transaction" />
+      </div>
+    );
+  }
 
   const summary = getMonthlyBudgetSummary();
 
