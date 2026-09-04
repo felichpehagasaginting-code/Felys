@@ -132,3 +132,23 @@ export interface SavingsGoal {
   isCompleted: boolean;
   createdAt: string;
 }
+
+export type LedgerReason =
+  | "transaction_create"
+  | "transaction_delete"
+  | "transaction_adjust"
+  | "account_adjust"
+  | "account_transfer_in"
+  | "account_transfer_out";
+
+export interface LedgerEntry {
+  id: string;
+  accountId: string;
+  transactionId?: string | null;
+  delta: number; // + masuk, - keluar
+  balanceBefore: number;
+  balanceAfter: number;
+  reason: LedgerReason;
+  note?: string | null;
+  createdAt: string;
+}
