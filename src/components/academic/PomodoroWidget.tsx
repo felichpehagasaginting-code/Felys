@@ -99,7 +99,7 @@ export function PomodoroWidget() {
           triggerHaptic("light");
           setWidgetOpen(true);
         }}
-        className="fixed bottom-20 lg:bottom-5 left-5 z-40 cursor-pointer group animate-in slide-in-from-bottom-3"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:bottom-5 left-5 z-40 cursor-pointer group animate-in slide-in-from-bottom-3"
       >
         <div className={`p-2.5 px-3.5 rounded-full border shadow-xl flex items-center gap-2.5 transition-all duration-300 group-hover:scale-105 ${
           isRunning
@@ -126,7 +126,7 @@ export function PomodoroWidget() {
   }
 
   return (
-    <aside aria-label="Panel Pomodoro Fokus" className="fixed bottom-20 lg:bottom-5 left-5 z-40 w-[90vw] sm:w-80 animate-in slide-in-from-bottom-4 duration-300">
+    <aside aria-label="Panel Pomodoro Fokus" className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:bottom-5 left-5 z-40 w-[90vw] sm:w-80 animate-in slide-in-from-bottom-4 duration-300">
       <div className="p-4 rounded-3xl bg-white dark:bg-[#26232E] border border-border shadow-2xl space-y-3.5 ring-1 ring-black/10">
         {/* Top Header */}
         <div className="flex items-center justify-between">
