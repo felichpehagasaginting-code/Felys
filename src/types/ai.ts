@@ -22,4 +22,8 @@ export interface AIChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   createdAt: string;
+  /** Skill deterministik yang menghasilkan pesan ini (untuk styling khusus). */
+  skill?: "can-i-spend" | "plan-tasks" | "simulate-saving";
+  /** Verdict skill can-i-spend (true = boleh, false = jangan). */
+  skillAllowed?: boolean;
 }
