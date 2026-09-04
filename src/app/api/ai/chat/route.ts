@@ -1,44 +1,30 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { getVerifiedUid } from "@/lib/firebase/auth-helpers";
+import { checkAiQuota, truncateDocText } from "@/server/services/ai-usage.service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// In-memory sliding window rate limiter: Map<identifier, timestamp[]>
-const rateLimitMap = new Map<string, number[]>();
-const MAX_REQUESTS_PER_WINDOW = 50;
-const WINDOW_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const windowStart = now - WINDOW_DURATION_MS;
-  const timestamps = rateLimitMap.get(identifier) || [];
-
-  // Filter timestamps within current 24h window
-  const recentTimestamps = timestamps.filter((t) => t > windowStart);
-
-  if (recentTimestamps.length >= MAX_REQUESTS_PER_WINDOW) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  recentTimestamps.push(now);
-  rateLimitMap.set(identifier, recentTimestamps);
-  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - recentTimestamps.length };
-}
-
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get("Authorization") || "";
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "anonymous";
-    const userIdentifier = authHeader.replace("Bearer ", "").trim() || ip;
+    // P2+P4: identitas dari session terverifikasi, kuota persisten di Firestore
+    const uid = await getVerifiedUid(req);
 
-    // 1. Rate Limiting Check
-    const { allowed, remaining } = checkRateLimit(userIdentifier);
-    if (!allowed) {
-      return new Response(
-        `Hai! Kamu sudah mencapai batas maksimal 50 pertanyaan AI untuk hari ini. Silakan coba lagi besok ya! ✨`,
-        { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": "0" } }
-      );
+    let remaining = 50;
+    try {
+      if (uid) {
+        const q = await checkAiQuota(uid, "chat");
+        if (!q.allowed) {
+          return new Response(
+            `Hai! Kamu sudah mencapai batas maksimal 50 pertanyaan AI untuk hari ini. Silakan coba lagi besok ya! ✨`,
+            { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": "0" } }
+          );
+        }
+        remaining = q.remaining;
+      }
+    } catch {
+      // fail-open bila Admin DB belum dikonfigurasi (dev lokal)
     }
 
     const { messages, context } = await req.json();
@@ -73,7 +59,7 @@ export async function POST(req: Request) {
     const pdfContext = context?.lectureDocText
       ? `
 --- DOKUMEN / SLIDE MATERI KULIAH AKTIF ("${context.lectureDocName || "Dokumen Materi"}") ---
-${context.lectureDocText}
+${truncateDocText(String(context.lectureDocText), 8000)}
 --- AKHIR ISI DOKUMEN ---
 Instruksi Tambahan: Mahasiswa sedang membuka dan mempelajari dokumen di atas. Kamu memiliki akses PENUH ke seluruh isi teks dokumen tersebut. Jawab pertanyaan, buatkan rangkuman, kuis kilat, atau jelaskan konsep secara spesifik mengacu pada data/isi dokumen di atas.`
       : "";
