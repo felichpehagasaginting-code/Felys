@@ -60,6 +60,25 @@ html {
   user-select: none;
 }
 
+/* Lenis smooth-scroll: biarkan Lenis yang pegang scroll, matikan CSS smooth bawaan */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.lenis, html.lenis body {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   color: var(--text-primary);
   background: var(--bg-primary);
