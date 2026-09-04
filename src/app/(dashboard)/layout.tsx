@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/shared/Sidebar";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { AIDrawer } from "@/components/ai/AIDrawer";
 import { DynamicIsland } from "@/components/shared/DynamicIsland";
+import { ScrollProgress } from "@/components/shared/ScrollProgress";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { NumpadQuickEntry } from "@/components/finance/NumpadQuickEntry";
 import { useModeStore } from "@/stores/use-mode-store";
@@ -16,6 +17,9 @@ import { Plus, LogIn, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { PomodoroWidget } from "@/components/academic/PomodoroWidget";
 import { ScratchpadPanel } from "@/components/shared/ScratchpadPanel";
+import { OnboardingWizard } from "@/components/shared/OnboardingWizard";
+import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
+import { useAIStore } from "@/stores/use-ai-store";
 
 export default function DashboardLayout({
   children,
@@ -25,9 +29,18 @@ export default function DashboardLayout({
   const { activeMode } = useModeStore();
   const { user, isLoading } = useAuthStore();
   const { initFirestoreSync } = useDataStore();
+  const { toggleDrawer } = useAIStore();
+  const { hasOnboarded, isLoaded: dataLoaded, courses, transactions } = useDataStore();
+
+  // P3: wizard hanya untuk user login yang benar-benar baru
+  // (belum onboard + belum punya data apa pun) — user lama tidak diganggu.
+  const showOnboarding =
+    !!user && !hasOnboarded && dataLoaded && courses.length === 0 && transactions.length === 0;
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+  // P6-B: FAB sembunyi saat scroll ke bawah, muncul saat scroll ke atas
+  const [isFabVisible, setIsFabVisible] = useState(true);
 
   // Synchronize with real Firestore whenever user is logged in
   useEffect(() => {
@@ -37,6 +50,41 @@ export default function DashboardLayout({
     }
   }, [user, initFirestoreSync]);
 
+  // P6-B: auto-hide FAB (pakai event Lenis bila ada, fallback scroll native)
+  useEffect(() => {
+    let lastY = typeof window !== "undefined" ? window.scrollY : 0;
+    let ticking = false;
+    const onScrollPos = (y: number) => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          const goingDown = y > lastY + 4;
+          const goingUp = y < lastY - 4;
+          if (goingDown && y > 140) setIsFabVisible(false);
+          else if (goingUp || y <= 140) setIsFabVisible(true);
+          lastY = y;
+          ticking = false;
+        });
+      }
+    };
+    const lenis = (window as unknown as { __lenis?: {
+      on: (e: string, cb: (ev: { scroll?: number }) => void) => void;
+      off: (e: string, cb: (ev: { scroll?: number }) => void) => void;
+    } }).__lenis;
+    let detachLenis: (() => void) | null = null;
+    if (lenis) {
+      const cb = (e: { scroll?: number }) => onScrollPos(e.scroll ?? window.scrollY);
+      lenis.on("scroll", cb);
+      detachLenis = () => lenis.off("scroll", cb);
+    }
+    const native = () => onScrollPos(window.scrollY);
+    window.addEventListener("scroll", native, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", native);
+      detachLenis?.();
+    };
+  }, []);
+
   const handleQuickAdd = () => {
     if (activeMode === "academic") {
       setIsTaskModalOpen(true);
@@ -45,8 +93,12 @@ export default function DashboardLayout({
     }
   };
 
+  // P2: N = tambah cepat, F = asisten Fio (nonaktif saat mengetik/modal terbuka)
+  useKeyboardShortcuts({ onQuickAdd: handleQuickAdd, onToggleFio: toggleDrawer });
+
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background text-foreground transition-colors duration-300">
+      <ScrollProgress />
       {/* Top Navbar */}
       <Navbar onOpenQuickAdd={handleQuickAdd} />
 
@@ -81,10 +133,13 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* Floating Action Button (FAB) on Mobile */}
+      {/* Floating Action Button (FAB) on Mobile — auto-hide saat scroll ke bawah */}
       <button
         onClick={handleQuickAdd}
-        className="lg:hidden fixed right-5 bottom-20 z-30 w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all select-none"
+        aria-label={activeMode === "academic" ? "Tambah tugas baru" : "Catat transaksi baru"}
+        className={`lg:hidden fixed right-5 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-float hover:scale-105 active:scale-95 transition-all select-none ${
+          isFabVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none"
+        }`}
         title={activeMode === "academic" ? "Tambah Tugas" : "Catat Transaksi"}
       >
         <Plus className="w-6 h-6 stroke-[2.5]" />
@@ -102,6 +157,9 @@ export default function DashboardLayout({
 
       {/* Global AI Chat Drawer */}
       <AIDrawer />
+
+      {/* P3: Onboarding wizard untuk user baru */}
+      {showOnboarding && <OnboardingWizard />}
 
       {/* Global Quick Add Modals */}
       <TaskFormModal
