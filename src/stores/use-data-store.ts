@@ -15,6 +15,7 @@ import {
   AccountProvider,
 } from "@/types/finance";
 import { AIInsight } from "@/types/ai";
+import { UserProfile } from "@/types/user";
 import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
 import { InsightService } from "@/server/services/insight.service";
@@ -58,6 +59,9 @@ interface DataState {
   emergencyFund: number;
   insights: AIInsight[];
   isLoaded: boolean;
+  /** P3: wizard onboarding selesai (device-level + Firestore). */
+  hasOnboarded: boolean;
+  completeOnboarding: (name?: string) => Promise<void>;
 
   // Real-time Firestore sync & cleanup
   initFirestoreSync: (userId: string) => () => void;
@@ -88,6 +92,7 @@ interface DataState {
   // Finance Actions
   addCategory: (category: Omit<Category, "id">) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, "id" | "createdAt">) => Promise<void>;
+  updateTransaction: (id: string, updates: Partial<Pick<Transaction, "amount" | "categoryId" | "categoryName" | "categoryIcon" | "categoryColor" | "note" | "date">>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   setBudgetLimit: (categoryId: string, monthlyLimit: number) => Promise<void>;
   deleteBudgetLimit: (categoryId: string) => Promise<void>;
@@ -132,6 +137,23 @@ export const useDataStore = create<DataState>((set, get) => ({
   emergencyFund: loadLocal<number>("felys_emergency_fund", 0),
   insights: [],
   isLoaded: false,
+  hasOnboarded: loadLocal<boolean>("felys_onboarded", false),
+
+  completeOnboarding: async (name) => {
+    set({ hasOnboarded: true });
+    saveLocal("felys_onboarded", true);
+    const userId = getCurrentUserId();
+    if (userId) {
+      try {
+        await FirestoreService.syncUserProfile(userId, {
+          ...(name?.trim() ? { name: name.trim() } : {}),
+          hasOnboarded: true,
+        } as Partial<UserProfile>);
+      } catch (err) {
+        console.warn("completeOnboarding sync warning:", err);
+      }
+    }
+  },
 
   resetDataStore: () => {
     set({
@@ -183,6 +205,10 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (typeof data.emergencyFund === "number") {
         set({ emergencyFund: data.emergencyFund });
         saveLocal("felys_emergency_fund", data.emergencyFund);
+      }
+      if (typeof data.hasOnboarded === "boolean") {
+        set({ hasOnboarded: data.hasOnboarded });
+        saveLocal("felys_onboarded", data.hasOnboarded);
       }
     });
 
@@ -655,6 +681,49 @@ export const useDataStore = create<DataState>((set, get) => ({
         console.warn("Firestore deleteTransaction sync warning:", err?.message || err);
       }
     }
+  },
+
+  // P4: edit via API atomik (server sumber kebenaran) + merge respons ke state lokal
+  updateTransaction: async (id, updates) => {
+    const prev = get().transactions.find((t) => t.id === id);
+    if (!prev) throw new Error("Transaksi tidak ditemukan.");
+    const userId = getCurrentUserId();
+
+    if (!userId) {
+      // Mode pratinjau: update lokal saja
+      const nextTransactions = get().transactions.map((t) =>
+        t.id === id ? { ...t, ...updates } : t
+      );
+      set({ transactions: nextTransactions });
+      saveLocal("felys_transactions", nextTransactions);
+      get().refreshInsights();
+      return;
+    }
+
+    let token = "";
+    try {
+      const { auth } = await import("@/lib/firebase/client");
+      token = (await auth.currentUser?.getIdToken()) || "";
+    } catch {}
+
+    const res = await fetch(`/api/finance/transactions/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(updates),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.error?.message || "Gagal memperbarui transaksi di server.");
+    }
+    const merged: Transaction = { ...prev, ...(json.data as Partial<Transaction>), id };
+    const nextTransactions = get().transactions.map((t) => (t.id === id ? merged : t));
+    // Saldo akun dihitung ulang dari server via listener; sinkron optimistis ringan:
+    set({ transactions: nextTransactions });
+    saveLocal("felys_transactions", nextTransactions);
+    get().refreshInsights();
   },
 
   setBudgetLimit: async (categoryId, monthlyLimit) => {
