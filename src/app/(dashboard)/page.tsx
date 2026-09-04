@@ -84,11 +84,21 @@ export default function DashboardPage() {
     if (!hero || !title || prefersReducedMotion()) return;
     const { gsap, SplitText } = ensureGsap();
     const ctx = gsap.context(() => {
-      const split = SplitText.create(title, { type: "chars", mask: "chars" });
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-      tl.from(".hero-badge", { y: -16, opacity: 0, scale: 0.85, duration: 0.6 }, 0.05)
-        .from(split.chars, { yPercent: 110, duration: 0.7, stagger: 0.02 }, 0.15)
-        .from(".hero-sub", { y: 14, opacity: 0, duration: 0.6 }, 0.5)
+      tl.from(".hero-badge", { y: -16, opacity: 0, scale: 0.85, duration: 0.6 }, 0.05);
+
+      if (SplitText && typeof SplitText.create === "function") {
+        try {
+          const split = SplitText.create(title, { type: "chars", mask: "chars" });
+          tl.from(split.chars, { yPercent: 110, duration: 0.7, stagger: 0.02 }, 0.15);
+        } catch {
+          tl.from(title, { y: 20, opacity: 0, duration: 0.7 }, 0.15);
+        }
+      } else {
+        tl.from(title, { y: 20, opacity: 0, duration: 0.7 }, 0.15);
+      }
+
+      tl.from(".hero-sub", { y: 14, opacity: 0, duration: 0.6 }, 0.5)
         .from(".hero-actions > *", { y: 16, opacity: 0, scale: 0.92, duration: 0.5, stagger: 0.07 }, 0.6);
     }, hero);
     return () => ctx.revert();
