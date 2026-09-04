@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/Button";
 import { Task } from "@/types/academic";
 import { isToday, isThisWeek, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ListSkeleton } from "@/components/ui/Skeleton";
 
 export default function AcademicTasksPage() {
-  const { tasks, courses } = useDataStore();
+  const { tasks, courses, isLoaded } = useDataStore();
 
   const [search, setSearch] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
@@ -76,6 +77,16 @@ export default function AcademicTasksPage() {
     setTaskToEdit(null);
     setIsTaskModalOpen(true);
   };
+
+  // Fresh-boot: sync belum tiba + cache kosong → skeleton list (bukan empty state palsu)
+  if (!isLoaded && tasks.length === 0) {
+    return (
+      <div className="space-y-5 sm:space-y-6">
+        <AcademicNavTabs />
+        <ListSkeleton rows={5} variant="task" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6">
