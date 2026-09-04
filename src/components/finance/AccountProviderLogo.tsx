@@ -14,16 +14,18 @@ const PROVIDER_INFO: Record<
   AccountProvider,
   { label: string; file: string; bg: string; needsPadding?: boolean }
 > = {
-  gopay: { label: "GoPay", file: "gopay.svg", bg: "#00AED6" },
-  superbank: { label: "Superbank", file: "superbank.svg", bg: "#0E0E0E" },
-  seabank: { label: "SeaBank", file: "seabank.svg", bg: "#FF5300" },
-  dana: { label: "DANA", file: "dana.svg", bg: "#118EEA", needsPadding: true },
-  ovo: { label: "OVO", file: "ovo.svg", bg: "#4C2A86", needsPadding: true },
-  shopeepay: { label: "ShopeePay", file: "shopeepay.svg", bg: "#EE4D2D" },
-  bca: { label: "BCA", file: "bca.svg", bg: "#FFFFFF", needsPadding: true },
-  mandiri: { label: "Mandiri", file: "mandiri.svg", bg: "#FFFFFF", needsPadding: true },
-  bri: { label: "BRI", file: "bri.svg", bg: "#00529C", needsPadding: false },
-  bni: { label: "BNI", file: "bni.svg", bg: "#005E54", needsPadding: false },
+  // Logo resmi tiap brand (PNG 512px, sumber: Wikimedia Commons / situs resmi brand).
+  // Semua file transparan — tile putih agar sesuai brand guideline.
+  gopay: { label: "GoPay", file: "gopay.png", bg: "#FFFFFF", needsPadding: true },
+  superbank: { label: "Superbank", file: "superbank.png", bg: "#0E0E0E", needsPadding: true },
+  seabank: { label: "SeaBank", file: "seabank.png", bg: "#FFFFFF", needsPadding: true },
+  dana: { label: "DANA", file: "dana.png", bg: "#FFFFFF", needsPadding: true },
+  ovo: { label: "OVO", file: "ovo.png", bg: "#FFFFFF", needsPadding: true },
+  shopeepay: { label: "ShopeePay", file: "shopeepay.png", bg: "#FFFFFF", needsPadding: true },
+  bca: { label: "BCA", file: "bca.png", bg: "#FFFFFF", needsPadding: true },
+  mandiri: { label: "Mandiri", file: "mandiri.png", bg: "#FFFFFF", needsPadding: true },
+  bri: { label: "BRI", file: "bri.png", bg: "#FFFFFF", needsPadding: true },
+  bni: { label: "BNI", file: "bni.png", bg: "#FFFFFF", needsPadding: true },
   cash: { label: "Uang Tunai", file: "cash.svg", bg: "#10B981" },
   custom: { label: "Lainnya", file: "cash.svg", bg: "#7C5CFA" },
 };
