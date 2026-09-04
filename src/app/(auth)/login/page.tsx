@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase/client";
 import { FirestoreService } from "@/lib/firebase/firestore-service";
+import { establishSession } from "@/lib/auth-session-client";
 import { useDataStore } from "@/stores/use-data-store";
 import { Button } from "@/components/ui/Button";
 import { Mail, Lock, AlertCircle } from "lucide-react";
@@ -30,7 +31,9 @@ export default function LoginPage() {
       );
 
       const userCredential: any = await Promise.race([loginPromise, timeoutPromise]);
-      
+
+      // Buat server session (non-blocking) + sync data
+      await establishSession(userCredential.user);
       // Sync user profile, categories, and push local data to Firestore
       await Promise.all([
         FirestoreService.syncUserProfile(userCredential.user.uid, {
@@ -68,6 +71,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithPopup(auth, googleProvider);
+      await establishSession(userCredential.user);
       await Promise.all([
         FirestoreService.syncUserProfile(userCredential.user.uid, {
           id: userCredential.user.uid,
@@ -93,7 +97,7 @@ export default function LoginPage() {
       } else if (err.code === "auth/popup-blocked") {
         setError("Jendela popup login Google diblokir oleh browser. Izinkan popup untuk localhost.");
       } else {
-        setError(err.message || "Gagal masuk dengan Google.");
+        setError(`Gagal masuk dengan Google.${err?.code ? ` (kode: ${err.code})` : ""} ${err?.message ? `- ${err.message}` : ""}`);
       }
     } finally {
       setLoading(false);
