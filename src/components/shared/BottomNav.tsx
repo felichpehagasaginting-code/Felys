@@ -49,6 +49,8 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "group flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold transition-all select-none active:scale-90",
                 isActive
@@ -72,6 +74,7 @@ export function BottomNav() {
         {/* Floating AI Button in Bottom Nav */}
         <button
           onClick={toggleDrawer}
+          aria-label="Buka asisten Fio AI"
           className="group flex flex-col items-center gap-1 p-2 rounded-xl text-[11px] font-semibold text-[#7C5CFA] transition-all active:scale-90 select-none"
         >
           <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white shadow-soft transition-transform duration-300 group-hover:scale-120 group-hover:rotate-12">
