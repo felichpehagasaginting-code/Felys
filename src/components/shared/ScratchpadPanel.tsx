@@ -58,8 +58,9 @@ export function ScratchpadPanel() {
           triggerHaptic("light");
           setIsOpen(!isOpen);
         }}
-        className="fixed bottom-20 lg:bottom-5 right-5 z-40 p-3 rounded-full bg-white dark:bg-[#26232E] border border-border text-[#7C5CFA] shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 ring-1 ring-black/10 group"
+        className="fixed bottom-36 lg:bottom-5 right-5 z-40 p-3 rounded-full bg-white dark:bg-[#26232E] border border-border text-[#7C5CFA] shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 ring-1 ring-black/10 group"
         title="Buka Papan Coret-Coret Kuliah (Sticky Notes)"
+        aria-label="Buka papan catatan cepat"
       >
         <StickyNote className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
         {content.trim() && (
@@ -69,7 +70,7 @@ export function ScratchpadPanel() {
 
       {/* Floating Scratchpad Panel */}
       {isOpen && (
-        <aside aria-label="Papan Catatan Cepat" className="fixed bottom-32 lg:bottom-18 right-5 z-50 w-[90vw] sm:w-88 max-h-[70vh] bg-white dark:bg-[#26232E] border border-border rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/10 animate-in slide-in-from-bottom-4 duration-300">
+        <aside aria-label="Papan Catatan Cepat" className="fixed bottom-[12.5rem] lg:bottom-18 right-5 z-50 w-[90vw] sm:w-88 max-h-[70vh] bg-white dark:bg-[#26232E] border border-border rounded-3xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-black/10 animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="p-3.5 px-4 bg-[#FAF9FC] dark:bg-[#2F2B3A] border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
