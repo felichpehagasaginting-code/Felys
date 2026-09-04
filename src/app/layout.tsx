@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { AntiZoomProvider } from "@/components/shared/AntiZoomProvider";
 import { PWAInstallPrompt } from "@/components/shared/PWAInstallPrompt";
 import { ThemeModeProvider } from "@/components/shared/ThemeModeProvider";
+import { SmoothScrollProvider } from "@/components/shared/SmoothScrollProvider";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -87,10 +88,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${jakarta.className} font-sans antialiased min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300 select-none`}>
+      <body className={`${jakarta.className} font-sans antialiased min-h-screen min-h-dvh flex flex-col bg-background text-foreground transition-colors duration-300 select-none`}>
         <ThemeModeProvider>
           <AntiZoomProvider />
-          {children}
+          <SmoothScrollProvider>
+            {children}
+          </SmoothScrollProvider>
           <PWAInstallPrompt />
           <Toaster position="top-right" richColors closeButton />
         </ThemeModeProvider>
