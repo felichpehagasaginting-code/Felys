@@ -88,7 +88,7 @@ export function PWAInstallPrompt() {
   if (isStandalone || !showPrompt) return null;
 
   return (
-    <aside aria-label="Instalasi Aplikasi" className="fixed bottom-20 lg:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-50 animate-in slide-in-from-bottom-5 duration-300">
+    <aside aria-label="Instalasi Aplikasi" className="fixed bottom-[12.5rem] lg:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-50 animate-in slide-in-from-bottom-5 duration-300">
       <div className="p-4 rounded-3xl bg-white dark:bg-[#26232E] border border-border shadow-2xl space-y-3 ring-1 ring-black/10">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
