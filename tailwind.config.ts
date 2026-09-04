@@ -9,7 +9,19 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
+      screens: {
+        // iPhone 15 Plus (428px) ke bawah = kompak; brand text muncul ≥480px
+        xs: "30rem",
+      },
+      scale: {
+        102: "1.02",
+        115: "1.15",
+        120: "1.2",
+      },
+      spacing: {
+        18: "4.5rem",
+        88: "22rem",
+      },      colors: {
         background: "var(--bg-primary)",
         surface: "var(--bg-surface)",
         foreground: "var(--text-primary)",
