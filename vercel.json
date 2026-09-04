@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/recalculate-urgency?secret=$CRON_SECRET",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-clone-budget?secret=$CRON_SECRET",
+      "schedule": "0 17 1 * *"
+    },
+    {
+      "path": "/api/cron/reminders?secret=$CRON_SECRET",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
