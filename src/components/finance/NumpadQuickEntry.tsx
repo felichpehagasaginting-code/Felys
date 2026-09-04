@@ -34,7 +34,7 @@ import {
 import { triggerHaptic } from "@/lib/haptics";
 import { playTick, playSuccessChime } from "@/lib/sounds";
 import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
-import { formatCurrencyIDR, cn } from "@/lib/utils";
+import { formatCurrencyIDR, cn, getBudgetStatusConfig } from "@/lib/utils";
 
 interface NumpadQuickEntryProps {
   isOpen: boolean;
@@ -72,7 +72,7 @@ const STATIC_DEFAULT_INCOMES: Category[] = DEFAULT_INCOME_CATEGORIES.map((c, i) 
 }));
 
 export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
-  const { categories, addTransaction, accounts } = useDataStore();
+  const { categories, addTransaction, accounts, getMonthlyBudgetSummary } = useDataStore();
 
   const [type, setType] = useState<TransactionType>("expense");
   const [amountStr, setAmountStr] = useState("0");
@@ -107,6 +107,31 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   }, [type, currentCategoryList]);
 
   const numAmount = parseInt(amountStr, 10) || 0;
+
+  // P1: dampak live terhadap budget kategori — dihitung sebelum submit.
+  // Cocokkan by id ATAU nama (kategori default statis punya id semu def_exp_N).
+  const summary = getMonthlyBudgetSummary();
+  const impactedBudget =
+    type === "expense" && selectedCategory
+      ? summary.categories.find(
+          (c) => c.categoryId === selectedCategory.id || c.categoryName === selectedCategory.name
+        )
+      : undefined;
+  const afterSpent = (impactedBudget?.spentAmount || 0) + numAmount;
+  const afterLimit = impactedBudget?.monthlyLimit || 0;
+  const afterPct = afterLimit > 0 ? Math.round((afterSpent / afterLimit) * 100) : 0;
+  const afterCfg = getBudgetStatusConfig(afterPct);
+  const willOverbudget = afterLimit > 0 && afterPct >= 100;
+  const impactHint =
+    !impactedBudget || afterLimit <= 0
+      ? null
+      : afterPct >= 100
+        ? "Transaksi ini bikin kategori ini overbudget ⚠️"
+        : afterPct >= 90
+          ? "Mepet limit — sisa dikit lagi"
+          : afterPct >= 70
+            ? "Masuk zona perhatian, tetap terkendali"
+            : null;
 
   const handleNumpadPress = (val: string) => {
     triggerHaptic("light");
@@ -217,6 +242,45 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             </span>
           </div>
 
+          {/* P1: Dampak live ke budget (pre-submit feedback) */}
+          {type === "expense" && selectedCategory && (
+            <div
+              aria-live="polite"
+              className={cn(
+                "rounded-2xl border p-3 space-y-1.5",
+                impactedBudget && afterLimit > 0
+                  ? afterCfg.badgeBg + " border-transparent"
+                  : "bg-[#FAF9FC] dark:bg-[#2F2B3A] border-border"
+              )}
+            >
+              {impactedBudget && afterLimit > 0 ? (
+                <>
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <span className="text-foreground/80 truncate mr-2">
+                      {impactedBudget.categoryName}
+                    </span>
+                    <span className={afterCfg.textColor}>
+                      sisa {formatCurrencyIDR(Math.max(0, afterLimit - afterSpent))} • {afterPct}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full transition-all duration-300", afterCfg.barColor)}
+                      style={{ width: `${Math.min(100, afterPct)}%` }}
+                    />
+                  </div>
+                  {impactHint && (
+                    <p className={cn("text-[11px] font-bold", afterCfg.textColor)}>{impactHint}</p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[11px] text-muted">
+                  Kategori ini belum punya limit — atur di halaman Budget agar Fio bisa menjaganya.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Account Source Selector (GoPay, SeaBank, Cash, etc.) */}
           {accounts.length > 0 && (
             <div>
@@ -231,6 +295,8 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
                       key={acc.id}
                       type="button"
                       onClick={() => setSelectedAccountId(acc.id)}
+                      aria-label={`Akun ${acc.name}, saldo ${formatCurrencyIDR(acc.currentBalance)}`}
+                      aria-pressed={isSelected}
                       className={`p-1.5 px-2.5 rounded-xl border flex items-center gap-1.5 transition-all shrink-0 text-left ${
                         isSelected
                           ? "bg-surface border-[#7C5CFA] ring-2 ring-[#7C5CFA]/40 shadow-xs"
@@ -274,6 +340,8 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
                     key={cat.id || cat.name}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
+                    aria-label={`Kategori ${cat.name}`}
+                    aria-pressed={isSelected}
                     className={cn(
                       "flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all text-center select-none",
                       isSelected
@@ -305,7 +373,8 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
                 key={key}
                 type="button"
                 onClick={() => handleNumpadPress(key)}
-                className="h-10 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-base font-bold text-foreground hover:bg-[#EDEAF2] active:scale-95 transition-all"
+                aria-label={`Angka ${key}`}
+                className="h-11 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-base font-bold text-foreground hover:bg-[#EDEAF2] active:scale-95 transition-all"
               >
                 {key}
               </button>
@@ -313,21 +382,24 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             <button
               type="button"
               onClick={() => handleQuickAddZeroes("000")}
-              className="h-10 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-xs font-bold text-muted hover:bg-[#EDEAF2] active:scale-95 transition-all"
+              aria-label="Tambah tiga nol"
+              className="h-11 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-xs font-bold text-muted hover:bg-[#EDEAF2] active:scale-95 transition-all"
             >
               +000
             </button>
             <button
               type="button"
               onClick={() => handleNumpadPress("0")}
-              className="h-10 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-base font-bold text-foreground hover:bg-[#EDEAF2] active:scale-95 transition-all"
+              aria-label="Angka 0"
+              className="h-11 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border text-base font-bold text-foreground hover:bg-[#EDEAF2] active:scale-95 transition-all"
             >
               0
             </button>
             <button
               type="button"
               onClick={handleBackspace}
-              className="h-10 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border flex items-center justify-center text-muted hover:text-[#FF7A85] active:scale-95 transition-all"
+              aria-label="Hapus digit terakhir"
+              className="h-11 rounded-xl bg-[#FAF9FC] dark:bg-[#2F2B3A] border border-border flex items-center justify-center text-muted hover:text-[#FF7A85] active:scale-95 transition-all"
             >
               <Delete className="w-4 h-4" />
             </button>
@@ -355,7 +427,9 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             <span>
               {isSubmitting
                 ? "Menyimpan ke Cloud..."
-                : `Simpan ${type === "expense" ? "Pengeluaran" : "Pemasukan"}`}
+                : willOverbudget
+                  ? "Tetap Catat (Overbudget)"
+                  : `Simpan ${type === "expense" ? "Pengeluaran" : "Pemasukan"}`}
             </span>
           </Button>
         </form>
