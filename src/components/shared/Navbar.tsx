@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Sparkles,
@@ -30,7 +31,8 @@ import { useAuthStore } from "@/stores/use-auth-store";
 import { usePomodoroStore } from "@/stores/use-pomodoro-store";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { useSoundStore } from "@/stores/use-sound-store";
-import { PDFLectureReaderModal } from "@/components/academic/PDFLectureReaderModal";
+// P10: PDF reader (unpdf, berat) hanya dimuat saat dibuka
+const PDFLectureReaderModal = dynamic(() => import("@/components/academic/PDFLectureReaderModal").then((m) => m.PDFLectureReaderModal), { ssr: false });
 import { triggerHaptic } from "@/lib/haptics";
 import { playPop } from "@/lib/sounds";
 
@@ -41,7 +43,7 @@ interface NavbarProps {
 export function Navbar({ onOpenQuickAdd }: NavbarProps) {
   const { activeMode, setActiveMode } = useModeStore();
   const { toggleDrawer } = useAIStore();
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, cachedDisplayName } = useAuthStore();
   const { toggleWidget, isRunning } = usePomodoroStore();
   const { resolvedTheme, toggleTheme } = useThemeStore();
   const { isSoundEnabled, toggleSound, volume, setVolume } = useSoundStore();
@@ -168,7 +170,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="text-xs font-bold text-foreground truncate">
-                      {user?.displayName || "Mahasiswa Felys"}
+                      {user?.displayName || cachedDisplayName || "Mahasiswa Felys"}
                     </h4>
                     <p className="text-[10px] text-muted truncate">
                       {user?.email || "Belum Masuk Akun"}
