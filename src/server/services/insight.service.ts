@@ -16,23 +16,23 @@ export class InsightService {
   }): AIInsight | null {
     const now = new Date();
 
-    // Kondisi 1: Ada >= 2 task dengan urgencyScore >= 75 atau deadline <= 5 hari
+    // P5 — sesuai AI-LOGIC.md: >=2 task urgency>=80 deadline<=7 hari + >=1 non-esensial >=70%
     const urgentTasks = params.tasks.filter((t) => {
       if (t.status === "done") return false;
       const deadline = new Date(t.deadline);
       const daysLeft = differenceInDays(deadline, now);
-      return (t.urgencyScore >= 75 || daysLeft <= 4) && daysLeft >= -1;
+      return t.urgencyScore >= 80 && daysLeft <= 7 && daysLeft >= -1;
     });
 
-    // Kondisi 2: Ada kategori non-esensial (Kopi, Jajan, Hiburan, Makan) dengan pemakaian >= 65%
+    // Kondisi 2: kategori non-esensial pemakaian >= 70%
     const overloadedDiscretionary = params.budgets.find(
-      (b) => !b.isEssential && b.usedPercentage >= 65
+      (b) => !b.isEssential && b.usedPercentage >= 70
     );
 
     // Kondisi 3: Total estimasi jam tugas >= 6 jam
     const totalHours = urgentTasks.reduce((acc, t) => acc + (t.estimatedHours || 3), 0);
 
-    if (urgentTasks.length >= 1 && overloadedDiscretionary) {
+    if (urgentTasks.length >= 2 && overloadedDiscretionary) {
       const courseNames = Array.from(
         new Set(urgentTasks.map((t) => t.courseName || t.title))
       )
