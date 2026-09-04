@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, ArrowUp, Bot, User, Trash2, Zap, MessageSquareQuote } from "lucide-react";
+import { Sparkles, X, ArrowUp, Bot, Trash2, Zap, Wallet, ListTodo, PiggyBank, Clock } from "lucide-react";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -10,6 +10,11 @@ import { triggerHaptic } from "@/lib/haptics";
 import { playPop, playWhoosh } from "@/lib/sounds";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { FormattedMessage } from "./FormattedMessage";
+import {
+  detectSkillIntent,
+  callFioSkill,
+  formatSkillReply,
+} from "@/lib/fio-skills-client";
 
 export function AIDrawer() {
   const { user } = useAuthStore();
@@ -26,6 +31,46 @@ export function AIDrawer() {
   } = useAIStore();
   const { tasks, categories, getMonthlyBudgetSummary } = useDataStore();
   const [input, setInput] = useState("");
+
+  // Konteks live untuk header + kartu skill (dihitung saat drawer dibuka)
+  const activeTasks = tasks.filter((t) => t.status !== "done");
+  const liveSummary = getMonthlyBudgetSummary();
+  const isFresh = messages.length <= 1;
+
+  const skillCards = [
+    {
+      icon: Wallet,
+      title: "Cek Jajan",
+      desc: "Boleh beli 25rb?",
+      prompt: "Fio, boleh aku jajan 25000 hari ini?",
+      tint: "from-[#E0FBF2] to-[#FAF9FC] dark:from-[#1E2E28] dark:to-[#23211F]",
+      iconBg: "bg-[#7FE3C0]",
+    },
+    {
+      icon: ListTodo,
+      title: "Rencana Tugas",
+      desc: "Cicilan per hari",
+      prompt: "Fio, buatkan rencana cicil tugas",
+      tint: "from-[#EDE5FF] to-[#FAF9FC] dark:from-[#2B2338] dark:to-[#23211F]",
+      iconBg: "bg-[#B69CFF]",
+    },
+    {
+      icon: PiggyBank,
+      title: "Simulasi Hemat",
+      desc: "Potong 50% jajan",
+      prompt: "Fio, simulasi hemat 50% jajan",
+      tint: "from-[#FFF4E5] to-[#FAF9FC] dark:from-[#33291D] dark:to-[#23211F]",
+      iconBg: "bg-[#FFC978]",
+    },
+  ];
+
+  const formatClock = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,9 +95,9 @@ export function AIDrawer() {
   }, [isDrawerOpen, pendingPrompt]);
 
   const quickPrompts = [
-    "Tugas apa paling mendesak minggu ini?",
-    "Sisa budget jajan kos berapa?",
-    "Bantu bikin jadwal belajar hari ini",
+    "Boleh aku jajan 30000 hari ini?",
+    "Buatkan rencana cicil tugas",
+    "Simulasi hemat 50% jajan",
     "Tips hemat makan anak kos",
   ];
 
@@ -70,6 +115,40 @@ export function AIDrawer() {
     });
     setInput("");
     setLoading(true);
+
+    // 2. Skill-first: intent deterministik berbasis data real (tanpa biaya LLM)
+    const intent = detectSkillIntent(query, categories);
+    if (intent) {
+      let skillDone = false;
+      try {
+        let token = "";
+        if (user) {
+          try {
+            token = await user.getIdToken();
+          } catch {}
+        }
+        const data = await callFioSkill(intent, token);
+        addMessage({
+          role: "assistant",
+          content: formatSkillReply(intent.skill, data),
+          skill: intent.skill,
+          ...(intent.skill === "can-i-spend" && typeof data.allowed === "boolean"
+            ? { skillAllowed: data.allowed }
+            : {}),
+        });
+        triggerHaptic("success");
+        skillDone = true;
+      } catch (e) {
+        // 401 (belum login / sesi kedaluwarsa) atau API down → lanjut ke LLM/fallback
+        console.warn("Fio skill fallback to chat:", e);
+      } finally {
+        if (skillDone) {
+          setLoading(false);
+          return;
+        }
+        // skill gagal → loading tetap jalan, lanjut ke jalur LLM di bawah
+      }
+    }
 
     try {
       // Gather context
@@ -110,14 +189,30 @@ export function AIDrawer() {
         }),
       });
 
+      if (res.status === 429) {
+        addMessage({
+          role: "assistant",
+          content: "Hai! Kamu sudah mencapai batas 50 pertanyaan AI hari ini. Coba lagi besok ya! ✨",
+        });
+        return;
+      }
+
       if (!res.ok) {
         throw new Error("Chat response failed");
       }
 
-      const data = await res.json();
+      // API mengembalikan text/plain (bukan JSON) — baca sesuai content-type
+      const contentType = res.headers.get("content-type") || "";
+      let reply: string;
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        reply = data.reply || data.content || data.text || "";
+      } else {
+        reply = await res.text();
+      }
       addMessage({
         role: "assistant",
-        content: data.reply || data.content || "Fio siap membantu kamu!",
+        content: reply.trim() || "Fio siap membantu kamu!",
       });
       triggerHaptic("success");
     } catch (error) {
@@ -210,19 +305,29 @@ export function AIDrawer() {
                     <span className="w-1.5 h-1.5 rounded-full bg-[#7FE3C0] inline-block" />
                   </div>
                   <p className="text-[11px] text-muted">
-                    Kecerdasan Kontekstual Mahasiswa
+                    {activeTasks.length > 0 ? (
+                      <>
+                        {activeTasks.length} tugas aktif • sisa{" "}
+                        <span className="font-bold text-foreground/80">
+                          {formatCurrencyIDR(liveSummary.remaining)}
+                        </span>
+                      </>
+                    ) : (
+                      "Kecerdasan Kontekstual Mahasiswa"
+                    )}
                   </p>
                 </div>
               </div>
 
               {/* Minimal Action Buttons */}
               <div className="flex items-center gap-1">
-                {messages.length > 0 && (
+                {!isFresh && (
                   <button
                     onClick={() => {
                       triggerHaptic("warning");
                       clearMessages();
                     }}
+                    aria-label="Bersihkan percakapan"
                     className="p-2 rounded-xl text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] transition-all"
                     title="Bersihkan percakapan"
                   >
@@ -231,6 +336,7 @@ export function AIDrawer() {
                 )}
                 <button
                   onClick={handleClose}
+                  aria-label="Tutup asisten Fio"
                   className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
                   title="Tutup"
                 >
@@ -241,9 +347,9 @@ export function AIDrawer() {
 
             {/* Message Conversation Stream */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-              {messages.length === 0 ? (
-                /* Empty State / Welcome Screen */
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
+              {isFresh && (
+                /* Welcome Screen + Skill Shortcut Cards */
+                <div className="flex flex-col items-center text-center pt-2 pb-1 space-y-3">
                   <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-[#EDE5FF] to-[#E0FBF2] dark:from-[#2B2338] dark:to-[#1E2E28] flex items-center justify-center text-[#7C5CFA] shadow-soft">
                     <Bot className="w-7 h-7" />
                   </div>
@@ -252,12 +358,57 @@ export function AIDrawer() {
                       Halo! Aku Fio ✨
                     </h4>
                     <p className="text-xs text-muted leading-relaxed">
-                      Tanyakan apapun seputar tugas kuliah, jadwal kelas, atau cara hemat uang saku bulan ini.
+                      Tanyakan apapun, atau pakai jalan pintas berbasis data real-time di bawah.
                     </p>
                   </div>
+                  <div className="grid grid-cols-3 gap-2 w-full">
+                    {skillCards.map((card) => (
+                      <button
+                        key={card.title}
+                        onClick={() => handleSendMessage(card.prompt)}
+                        disabled={isLoading}
+                        aria-label={`Jalan pintas: ${card.title}`}
+                        className={`rounded-2xl border border-border bg-gradient-to-b ${card.tint} p-3 flex flex-col items-start gap-1.5 text-left transition-all hover:scale-[1.03] hover:shadow-soft active:scale-95 disabled:opacity-50`}
+                      >
+                        <span className={`w-7 h-7 rounded-xl ${card.iconBg} text-white flex items-center justify-center shadow-xs`}>
+                          <card.icon className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="text-[11px] font-extrabold text-foreground leading-tight">
+                          {card.title}
+                        </span>
+                        <span className="text-[10px] text-muted leading-tight">
+                          {card.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                messages.map((msg) => (
+              )}
+
+              {messages.map((msg) => {
+                const skillLabel =
+                  msg.skill === "can-i-spend"
+                    ? "Cek Jajan"
+                    : msg.skill === "plan-tasks"
+                      ? "Rencana Tugas"
+                      : msg.skill === "simulate-saving"
+                        ? "Simulasi Hemat"
+                        : null;
+                const verdictColor =
+                  msg.skill === "can-i-spend"
+                    ? msg.skillAllowed
+                      ? "#1F8766"
+                      : "#D93D4A"
+                    : "#7C5CFA";
+                const verdictBorder =
+                  msg.skill === "can-i-spend"
+                    ? msg.skillAllowed
+                      ? "border-[#7FE3C0]/70"
+                      : "border-[#FFA8B0]/70"
+                    : msg.skill
+                      ? "border-[#B69CFF]/50"
+                      : "border-border";
+                return (
                   <motion.div
                     key={msg.id}
                     initial={{ opacity: 0, y: 6 }}
@@ -273,18 +424,40 @@ export function AIDrawer() {
                       </div>
                     )}
 
-                    <div
-                      className={`max-w-[85%] rounded-3xl p-3.5 sm:p-4 text-xs leading-relaxed transition-all ${
-                        msg.role === "user"
-                          ? "bg-[#7C5CFA] text-white rounded-br-xs shadow-soft"
-                          : "bg-[#FAF9FC] dark:bg-[#23211F] text-foreground rounded-bl-xs border border-border shadow-xs"
-                      }`}
-                    >
-                      <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
+                    <div className="flex flex-col gap-1 max-w-[85%]">
+                      <div
+                        className={`rounded-3xl p-3.5 sm:p-4 text-xs leading-relaxed transition-all ${
+                          msg.role === "user"
+                            ? "bg-[#7C5CFA] text-white rounded-br-xs shadow-soft"
+                            : `bg-[#FAF9FC] dark:bg-[#23211F] text-foreground rounded-bl-xs border ${verdictBorder} shadow-xs`
+                        }`}
+                      >
+                        {skillLabel && (
+                          <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-border/60">
+                            <span
+                              className="w-1.5 h-1.5 rounded-full inline-block"
+                              style={{ backgroundColor: verdictColor }}
+                            />
+                            <Zap className="w-3 h-3" style={{ color: verdictColor }} />
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: verdictColor }}>
+                              {skillLabel} • data real-time
+                            </span>
+                          </div>
+                        )}
+                        <FormattedMessage content={msg.content} isUser={msg.role === "user"} />
+                      </div>
+                      <span
+                        className={`flex items-center gap-1 text-[10px] text-muted/70 px-1 ${
+                          msg.role === "user" ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <Clock className="w-2.5 h-2.5" />
+                        {formatClock(msg.createdAt)}
+                      </span>
                     </div>
                   </motion.div>
-                ))
-              )}
+                );
+              })}
 
               {/* Minimalist Typing Pulse */}
               {isLoading && (
@@ -309,6 +482,7 @@ export function AIDrawer() {
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(prompt)}
+                  aria-label={`Kirim saran: ${prompt}`}
                   className="shrink-0 px-3 py-1.5 rounded-full bg-[#FAF9FC] dark:bg-[#23211F] border border-border text-muted hover:text-[#7C5CFA] dark:hover:text-[#B69CFF] hover:border-[#7C5CFA]/40 text-[11px] font-medium transition-all active:scale-95 shadow-2xs"
                 >
                   {prompt}
@@ -317,7 +491,7 @@ export function AIDrawer() {
             </div>
 
             {/* Minimalist Floating Input Bar */}
-            <div className="p-3.5 sm:p-4 border-t border-border bg-surface">
+            <div className="p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-border bg-surface">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -331,12 +505,14 @@ export function AIDrawer() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ketik pertanyaan untuk Fio..."
+                  aria-label="Ketik pertanyaan untuk Fio"
                   className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted focus:outline-none py-1.5"
                 />
 
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
+                  aria-label="Kirim pesan ke Fio"
                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                     input.trim() && !isLoading
                       ? "bg-[#7C5CFA] text-white hover:bg-[#6A4BE8] shadow-sm active:scale-90"
