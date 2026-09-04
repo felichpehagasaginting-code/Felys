@@ -133,7 +133,7 @@ export function AccountFormModal({ isOpen, onClose, editAccount }: AccountFormMo
                         : "hover:bg-surface/50 border border-transparent"
                     }`}
                   >
-                    <AccountProviderLogo provider={p.id} size="sm" />
+                    <AccountProviderLogo provider={p.id} size="md" />
                     <span className="text-[10px] font-bold text-foreground truncate w-full">
                       {p.label}
                     </span>
