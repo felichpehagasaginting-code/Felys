@@ -28,7 +28,9 @@ import {
   Gift,
   TrendingUp,
   Trash2,
+  Pencil,
 } from "lucide-react";
+import { TransactionEditModal } from "./TransactionEditModal";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -58,6 +60,7 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
   const { deleteTransaction, addTransaction } = useDataStore();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const IconComponent = ICON_MAP[transaction.categoryIcon || ""] || Sparkles;
   const isExpense = transaction.type === "expense";
 
@@ -125,9 +128,23 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
             </div>
 
             <button
+              onClick={() => {
+                triggerHaptic("light");
+                playPop();
+                setIsEditOpen(true);
+              }}
+              className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-[#7C5CFA] hover:bg-[#EDE5FF] dark:hover:bg-[#383442] transition-all hover:scale-115 active:scale-95"
+              title="Edit transaksi"
+              aria-label={`Edit transaksi ${transaction.categoryName || ""} ${formatCurrencyIDR(transaction.amount)}`}
+            >
+              <Pencil className="w-3.5 h-3.5 transition-transform duration-200 hover:rotate-12" />
+            </button>
+
+            <button
               onClick={() => setIsConfirmOpen(true)}
               className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] dark:hover:bg-[#382024] transition-all hover:scale-115 active:scale-95"
               title="Hapus transaksi"
+              aria-label={`Hapus transaksi ${transaction.categoryName || ""} ${formatCurrencyIDR(transaction.amount)}`}
             >
               <Trash2 className="w-3.5 h-3.5 transition-transform duration-200 hover:rotate-12" />
             </button>
@@ -143,6 +160,13 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
         description={`Transaksi ${transaction.categoryName || "Keuangan"} sebesar ${formatCurrencyIDR(transaction.amount)} akan dihapus secara permanen.`}
         isSubmitting={isDeleting}
       />
+
+      {isEditOpen && (
+        <TransactionEditModal
+          transaction={transaction}
+          onClose={() => setIsEditOpen(false)}
+        />
+      )}
     </>
   );
 }
