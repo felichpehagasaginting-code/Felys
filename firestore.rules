@@ -1,21 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
+    }
+    function isValidAmount(a) {
+      return a is number && a > 0 && a <= 1000000000;
     }
 
     match /users/{userId} {
       allow read, write: if isOwner(userId);
-      
+
       match /courses/{courseId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 200;
+        allow delete: if isOwner(userId);
       }
 
       match /tasks/{taskId} {
-        allow read, write: if isOwner(userId);
-        
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.title is string
+          && request.resource.data.title.size() >= 1
+          && request.resource.data.priority in ["low", "medium", "high"]
+          && request.resource.data.status in ["todo", "in_progress", "done"]
+          && (!("urgencyScore" in request.resource.data) || (request.resource.data.urgencyScore is number && request.resource.data.urgencyScore >= 0 && request.resource.data.urgencyScore <= 100));
+        allow delete: if isOwner(userId);
+
         match /subtasks/{subtaskId} {
           allow read, write: if isOwner(userId);
         }
@@ -26,15 +41,34 @@ service cloud.firestore {
       }
 
       match /transactions/{transactionId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        // Write uang sebaiknya lewat API atomik; rule ini jadi jaring kedua
+        allow create, update: if isOwner(userId)
+          && request.resource.data.type in ["expense", "income"]
+          && isValidAmount(request.resource.data.amount);
+        allow delete: if isOwner(userId);
       }
 
       match /budgets/{budgetId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.monthlyLimit is number
+          && request.resource.data.monthlyLimit >= 0;
+        allow delete: if isOwner(userId);
       }
 
       match /accounts/{accountId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.currentBalance is number
+          && request.resource.data.currentBalance >= 0;
+        allow delete: if isOwner(userId);
+      }
+
+      match /ledger_entries/{entryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
       }
 
       match /savings_goals/{goalId} {
@@ -51,6 +85,11 @@ service cloud.firestore {
 
       match /ai_insights/{insightId} {
         allow read, write: if isOwner(userId);
+      }
+
+      match /ai_usage/{usageId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // hanya Admin SDK (server)
       }
     }
   }
