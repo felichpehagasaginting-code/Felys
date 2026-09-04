@@ -169,7 +169,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       savingsGoals: [],
       emergencyFund: 0,
       insights: [],
-      isLoaded: false,
+      isLoaded: true,
       hasOnboarded: false,
       ddayEvent: { title: "Target Ujian / Sidang", targetDate: "" },
     });

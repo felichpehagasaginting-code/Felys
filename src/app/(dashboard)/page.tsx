@@ -127,9 +127,9 @@ export default function DashboardPage() {
   // Recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
 
-  // Fresh-boot: sync Firestore belum tiba + tidak ada cache lokal → skeleton.
-  // User dengan cache tidak pernah melihat ini (paint instant dari localStorage).
-  if (!isLoaded && tasks.length === 0 && transactions.length === 0) {
+  // Skeleton hanya ditampilkan jika user login sedang menunggu sync pertama dari Firestore.
+  // Bila user belum login / mode pratinjau, atau sync sudah selesai, tampilkan dashboard langsung.
+  if (user && !isLoaded && tasks.length === 0 && transactions.length === 0) {
     return <DashboardSkeleton />;
   }
 

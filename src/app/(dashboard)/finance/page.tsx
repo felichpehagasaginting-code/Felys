@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { Plus, Search, Filter, ArrowUpRight, ArrowDownRight, Wallet, PieChart as PieChartIcon, Camera, CalendarClock, Users } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { TransactionCard } from "@/components/finance/TransactionCard";
 import { MetricCardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/ui/Skeleton";
 // P10: heavy components lazy-loaded (recharts/tesseract/unpdf hanya saat dibuka)
@@ -33,9 +34,10 @@ export default function FinanceTransactionsPage() {
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
   const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
+  const { user } = useAuthStore();
 
-  // Fresh-boot: sync belum tiba + cache kosong → skeleton (bukan empty state palsu)
-  if (!isLoaded && transactions.length === 0) {
+  // Fresh-boot: sync belum tiba + cache kosong → skeleton hanya untuk user login
+  if (user && !isLoaded && transactions.length === 0) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
