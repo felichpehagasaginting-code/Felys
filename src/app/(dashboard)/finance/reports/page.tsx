@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   BarChart3,
   TrendingDown,
@@ -15,7 +16,8 @@ import {
 } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
-import { DonutExpenseChart } from "@/components/finance/DonutExpenseChart";
+import { ChartSkeleton } from "@/components/ui/Skeleton";
+const DonutExpenseChart = dynamic(() => import("@/components/finance/DonutExpenseChart").then((m) => m.DonutExpenseChart), { ssr: false, loading: () => <ChartSkeleton /> });
 import { Button } from "@/components/ui/Button";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { generateFinancialStatementPDF } from "@/lib/pdf-generator";
