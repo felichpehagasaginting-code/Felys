@@ -88,7 +88,7 @@ Dirancang khusus agar tab Felys dapat dibuka sepanjang hari di latar belakang ta
 2. 🪟 **Floating Picture-in-Picture (PiP) Mini Companion:**
    - Mini window Felys mengambang di atas Microsoft Word, VS Code, Canva, atau PPT saat nugas.
 3. 📝 **Lecture Scratchpad & Sticky Notes:**
-   - Catatan coret-coret cepat dengan debounced 500ms auto-save ke IndexedDB.
+   - Catatan coret-coret cepat dengan debounced 500ms auto-save tersinkronisasi 100% ke Cloud Firestore (`/users/{userId}`) dan aman lintas perangkat.
 4. ⏳ **Live Class Agenda:**
    - Status realtime kelas yang sedang berlangsung vs kelas berikutnya dengan countdown menit.
 5. 📖 **Split-Screen PDF Lecture Reader + Contextual AI:**
@@ -106,13 +106,18 @@ Dirancang khusus agar tab Felys dapat dibuka sepanjang hari di latar belakang ta
 | 🎚️ **Fluid iOS Sliders** | Slider interaktif dengan thumb membesar dinamis saat di-drag, floating tooltip badge, dan audio feedback real-time. |
 | ⚡ **NLP Quick Input Bar** | Parser kalimat natural bahasa Indonesia (*contoh: "Makan siang geprek 18rb"* atau *"Makalah AI jumat jam 23:59"*) dengan *live preview chip*. |
 | 🧠 **Web Worker Real OCR Engine** | Pemindaian struk nyata dengan `tesseract.js` + Canvas contrast boost 100% di browser tanpa kirim foto ke server luar (*privacy-first*). |
-| 📅 **Google & Apple Calendar Sync** | Ekspor `.ics` standar RFC 5545 dengan pengingat otomatis H-1 & H-2 jam, serta 1-tap sinkronisasi langsung ke Google Calendar. |
+| 🔔 **Background Web Push Notifications** | Notifikasi proaktif sistem operasi (desktop & HP) via Service Worker `sw.js` & VAPID untuk pengingat deadline H-1/H-3, tagihan kos, dan alert budget bahkan saat tab browser ditutup. |
+| 📅 **Bi-directional Google Calendar Sync** | Sinkronisasi 2 arah otomatis dengan kalender sekunder *"Felys Academic"*. Perubahan jadwal di Google Calendar app (HP) otomatis memperbarui deadline di Felys & menghitung ulang Urgency Score. |
+| ☁️ **100% Cloud Firestore Sync** | Seluruh data (tugas, catatan Scratchpad, riwayat chat Fio AI, sesi fokus Pomodoro, rekening, transaksi, budget, celengan) 100% tersimpan aman di Cloud Firestore. |
+| 🛡️ **Zero-Leakage Privacy & Hard Purge** | Isolasi data mutlak per-user (`request.auth.uid == userId`) di seluruh subkoleksi dan pembersihan total memori + cache browser saat logout sehingga akun lain di perangkat sama tidak melihat sisa data. |
+| 📊 **Firebase Console Owner Monitoring** | Dokumen utama `/users/{userId}` otomatis memuat metrik agregat (`netWorth`, `activeTasksCount`, `totalTransactionsCount`, `totalFocusMinutes`, `lastActiveAt`) untuk monitoring instan di konsol database. |
+| 🔄 **Migrasi Otomatis Data Tamu (Offline to Cloud)** | Data tugas atau transaksi yang sempat dicoba pengguna saat mode tamu (belum login) otomatis diunggah ke akun Google pengguna saat pertama kali masuk tanpa hilang. |
 | 👥 **Split Bill & IOU Tracker** | Kalkulator patungan makan/kelompok dengan generator pesan pengingat WhatsApp sopan dan pelunasan otomatis ke saldo kas. |
 | 📶 **Offline-First Persistence** | Firestore IndexedDB Cache dengan multi-tab sync. Mahasiswa tetap bisa mencatat pengeluaran di kantin atau mencentang tugas di lab saat tanpa internet (*zero data loss*). |
 | 📅 **Tagihan & Biaya Rutin Mahasiswa** | Kelola pengingat pembayaran uang kos bulanan, UKT/SPP semesteran, WiFi, dan langganan dengan tombol *1-Click Pay & Record*. |
-| 🛡️ **Proteksi AI & Rate Limiting** | Keamanan token Firebase Auth + sliding-window rate limiter (maksimal 40 request/24 jam per akun) untuk mencegah lonjakan kuota API. |
+| 🛡️ **Proteksi AI & Rate Limiting** | Keamanan token Firebase Auth + sliding-window rate limiter (maksimal 50 request/24 jam per akun) untuk mencegah lonjakan kuota API. |
 | 📳 **Haptic Tactile & Undo Toast** | Getaran tactile pada perangkat mobile PWA, konfirmasi hapus data, serta **Tombol Undo (Batalkan)** 5 detik untuk memulihkan catatan yang tidak sengaja terhapus. |
-| 📱 **Progressive Web App (PWA)** | Install ke layar utama iPhone/Android dengan ikon kustom elegan dual-mode (*no AI slop*). |
+| 📱 **Progressive Web App (PWA)** | Install ke layar utama iPhone/Android dengan service worker background support dan ikon kustom elegan dual-mode. |
 
 ---
 
@@ -135,32 +140,50 @@ $$U = (0.5 \times D) + (0.3 \times P) + (0.2 \times E)$$
 ```
 Felys/
 ├── public/
+│   ├── sw.js                   # Service Worker (PWA Background Push & Notification Click)
 │   ├── logos/                  # Official Bank & E-Wallet SVG Vectors (GoPay, SeaBank, BCA, dll.)
 │   ├── icon.png                # High-resolution PWA App Badges
-│   └── manifest.webmanifest    # Progressive Web App Manifest
+│   └── manifest.json           # Progressive Web App Manifest
 ├── src/
 │   ├── app/                    # Next.js 15 App Router (Pages, API Routes, Layouts)
-│   │   ├── (auth)/             # Authentication Routes (/login, /register)
+│   │   ├── (auth)/             # Authentication Routes (/login, /register dengan guest migration)
 │   │   ├── (dashboard)/        # Unified Dashboard, Academic, Finance, & Settings
-│   │   └── api/ai/             # Streaming Chat & Breakdown API with Gemini Multi-Model Fallback
+│   │   └── api/                # Route Handlers:
+│   │       ├── academic/calendar-sync/ # Bi-directional Google Calendar Sync (Push & Pull)
+│   │       ├── ai/             # Streaming Chat & Breakdown API (Gemini Multi-Model Fallback)
+│   │       ├── notifications/  # Web Push Notification Dispatch & Test Push
+│   │       ├── user/sync-stats/# Background Aggregated Metrics for Firebase Console
+│   │       └── cron/reminders/ # Proactive Reminders with Push Dispatcher
 │   ├── components/             # Reusable UI Components & Modals
 │   │   ├── academic/           # TaskCard, CourseModal, PomodoroWidget, DDayCountdownBanner, PDFLectureReaderModal
 │   │   ├── finance/            # AccountOverviewGrid, AccountProviderLogo, AdjustBalanceModal, NumpadQuickEntry, ReceiptScanModal
 │   │   ├── ai/                 # AIDrawer, InsightCard
 │   │   ├── shared/             # NLPQuickBar, Navbar, PiPCompanionModal, ScratchpadPanel, ModeSwitcher
 │   │   └── ui/                 # SwipeableCard, IOSSegmentedControl, IOSSlider, Modals, ConfirmDialog, Skeletons
-│   ├── lib/                    # Firebase Firestore Service, sounds.ts (Web Audio Synthesizer), unpdf, Haptics
-│   ├── server/services/        # Urgency, Budget, & Cross-Mode Insight Services
+│   ├── lib/                    # Client Services:
+│   │   ├── push-notification-client.ts # PushManager registration & subscription
+│   │   ├── google-calendar-client.ts   # Google Calendar OAuth & 2-way sync client
+│   │   ├── firebase/firestore-service.ts# 100% Cloud Firestore CRUD & Real-time Listeners
+│   │   └── sounds.ts (Web Audio Synth), unpdf, Haptics, calendar-sync (.ics export)
+│   ├── server/services/        # Domain Engine & Server Logic:
+│   │   ├── urgency.service.ts          # Formula Urgency Score (AI-LOGIC.md)
+│   │   ├── budget.service.ts           # Perhitungan konsumsi budget & threshold
+│   │   ├── google-calendar.service.ts  # Google Calendar REST v3 Engine (Event Formatting & Sync)
+│   │   ├── push-dispatcher.service.ts  # Web Push RFC 8291/8292 Dispatcher (VAPID)
+│   │   ├── user-metrics.service.ts     # Aggregated User Metrics for Firebase Console
+│   │   └── insight.service.ts          # Cross-Mode Heuristic Insight Generator
 │   ├── stores/                 # Zustand State Stores (Data, Sound, Pomodoro, AI, Auth, Mode, Theme)
 │   └── types/                  # TypeScript Data Models & Contracts
 ```
 
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI Primitives, Lucide React, Recharts, Sonner.
+- **Push & Service Worker:** Web Push (VAPID / RFC 8291), Service Worker API, Web Notification API.
+- **Integrasi Kalender:** Google Calendar REST API v3 (OAuth2 Incremental Auth + Two-Way Sync), RFC 5545 `.ics`.
 - **Audio & Haptics:** Web Audio API Procedural Synthesizer, Web Vibration API.
-- **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + `/users/{userId}/...`), Firebase Authentication.
+- **Database & Auth:** Google Cloud Firestore (IndexedDB Offline Cache + 100% Cloud Persistence di `/users/{userId}/...`), Firebase Authentication.
 - **PDF & OCR:** `unpdf` client parser, `tesseract.js` Web Worker OCR.
 - **AI Engine:** Google Gemini API (`@ai-sdk/google` + Vercel AI SDK).
-- **Client State:** Zustand (dengan real-time Firestore `onSnapshot` listeners).
+- **Client State:** Zustand (dengan real-time Firestore `onSnapshot` listeners dan per-user cache isolation).
 
 ---
 
@@ -196,6 +219,14 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+
+# Optional: Web Push Notification VAPID Keys
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_SUBJECT=mailto:developer@felys.app
+
+# Optional: Cron Endpoint Security Secret
+CRON_SECRET=your_cron_secret_token
 ```
 
 ### 4. Menjalankan Server Development
