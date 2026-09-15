@@ -98,16 +98,16 @@ export default function DashboardLayout({
 
       {/* Auth Banner if not signed in */}
       {!isLoading && !user && (
-        <div className="bg-gradient-to-r from-[#EDE5FF] to-[#E0FBF2] dark:from-[#2B2338] dark:to-[#1E2E28] border-b border-[#B69CFF]/30 px-4 py-2.5 text-xs text-foreground flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="bg-gradient-to-r from-[#EDE5FF] to-[#E0FBF2] dark:from-[#2B2338] dark:to-[#1E2E28] border-b border-[#B69CFF]/30 px-3 sm:px-4 py-2 text-xs text-foreground flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="w-4 h-4 text-[#7C5CFA] shrink-0" />
-            <span>
+            <span className="leading-snug text-[11px] sm:text-xs">
               Kamu sedang dalam mode pratinjau. <b>Masuk atau daftar</b> untuk menyimpan data tugas & keuangan kamu secara permanen di Cloud Firestore.
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
             <Link href="/login">
-              <Button size="sm" variant="academic" className="h-7 text-xs px-3">
+              <Button size="sm" variant="academic" className="h-7 text-xs px-3 font-bold rounded-xl shadow-xs">
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Masuk</span>
               </Button>
@@ -122,7 +122,7 @@ export default function DashboardLayout({
         <Sidebar />
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 min-w-0">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 pb-28 sm:pb-32 lg:pb-8 min-w-0">
           {children}
         </main>
       </div>

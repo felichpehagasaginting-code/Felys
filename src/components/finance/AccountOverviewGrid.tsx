@@ -62,21 +62,21 @@ export function AccountOverviewGrid() {
     <section className="space-y-4">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] flex items-center justify-center font-bold text-xs shrink-0">
             <Wallet className="w-4 h-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-extrabold text-foreground">
                 Alokasi Rekening & E-Wallet
               </h3>
               {user ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1F8766] bg-[#E0FBF2] dark:bg-[#1E332A] px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1F8766] bg-[#E0FBF2] dark:bg-[#1E332A] px-2 py-0.5 rounded-full shrink-0">
                   <Cloud className="w-3 h-3" /> Live Cloud
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full shrink-0">
                   Lokal (Belum Login)
                 </span>
               )}
@@ -89,7 +89,7 @@ export function AccountOverviewGrid() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
           {/* Sync Button */}
           <Button
             onClick={handleManualSync}
@@ -136,12 +136,12 @@ export function AccountOverviewGrid() {
 
       {/* Grid of Accounts */}
       {accounts.length === 0 ? (
-        <div className="p-6 rounded-3xl bg-surface border border-dashed border-border text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] flex items-center justify-center mx-auto">
-            <Wallet className="w-6 h-6" />
+        <div className="py-6 px-4 sm:px-6 rounded-3xl bg-surface border border-dashed border-border text-center space-y-3 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] flex items-center justify-center mx-auto">
+            <Wallet className="w-5 h-5" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
-            <h4 className="text-xs font-bold text-foreground">Belum Ada Rekening / E-Wallet</h4>
+            <h4 className="text-xs sm:text-sm font-bold text-foreground">Belum Ada Rekening / E-Wallet</h4>
             <p className="text-[11px] text-muted leading-relaxed">
               Tambahkan akun penyimpananmu (Superbank, GoPay, SeaBank, BCA, Uang Tunai, dll.) untuk mulai mencatat dan membagi alokasi saldo.
             </p>
@@ -154,7 +154,7 @@ export function AccountOverviewGrid() {
             }}
             size="sm"
             variant="finance"
-            className="rounded-xl text-xs font-bold shadow-soft inline-flex items-center gap-1.5"
+            className="rounded-xl text-xs font-bold shadow-soft inline-flex items-center gap-1.5 mt-1"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Tambah Rekening / E-Wallet</span>

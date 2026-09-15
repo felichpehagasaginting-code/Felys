@@ -91,38 +91,7 @@ export function PomodoroWidget() {
   };
 
   if (!isWidgetOpen) {
-    // Floating Mini Indicator in bottom right
-    return (
-      <aside
-        aria-label="Pomodoro Timer Melayang"
-        onClick={() => {
-          triggerHaptic("light");
-          setWidgetOpen(true);
-        }}
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:bottom-5 left-5 z-40 cursor-pointer group animate-in slide-in-from-bottom-3"
-      >
-        <div className={`p-2.5 px-3.5 rounded-full border shadow-xl flex items-center gap-2.5 transition-all duration-300 group-hover:scale-105 ${
-          isRunning
-            ? "bg-gradient-to-r from-[#7C5CFA] to-[#6842f5] text-white border-transparent ring-2 ring-[#B69CFF]/50"
-            : "bg-surface/95 backdrop-blur-md text-foreground border-border"
-        }`}>
-          <span className="text-sm">
-            {mode === "focus" ? "🍅" : "☕"}
-          </span>
-          <span className="text-xs font-mono font-extrabold tracking-tight">
-            {formatTime(timeLeft)}
-          </span>
-          {activeTaskTitle && (
-            <span className="hidden sm:inline text-[11px] font-medium max-w-[120px] truncate opacity-90">
-              {activeTaskTitle}
-            </span>
-          )}
-          {isRunning && (
-            <span className="w-2 h-2 rounded-full bg-[#7FE3C0] animate-pulse" />
-          )}
-        </div>
-      </aside>
-    );
+    return null;
   }
 
   return (

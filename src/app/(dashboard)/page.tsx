@@ -89,7 +89,7 @@ export default function DashboardPage() {
 
       if (SplitText && typeof SplitText.create === "function") {
         try {
-          const split = SplitText.create(title, { type: "chars", mask: "chars" });
+          const split = SplitText.create(title, { type: "words,chars", mask: "chars" });
           tl.from(split.chars, { yPercent: 110, duration: 0.7, stagger: 0.02 }, 0.15);
         } catch {
           tl.from(title, { y: 20, opacity: 0, duration: 0.7 }, 0.15);
@@ -146,14 +146,21 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* 1. Welcoming Hero Banner (Apple Minimalist Aesthetics) */}
-      <section ref={heroRef} className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-surface to-background border border-border shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
-        <div className="space-y-2">
+      <section
+        ref={heroRef}
+        className="p-5 sm:p-7 lg:p-8 rounded-[32px] bg-gradient-to-br from-surface to-background border border-border shadow-soft flex flex-col lg:flex-row lg:items-center justify-between gap-6 overflow-hidden"
+      >
+        <div className="space-y-2 flex-1 min-w-0">
           <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Felys Student Space</span>
           </div>
-          <h1 ref={titleRef} className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">
-            {getGreeting()}, {displayName}! ✨
+          <h1
+            ref={titleRef}
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight break-keep"
+          >
+            {getGreeting()},{" "}
+            <span className="inline-block whitespace-nowrap">{displayName}! ✨</span>
           </h1>
           <p className="hero-sub text-xs sm:text-sm text-muted max-w-xl leading-relaxed">
             {activeMode === "academic"
@@ -163,11 +170,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Action Bar Pills */}
-        <div className="hero-actions flex items-center gap-2 flex-wrap">
+        <div className="hero-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
           {activeMode === "academic" ? (
-            <>
-              <Link href="/academic/calendar">
-                <Button variant="secondary" size="md" className="rounded-2xl">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <Link href="/academic/calendar" className="w-full sm:w-auto">
+                <Button variant="secondary" size="md" className="rounded-2xl w-full sm:w-auto">
                   <Clock className="w-4 h-4 text-[#7C5CFA]" />
                   <span>Kalender</span>
                 </Button>
@@ -176,64 +183,65 @@ export default function DashboardPage() {
                 onClick={handleCreateTask}
                 variant="academic"
                 size="md"
-                className="rounded-2xl"
+                className="rounded-2xl w-full sm:w-auto font-bold shadow-soft"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Tugas</span>
               </Button>
-            </>
+            </div>
           ) : (
-            <>
-              <Button
-                onClick={() => setIsSplitBillOpen(true)}
-                variant="secondary"
-                size="md"
-                className="rounded-2xl"
-                title="Split Bill"
-              >
-                <Users className="w-4 h-4 text-[#7C5CFA]" />
-                <span className="hidden sm:inline">Split Bill</span>
-              </Button>
-              <Button
-                onClick={() => setIsScanModalOpen(true)}
-                variant="secondary"
-                size="md"
-                className="rounded-2xl"
-                title="Scan Struk"
-              >
-                <Camera className="w-4 h-4 text-[#1F8766]" />
-                <span className="hidden sm:inline">Scan Struk</span>
-              </Button>
-              <Button
-                onClick={() => setIsRecurringModalOpen(true)}
-                variant="secondary"
-                size="md"
-                className="rounded-2xl"
-                title="Biaya Rutin"
-              >
-                <CalendarClock className="w-4 h-4 text-[#FF7A85]" />
-                <span className="hidden sm:inline">Tagihan</span>
-              </Button>
-              <Button
-                onClick={() => setIsSavingsGoalOpen(true)}
-                variant="secondary"
-                size="md"
-                className="rounded-2xl"
-                title="Celengan Impian"
-              >
-                <Target className="w-4 h-4 text-[#B69CFF]" />
-                <span className="hidden sm:inline">Celengan</span>
-              </Button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              {/* Secondary Utilities Pills */}
+              <div className="grid grid-cols-2 sm:flex items-center gap-1 p-1 bg-surface/90 dark:bg-surface/60 border border-border rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => setIsSplitBillOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-center sm:justify-start gap-1.5 active:scale-95"
+                  title="Split Bill Mahasiswa"
+                >
+                  <Users className="w-3.5 h-3.5 text-[#7C5CFA] shrink-0" />
+                  <span>Split Bill</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsScanModalOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-center sm:justify-start gap-1.5 active:scale-95"
+                  title="Scan Struk Pengeluaran"
+                >
+                  <Camera className="w-3.5 h-3.5 text-[#1F8766] shrink-0" />
+                  <span>Scan Struk</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsRecurringModalOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-center sm:justify-start gap-1.5 active:scale-95"
+                  title="Pengingat Tagihan & Biaya Rutin"
+                >
+                  <CalendarClock className="w-3.5 h-3.5 text-[#FF7A85] shrink-0" />
+                  <span>Tagihan</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSavingsGoalOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-center sm:justify-start gap-1.5 active:scale-95"
+                  title="Celengan Impian"
+                >
+                  <Target className="w-3.5 h-3.5 text-[#B69CFF] shrink-0" />
+                  <span>Celengan</span>
+                </button>
+              </div>
+
+              {/* Primary Action Button */}
               <Button
                 onClick={() => setIsFinanceModalOpen(true)}
                 variant="finance"
                 size="md"
-                className="rounded-2xl"
+                className="rounded-2xl w-full sm:w-auto font-bold shadow-soft flex items-center justify-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Catat Transaksi</span>
               </Button>
-            </>
+            </div>
           )}
         </div>
       </section>
@@ -408,23 +416,18 @@ export default function DashboardPage() {
             {/* Left: Monthly Budget & Expense Distribution */}
             <div className="lg:col-span-7 space-y-6">
               <div className="p-6 sm:p-7 rounded-[32px] bg-surface border border-border space-y-5 shadow-soft">
-                <div className="flex items-center justify-between pb-3 border-b border-border/80">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E3029] flex items-center justify-center text-[#1F8766]">
-                      <Receipt className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        Status Anggaran Bulanan
-                      </h3>
-                      <p className="text-[11px] text-muted">
-                        Pantau limit pengeluaran agar tidak overbudget di akhir bulan.
-                      </p>
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/80">
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-foreground">
+                      Status Anggaran Bulanan
+                    </h3>
+                    <p className="text-[11px] text-muted">
+                      Pantau limit pengeluaran agar tidak overbudget di akhir bulan.
+                    </p>
                   </div>
 
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold w-fit shrink-0 ${
                       summary.isDeficit
                         ? "bg-[#FFE8EA] text-[#D93D4A]"
                         : `${budgetConfig.badgeBg} ${budgetConfig.textColor}`
@@ -435,13 +438,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Numbers Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
                     <span className="text-[11px] text-muted font-semibold block mb-0.5">
                       Sisa Budget
                     </span>
                     <span
-                      className={`text-xl font-extrabold tracking-tight ${
+                      className={`text-lg sm:text-xl font-extrabold tracking-tight ${
                         summary.isDeficit ? "text-[#D93D4A]" : "text-[#1F8766]"
                       }`}
                     >
@@ -449,20 +452,20 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
                     <span className="text-[11px] text-muted font-semibold block mb-0.5">
                       Pemasukan Kas
                     </span>
-                    <span className="text-xl font-extrabold tracking-tight text-[#1F8766]">
+                    <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#1F8766]">
                       +{formatCurrencyIDR(summary.totalIncome)}
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF9FC] dark:bg-[#23211F] border border-border">
                     <span className="text-[11px] text-muted font-semibold block mb-0.5">
                       Total Pengeluaran
                     </span>
-                    <span className="text-xl font-extrabold tracking-tight text-[#D93D4A]">
+                    <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#D93D4A]">
                       -{formatCurrencyIDR(summary.totalSpent)}
                     </span>
                   </div>

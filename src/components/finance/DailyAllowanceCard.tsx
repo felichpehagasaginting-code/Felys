@@ -19,22 +19,22 @@ export function DailyAllowanceCard() {
     <>
       <div className="p-5 rounded-3xl bg-surface border border-border shadow-soft space-y-3.5 relative overflow-hidden group">
         {/* Top Header */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7FE3C0] to-[#37B98F] flex items-center justify-center text-white shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7FE3C0] to-[#37B98F] flex items-center justify-center text-white shadow-xs shrink-0">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-xs font-bold text-foreground">
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold text-foreground">
                 Jatah Belanja Aman Hari Ini
               </h3>
-              <p className="text-[10px] text-muted">
+              <p className="text-[10px] text-muted truncate">
                 Dihitung dari sisa saldo setelah tagihan rutin ({daily.remainingDays} hari tersisa)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             <button
               type="button"
               onClick={() => setIsMealModalOpen(true)}

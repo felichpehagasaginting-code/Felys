@@ -10,10 +10,11 @@ import {
   Pause,
   RotateCcw,
   Flame,
-  ChevronUp,
+  ChevronDown,
   GripHorizontal,
   ExternalLink,
   Layers,
+  SlidersHorizontal,
 } from "lucide-react";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 
@@ -35,6 +36,7 @@ export function DynamicIsland() {
     pauseTimer,
     resetTimer,
     tick,
+    setWidgetOpen,
   } = usePomodoroStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -249,14 +251,14 @@ export function DynamicIsland() {
         triggerHaptic("light");
         setTimeout(() => setIsDragging(false), 120);
       }}
-      className="fixed top-[calc(env(safe-area-inset-top,0px)+4.5rem)] right-4 sm:right-8 z-50 pointer-events-auto touch-none"
+      className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] lg:bottom-6 left-4 sm:left-6 z-40 pointer-events-auto touch-none"
       style={{ touchAction: "none" }}
     >
       <motion.div
         layout
         initial={false}
         animate={{
-          width: isExpanded ? "min(90vw, 360px)" : isRunning ? 220 : 170,
+          width: isExpanded ? "min(92vw, 360px)" : isRunning ? 210 : 160,
           height: isExpanded ? "auto" : 40,
           borderRadius: isExpanded ? 28 : 22,
         }}
@@ -366,11 +368,21 @@ export function DynamicIsland() {
                     <span>{completedSessions} Selesai</span>
                   </span>
                   <button
+                    onClick={() => {
+                      setIsExpanded(false);
+                      setWidgetOpen(true);
+                    }}
+                    className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                    title="Buka Pengaturan Fokus & Tugas Lengkap"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                  </button>
+                  <button
                     onClick={toggleExpand}
                     className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all"
                     title="Kecilkan Island"
                   >
-                    <ChevronUp className="w-4 h-4" />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
                 </div>
               </div>
