@@ -73,6 +73,7 @@ export default function LoginPage() {
       const userCredential = await signInWithPopup(auth, googleProvider);
       await establishSession(userCredential.user);
       await Promise.all([
+        FirestoreService.migrateLocalGuestData(userCredential.user.uid),
         FirestoreService.syncUserProfile(userCredential.user.uid, {
           id: userCredential.user.uid,
           name: userCredential.user.displayName || "Mahasiswa Felys",
@@ -83,6 +84,7 @@ export default function LoginPage() {
       ]).catch((e) => console.warn("Firestore sync error:", e));
 
       useDataStore.getState().initFirestoreSync(userCredential.user.uid);
+      fetch("/api/user/sync-stats", { method: "POST" }).catch(() => {});
 
       router.push("/");
       router.refresh();

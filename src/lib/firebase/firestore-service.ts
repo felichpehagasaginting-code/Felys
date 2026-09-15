@@ -17,6 +17,7 @@ import { db } from "./client";
 import { Course, Task, DDayEvent } from "@/types/academic";
 import { Category, Transaction, SavingsGoal, RecurringBill, FriendDebt, FinancialAccount } from "@/types/finance";
 import { UserProfile } from "@/types/user";
+import { AIChatMessage } from "@/types/ai";
 
 /**
  * Remove undefined values and convert nested structures for safe Firestore serialization.
@@ -645,5 +646,175 @@ export class FirestoreService {
   public static async deleteAccount(userId: string, accountId: string): Promise<void> {
     const ref = doc(db, "users", userId, "accounts", accountId);
     await deleteDoc(ref);
+  }
+
+  // --- SCRATCHPAD LECTURE NOTES ---
+  public static async saveScratchpadText(userId: string, text: string): Promise<void> {
+    const userRef = doc(db, "users", userId);
+    await setDoc(
+      userRef,
+      cleanFirestoreData({
+        scratchpadText: text,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
+  }
+
+  // --- AI CHAT MESSAGES PERSISTENCE ---
+  public static async saveAiMessage(userId: string, message: AIChatMessage): Promise<void> {
+    const ref = doc(db, "users", userId, "ai_messages", message.id);
+    const payload = cleanFirestoreData({
+      ...message,
+      createdAt: message.createdAt || new Date().toISOString(),
+    });
+    await setDoc(ref, payload);
+  }
+
+  public static subscribeAiMessages(userId: string, callback: (messages: AIChatMessage[]) => void) {
+    const ref = collection(db, "users", userId, "ai_messages");
+    const q = query(ref, orderBy("createdAt", "asc"), limit(100));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list: AIChatMessage[] = snapshot.docs.map((d) => ({
+          ...(d.data() as Omit<AIChatMessage, "id">),
+          id: d.id,
+        }));
+        callback(list);
+      },
+      (error) => console.warn("AI Messages listener error:", error)
+    );
+  }
+
+  public static async clearAiMessages(userId: string): Promise<void> {
+    const ref = collection(db, "users", userId, "ai_messages");
+    const snap = await getDocs(ref);
+    const deletes = snap.docs.map((d) => deleteDoc(d.ref));
+    await Promise.all(deletes);
+  }
+
+  // --- POMODORO FOCUS SESSIONS ---
+  public static async recordPomodoroSession(
+    userId: string,
+    session: {
+      startTime: string;
+      durationMinutes: number;
+      taskId?: string | null;
+      taskTitle?: string | null;
+      completed: boolean;
+    }
+  ): Promise<string> {
+    const colRef = collection(db, "users", userId, "pomodoro_sessions");
+    const docRef = await addDoc(colRef, cleanFirestoreData({
+      ...session,
+      createdAt: new Date().toISOString(),
+    }));
+    return docRef.id;
+  }
+
+  public static subscribePomodoroSessions(userId: string, callback: (sessions: any[]) => void) {
+    const ref = collection(db, "users", userId, "pomodoro_sessions");
+    const q = query(ref, orderBy("createdAt", "desc"), limit(50));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        callback(list);
+      },
+      (error) => console.warn("Pomodoro sessions listener error:", error)
+    );
+  }
+
+  // --- USER AGGREGATED STATS (FOR FIREBASE CONSOLE VISIBILITY) ---
+  public static async updateUserAggregatedStats(
+    userId: string,
+    stats: Partial<{
+      netWorth: number;
+      activeTasksCount: number;
+      completedTasksCount: number;
+      totalTransactionsCount: number;
+      totalSpentThisMonth: number;
+      totalFocusMinutes: number;
+    }>
+  ): Promise<void> {
+    try {
+      const userRef = doc(db, "users", userId);
+      await setDoc(
+        userRef,
+        cleanFirestoreData({
+          stats: {
+            ...stats,
+            updatedAt: new Date().toISOString(),
+          },
+          lastActiveAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn("Error updating user aggregated stats:", e);
+    }
+  }
+
+  // --- GUEST DATA TO FIRESTORE MIGRATION ---
+  public static async migrateLocalGuestData(userId: string): Promise<void> {
+    if (typeof window === "undefined") return;
+    try {
+      const getLocal = <T>(key: string): T | null => {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const guestTasks = getLocal<Task[]>("felys_tasks");
+      const guestCourses = getLocal<Course[]>("felys_courses");
+      const guestAccounts = getLocal<FinancialAccount[]>("felys_accounts");
+      const guestTransactions = getLocal<Transaction[]>("felys_transactions");
+      const guestScratchpad = localStorage.getItem("felys_scratchpad_content");
+
+      if (guestCourses && guestCourses.length > 0) {
+        for (const c of guestCourses) {
+          await this.addCourse(userId, c, c.id);
+        }
+      }
+      if (guestTasks && guestTasks.length > 0) {
+        for (const t of guestTasks) {
+          await this.addTask(userId, t, t.id);
+        }
+      }
+      if (guestAccounts && guestAccounts.length > 0) {
+        for (const a of guestAccounts) {
+          await this.addAccount(userId, a, a.id);
+        }
+      }
+      if (guestTransactions && guestTransactions.length > 0) {
+        for (const tr of guestTransactions) {
+          await this.addTransaction(userId, tr, tr.id);
+        }
+      }
+      if (guestScratchpad) {
+        await this.saveScratchpadText(userId, guestScratchpad);
+      }
+
+      const guestKeys = [
+        "felys_tasks",
+        "felys_courses",
+        "felys_accounts",
+        "felys_transactions",
+        "felys_scratchpad_content",
+        "felys_categories",
+        "felys_budgets",
+        "felys_savings",
+        "felys_bills",
+        "felys_debts",
+      ];
+      guestKeys.forEach((k) => localStorage.removeItem(k));
+    } catch (err) {
+      console.warn("Guest data migration warning:", err);
+    }
   }
 }

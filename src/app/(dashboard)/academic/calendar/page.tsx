@@ -15,23 +15,28 @@ import {
   subMonths,
 } from "date-fns";
 import { id } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Share2, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Share2, Download, RefreshCw } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { Task } from "@/types/academic";
 import { cn } from "@/lib/utils";
 import { AcademicNavTabs } from "@/components/academic/AcademicNavTabs";
 import { downloadICSFile } from "@/lib/calendar-sync";
+import { GoogleCalendarClient } from "@/lib/google-calendar-client";
 import { Button } from "@/components/ui/Button";
+import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
 
 export default function AcademicCalendarPage() {
   const { tasks } = useDataStore();
+  const { user } = useAuthStore();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -65,6 +70,39 @@ export default function AcademicCalendarPage() {
     });
   };
 
+  const handleGoogleCalendarSync = async () => {
+    if (!user) {
+      toast.info("Masuk akun terlebih dahulu untuk sinkronisasi Google Calendar.");
+      return;
+    }
+    triggerHaptic("medium");
+    setSyncLoading(true);
+
+    try {
+      const status = await GoogleCalendarClient.getStatus(user.uid);
+      if (!status?.isConnected) {
+        const connRes = await GoogleCalendarClient.connect(user.uid);
+        if (!connRes.success) {
+          toast.error(connRes.error || "Gagal menghubungkan Google Calendar.");
+          return;
+        }
+      }
+
+      const syncRes = await GoogleCalendarClient.syncNow(user.uid);
+      if (syncRes.success) {
+        toast.success("Sinkronisasi Google Calendar Berhasil! 📅", {
+          description: `${syncRes.pushed || 0} tugas diunggah, ${syncRes.pulled || 0} jadwal ditarik ke Felys.`,
+        });
+      } else {
+        toast.error(syncRes.error || "Sinkronisasi gagal.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Gagal sinkronisasi kalender.");
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-5 sm:space-y-6">
       {/* Sub-navigation tabs for iPhone and Desktop */}
@@ -82,6 +120,18 @@ export default function AcademicCalendarPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            onClick={handleGoogleCalendarSync}
+            disabled={syncLoading}
+            variant="academic"
+            size="sm"
+            className="rounded-2xl text-xs shadow-soft"
+            title="Sinkronisasi dua arah dengan Google Calendar"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? "animate-spin" : ""}`} />
+            <span>{syncLoading ? "Sinkronisasi..." : "Sinkron Google Calendar"}</span>
+          </Button>
+
           <Button
             onClick={handleExportICS}
             variant="secondary"

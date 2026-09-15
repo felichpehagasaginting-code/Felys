@@ -44,6 +44,8 @@ export interface Task {
   completedSubtasksCount?: number;
   totalSubtasksCount?: number;
   subtasks?: SubTask[];
+  googleCalendarEventId?: string | null;
+  googleCalendarSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

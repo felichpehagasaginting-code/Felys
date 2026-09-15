@@ -2,6 +2,12 @@
 
 import { create } from "zustand";
 import { AIChatMessage } from "@/types/ai";
+import { FirestoreService } from "@/lib/firebase/firestore-service";
+import { auth } from "@/lib/firebase/client";
+
+function getCurrentUserId(): string | null {
+  return auth.currentUser?.uid || null;
+}
 
 interface AIState {
   isDrawerOpen: boolean;
@@ -15,7 +21,9 @@ interface AIState {
   toggleDrawer: () => void;
   addMessage: (message: Omit<AIChatMessage, "id" | "createdAt">) => void;
   setLoading: (loading: boolean) => void;
-  clearMessages: () => void;
+  clearMessages: () => Promise<void>;
+  initFirestoreSync: (userId: string) => () => void;
+  resetAIStore: () => void;
 }
 
 const initialMessages: AIChatMessage[] = [
@@ -27,27 +35,79 @@ const initialMessages: AIChatMessage[] = [
   },
 ];
 
-export const useAIStore = create<AIState>((set) => ({
+let activeAiUnsubscribe: (() => void) | null = null;
+
+export const useAIStore = create<AIState>((set, get) => ({
   isDrawerOpen: false,
   messages: initialMessages,
   isLoading: false,
   pendingPrompt: null,
+
   openDrawer: () => set({ isDrawerOpen: true }),
   openDrawerWithPrompt: (prompt: string) => set({ isDrawerOpen: true, pendingPrompt: prompt }),
   clearPendingPrompt: () => set({ pendingPrompt: null }),
   closeDrawer: () => set({ isDrawerOpen: false }),
   toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
-  addMessage: (msg) =>
+
+  addMessage: (msg) => {
+    const newMessage: AIChatMessage = {
+      ...msg,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+
     set((state) => ({
-      messages: [
-        ...state.messages,
-        {
-          ...msg,
-          id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    })),
+      messages: [...state.messages, newMessage],
+    }));
+
+    const userId = getCurrentUserId();
+    if (userId) {
+      FirestoreService.saveAiMessage(userId, newMessage).catch((err) =>
+        console.warn("Firestore saveAiMessage warning:", err)
+      );
+    }
+  },
+
   setLoading: (loading) => set({ isLoading: loading }),
-  clearMessages: () => set({ messages: initialMessages }),
+
+  clearMessages: async () => {
+    set({ messages: initialMessages });
+    const userId = getCurrentUserId();
+    if (userId) {
+      try {
+        await FirestoreService.clearAiMessages(userId);
+      } catch (err) {
+        console.warn("Firestore clearAiMessages warning:", err);
+      }
+    }
+  },
+
+  initFirestoreSync: (userId: string) => {
+    if (activeAiUnsubscribe) {
+      activeAiUnsubscribe();
+      activeAiUnsubscribe = null;
+    }
+
+    const unsub = FirestoreService.subscribeAiMessages(userId, (dbMsgs) => {
+      if (dbMsgs && dbMsgs.length > 0) {
+        set({ messages: dbMsgs });
+      }
+    });
+
+    activeAiUnsubscribe = unsub;
+    return unsub;
+  },
+
+  resetAIStore: () => {
+    if (activeAiUnsubscribe) {
+      activeAiUnsubscribe();
+      activeAiUnsubscribe = null;
+    }
+    set({
+      isDrawerOpen: false,
+      messages: initialMessages,
+      isLoading: false,
+      pendingPrompt: null,
+    });
+  },
 }));

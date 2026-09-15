@@ -1,5 +1,6 @@
 import { getVerifiedUid, requireAdminDb } from "@/lib/firebase/auth-helpers";
 import { stdSuccess, stdError } from "@/lib/validation";
+import { PushDispatcherService } from "@/server/services/push-dispatcher.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,8 +8,7 @@ export const dynamic = "force-dynamic";
 /**
  * P9: Cron pengingat proaktif.
  * GET /api/cron/reminders?secret=&uid= — kumpulkan deadline H-1/H-3,
- * budget >=90%, dan burn-rate kritis menjadi payload siap kirim FCM.
- * (Pengiriman FCM diserahkan ke client/service worker memakai payload ini.)
+ * budget >=90%, dan kirim notifikasi push langsung ke perangkat pengguna.
  */
 export async function GET(req: Request) {
   try {
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     const db = requireAdminDb();
     const onlyUid = url.searchParams.get("uid");
     const users = onlyUid ? [{ id: onlyUid }] : (await db.collection("users").select().get()).docs;
-    const out: Record<string, string[]> = {};
+    const out: Record<string, { notes: string[]; pushSent: number; pushFailed: number }> = {};
     const now = new Date();
 
     for (const u of users) {
@@ -41,7 +41,21 @@ export async function GET(req: Request) {
         const b = d.data() as { categoryName?: string; status: string; usedPercentage: number };
         notes.push(`Budget ${b.categoryName || d.id} ${b.status} (${b.usedPercentage || "?"}%)`);
       }
-      if (notes.length) out[uid] = notes;
+
+      let pushSent = 0;
+      let pushFailed = 0;
+
+      if (notes.length > 0) {
+        const pushResult = await PushDispatcherService.sendPushToUser(uid, {
+          title: `Pengingat Penting Felys (${notes.length})`,
+          body: notes.slice(0, 2).join(" • ") + (notes.length > 2 ? ` (+${notes.length - 2} lainnya)` : ""),
+          url: "/",
+          tag: `felys-reminder-${uid}`,
+        });
+        pushSent = pushResult.sent;
+        pushFailed = pushResult.failed;
+        out[uid] = { notes, pushSent, pushFailed };
+      }
     }
     return stdSuccess(out);
   } catch (e: unknown) {

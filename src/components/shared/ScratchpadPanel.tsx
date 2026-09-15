@@ -6,31 +6,31 @@ import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 
+import { useDataStore } from "@/stores/use-data-store";
+
 export function ScratchpadPanel() {
+  const { scratchpadText, updateScratchpadText } = useDataStore();
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
   const [isSaved, setIsSaved] = useState(true);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("felys_scratchpad_content");
-    if (saved) {
-      setContent(saved);
-    }
-  }, []);
+    setContent(scratchpadText || "");
+  }, [scratchpadText]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setContent(val);
     setIsSaved(false);
 
-    // Debounced Auto-save (500ms delay for battery/CPU efficiency)
+    // Debounced Auto-save to Firestore (500ms delay for battery/CPU efficiency)
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
     saveTimeoutRef.current = setTimeout(() => {
-      localStorage.setItem("felys_scratchpad_content", val);
+      updateScratchpadText(val);
       setIsSaved(true);
     }, 500);
   };
@@ -38,7 +38,7 @@ export function ScratchpadPanel() {
   const handleClear = () => {
     triggerHaptic("light");
     setContent("");
-    localStorage.removeItem("felys_scratchpad_content");
+    updateScratchpadText("");
     setIsSaved(true);
     toast.success("Catatan coretan dibersihkan.");
   };

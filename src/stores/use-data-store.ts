@@ -20,6 +20,7 @@ import { UrgencyService } from "@/server/services/urgency.service";
 import { BudgetService } from "@/server/services/budget.service";
 import { InsightService } from "@/server/services/insight.service";
 import { FirestoreService, ALL_DEFAULT_CATEGORIES } from "@/lib/firebase/firestore-service";
+import { GoogleCalendarClient } from "@/lib/google-calendar-client";
 import { auth } from "@/lib/firebase/client";
 import { useAuthStore } from "./use-auth-store";
 
@@ -57,11 +58,13 @@ interface DataState {
   debts: FriendDebt[];
   savingsGoals: SavingsGoal[];
   emergencyFund: number;
+  scratchpadText: string;
   insights: AIInsight[];
   isLoaded: boolean;
   /** P3: wizard onboarding selesai (device-level + Firestore). */
   hasOnboarded: boolean;
   completeOnboarding: (name?: string) => Promise<void>;
+  updateScratchpadText: (text: string) => Promise<void>;
 
   // Real-time Firestore sync & cleanup
   initFirestoreSync: (userId: string) => () => void;
@@ -135,6 +138,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   debts: loadLocal<FriendDebt[]>("felys_debts", []),
   savingsGoals: loadLocal<SavingsGoal[]>("felys_savings", []),
   emergencyFund: loadLocal<number>("felys_emergency_fund", 0),
+  scratchpadText: loadLocal<string>("felys_scratchpad_content", ""),
   insights: [],
   isLoaded: false,
   hasOnboarded: loadLocal<boolean>("felys_onboarded", false),
@@ -155,6 +159,21 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
+  updateScratchpadText: async (text: string) => {
+    set({ scratchpadText: text });
+    if (typeof window !== "undefined") {
+      localStorage.setItem("felys_scratchpad_content", text);
+    }
+    const userId = getCurrentUserId();
+    if (userId) {
+      try {
+        await FirestoreService.saveScratchpadText(userId, text);
+      } catch (err) {
+        console.warn("Firestore saveScratchpadText warning:", err);
+      }
+    }
+  },
+
   resetDataStore: () => {
     // 1. Bersihkan seluruh state memori
     set({
@@ -168,6 +187,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       debts: [],
       savingsGoals: [],
       emergencyFund: 0,
+      scratchpadText: "",
       insights: [],
       isLoaded: true,
       hasOnboarded: false,
@@ -193,6 +213,7 @@ export const useDataStore = create<DataState>((set, get) => ({
           "felys_dday_date",
           "felys_onboarded",
           "felys_display_name",
+          "felys_scratchpad_content",
         ];
         keysToRemove.forEach((key) => localStorage.removeItem(key));
       } catch (err) {
@@ -236,6 +257,12 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (typeof data.emergencyFund === "number") {
         set({ emergencyFund: data.emergencyFund });
         saveLocal("felys_emergency_fund", data.emergencyFund);
+      }
+      if (typeof data.scratchpadText === "string") {
+        set({ scratchpadText: data.scratchpadText });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("felys_scratchpad_content", data.scratchpadText);
+        }
       }
       if (typeof data.hasOnboarded === "boolean") {
         set({ hasOnboarded: data.hasOnboarded });
@@ -408,6 +435,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     if (userId) {
       try {
         await FirestoreService.addTask(userId, newTask, taskId);
+        GoogleCalendarClient.syncSingleTaskInBackground(userId, "push", newTask).catch(() => {});
       } catch (err: any) {
         console.warn("Firestore addTask sync warning:", err?.message || err);
       }
@@ -416,6 +444,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateTask: async (id, updates) => {
     const userId = getCurrentUserId();
+    let updatedTaskObj: Task | undefined;
     let updatedTasks = get().tasks.map((t) => {
       if (t.id === id) {
         const merged = { ...t, ...updates, updatedAt: new Date().toISOString() };
@@ -426,6 +455,7 @@ export const useDataStore = create<DataState>((set, get) => ({
             estimatedHours: merged.estimatedHours,
           });
         }
+        updatedTaskObj = merged;
         return merged;
       }
       return t;
@@ -439,6 +469,9 @@ export const useDataStore = create<DataState>((set, get) => ({
     if (userId) {
       try {
         await FirestoreService.updateTask(userId, id, updates);
+        if (updatedTaskObj) {
+          GoogleCalendarClient.syncSingleTaskInBackground(userId, "push", updatedTaskObj).catch(() => {});
+        }
       } catch (err: any) {
         console.warn("Firestore updateTask sync warning:", err?.message || err);
       }
@@ -447,6 +480,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteTask: async (id) => {
     const userId = getCurrentUserId();
+    const taskToDelete = get().tasks.find((t) => t.id === id);
     const nextTasks = get().tasks.filter((t) => t.id !== id);
     set({ tasks: nextTasks });
     saveLocal("felys_tasks", nextTasks);
@@ -455,6 +489,9 @@ export const useDataStore = create<DataState>((set, get) => ({
     if (userId) {
       try {
         await FirestoreService.deleteTask(userId, id);
+        if (taskToDelete) {
+          GoogleCalendarClient.syncSingleTaskInBackground(userId, "delete", taskToDelete).catch(() => {});
+        }
       } catch (err: any) {
         console.warn("Firestore deleteTask sync warning:", err?.message || err);
       }
