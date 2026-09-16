@@ -20,12 +20,13 @@ export function DDayCountdownBanner() {
     setTempDate(ddayEvent.targetDate);
   }, [ddayEvent]);
 
-  const target = new Date(ddayEvent.targetDate || "2026-09-21");
+  const hasTargetDate = Boolean(ddayEvent.targetDate);
+  const target = hasTargetDate ? new Date(ddayEvent.targetDate) : null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
+  if (target) target.setHours(0, 0, 0, 0);
 
-  const daysLeft = differenceInDays(target, today);
+  const daysLeft = target ? differenceInDays(target, today) : null;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,31 +66,47 @@ export function DDayCountdownBanner() {
                 </button>
               </div>
               <h3 className="text-sm sm:text-base font-extrabold text-foreground mt-0.5">
-                {ddayEvent.title}
+                {ddayEvent.title || "Target Ujian / Sidang"}
               </h3>
               <p className="text-[11px] text-muted">
-                Tanggal: {format(target, "EEEE, d MMMM yyyy", { locale: id })}
+                {target
+                  ? `Tanggal: ${format(target, "EEEE, d MMMM yyyy", { locale: id })}`
+                  : "Target tanggal belum diatur"}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <span
-                className={`text-2xl sm:text-3xl font-black tracking-tight ${
-                  daysLeft <= 3
-                    ? "text-[#FF7A85]"
-                    : daysLeft <= 7
-                    ? "text-[#B86B14]"
-                    : "text-[#7C5CFA]"
-                }`}
+            {daysLeft !== null ? (
+              <div className="text-right">
+                <span
+                  className={`text-2xl sm:text-3xl font-black tracking-tight ${
+                    daysLeft <= 3
+                      ? "text-[#FF7A85]"
+                      : daysLeft <= 7
+                      ? "text-[#B86B14]"
+                      : "text-[#7C5CFA]"
+                  }`}
+                >
+                  {daysLeft > 0 ? `H-${daysLeft}` : daysLeft === 0 ? "HARI H! 🔥" : "Selesai ✨"}
+                </span>
+                <span className="text-[10px] font-bold text-muted block">
+                  {daysLeft > 0 ? `${daysLeft} hari lagi` : "Semoga sukses!"}
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setTempTitle(ddayEvent.title);
+                  setTempDate(ddayEvent.targetDate);
+                  setIsEditing(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-accent text-white text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
               >
-                {daysLeft > 0 ? `H-${daysLeft}` : daysLeft === 0 ? "HARI H! 🔥" : "Selesai ✨"}
-              </span>
-              <span className="text-[10px] font-bold text-muted block">
-                {daysLeft > 0 ? `${daysLeft} hari lagi` : "Semoga sukses!"}
-              </span>
-            </div>
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Atur Tanggal</span>
+              </button>
+            )}
           </div>
         </div>
       ) : (
