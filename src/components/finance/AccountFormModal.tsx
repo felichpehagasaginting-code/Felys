@@ -218,10 +218,10 @@ export function AccountFormModal({ isOpen, onClose, editAccount }: AccountFormMo
             <Button
               type="submit"
               variant="finance"
-              className="flex-1 rounded-2xl font-bold flex items-center justify-center gap-1.5"
+              className="flex-1 rounded-2xl font-bold flex items-center justify-center gap-1.5 shadow-xs"
             >
               <Check className="w-4 h-4" />
-              <span>{editAccount ? "Simpan Perubahan" : "Tambahkan Akun"}</span>
+              <span>{editAccount ? "Perbarui" : "Tambah"}</span>
             </Button>
           </div>
         </form>
