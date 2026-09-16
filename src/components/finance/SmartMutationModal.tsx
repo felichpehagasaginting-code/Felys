@@ -127,15 +127,15 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
         </div>
 
         {/* Input Box */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-muted uppercase tracking-wider">
-              Teks Notifikasi / SMS:
+            <label className="text-[11px] font-semibold text-muted">
+              Teks Notifikasi / SMS Mutasi
             </label>
             <button
               type="button"
               onClick={handlePasteFromClipboard}
-              className="text-xs text-[#7C5CFA] font-bold hover:underline inline-flex items-center gap-1"
+              className="text-xs text-accent font-semibold hover:underline inline-flex items-center gap-1"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
               <span>Tempel Clipboard</span>
@@ -144,39 +144,39 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
           <textarea
             value={rawText}
             onChange={(e) => setRawText(e.target.value)}
-            placeholder="Contoh: 'm-Transfer: BERHASIL 16/09 ke BCA 1234567890 AN KOPI KENANGAN Rp. 24.000,00' atau 'Pembayaran berhasil! Rp15.000 di Kopi Kenangan pakai GoPay.'"
-            rows={4}
-            className="w-full p-3 text-xs bg-[#FAF9FC] dark:bg-[#201D28] border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7C5CFA]/20 focus:border-[#7C5CFA] text-foreground resize-none leading-relaxed"
+            placeholder="Tempel SMS m-Transfer BCA, notifikasi GoPay, SeaBank, OVO, atau DANA di sini..."
+            rows={3}
+            className="w-full px-3 py-2 text-xs bg-black/2 dark:bg-white/2 border border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-accent text-foreground resize-none leading-relaxed placeholder:text-muted/60"
           />
         </div>
 
         {/* Live Parsed Preview */}
         {parsed ? (
-          <div className="p-4 rounded-2xl bg-[#E0FBF2]/60 dark:bg-[#1A2E26]/60 border border-[#7FE3C0]/40 space-y-3 animate-in fade-in-50">
+          <div className="p-3.5 rounded-2xl bg-surface border border-border/80 shadow-xs space-y-2.5 animate-in fade-in-50">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#1F8766] dark:text-[#7FE3C0]">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
                 {parsed.type === "income" ? (
                   <>
                     <ArrowDownLeft className="w-4 h-4 text-[#1F8766]" />
-                    <span>Pemasukan Terdeteksi</span>
+                    <span className="text-[#1F8766]">Pemasukan</span>
                   </>
                 ) : (
                   <>
                     <ArrowUpRight className="w-4 h-4 text-[#D93D4A]" />
-                    <span className="text-[#D93D4A]">Pengeluaran Terdeteksi</span>
+                    <span className="text-[#D93D4A]">Pengeluaran</span>
                   </>
                 )}
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1F8766]/15 text-[#1F8766] dark:text-[#7FE3C0] uppercase">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-muted uppercase">
                 {parsed.provider}
               </span>
             </div>
 
-            <div className="flex items-baseline justify-between border-t border-b border-border/40 py-2">
+            <div className="flex items-baseline justify-between border-t border-b border-border/60 py-2">
               <span className="text-xs text-muted font-medium truncate max-w-[200px]">
                 {parsed.merchantOrNote}
               </span>
-              <span className="text-lg font-mono font-black text-foreground">
+              <span className="text-lg font-mono font-extrabold text-foreground">
                 {formatCurrencyIDR(parsed.amount)}
               </span>
             </div>
@@ -184,13 +184,13 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
             {/* Account Selector */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <label className="text-[10px] font-bold text-muted block mb-1">
-                  Pilih Rekening:
+                <label className="text-[10px] font-semibold text-muted block mb-1">
+                  Rekening
                 </label>
                 <select
                   value={selectedAccountId}
                   onChange={(e) => setSelectedAccountId(e.target.value)}
-                  className="w-full p-2 rounded-xl bg-surface border border-border text-xs text-foreground focus:outline-none"
+                  className="w-full px-2.5 py-1.5 rounded-xl bg-black/2 dark:bg-white/2 border border-border text-xs text-foreground focus:outline-none"
                 >
                   {accounts.map((acc) => (
                     <option key={acc.id} value={acc.id}>
@@ -201,13 +201,13 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted block mb-1">
-                  Kategori:
+                <label className="text-[10px] font-semibold text-muted block mb-1">
+                  Kategori
                 </label>
                 <select
                   value={selectedCategoryId}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className="w-full p-2 rounded-xl bg-surface border border-border text-xs text-foreground focus:outline-none"
+                  className="w-full px-2.5 py-1.5 rounded-xl bg-black/2 dark:bg-white/2 border border-border text-xs text-foreground focus:outline-none"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -219,30 +219,30 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
             </div>
           </div>
         ) : rawText.trim().length > 10 ? (
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>Format tidak dikenali. Pastikan teks mencantumkan nominal Rupiah.</span>
           </div>
         ) : null}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2">
+        <div className="grid grid-cols-2 gap-2 pt-1">
           <Button
             type="button"
             variant="secondary"
-            size="md"
+            size="sm"
             onClick={onClose}
-            className="flex-1 rounded-2xl"
+            className="rounded-xl font-semibold"
           >
             Batal
           </Button>
           <Button
             type="button"
             variant="finance"
-            size="md"
+            size="sm"
             disabled={!parsed || isSaving}
             onClick={handleSaveTransaction}
-            className="flex-1 rounded-2xl font-bold shadow-soft flex items-center justify-center gap-1.5"
+            className="rounded-xl font-bold shadow-soft flex items-center justify-center gap-1.5"
           >
             <Check className="w-4 h-4" />
             <span>{isSaving ? "Menyimpan..." : "Simpan Transaksi"}</span>
