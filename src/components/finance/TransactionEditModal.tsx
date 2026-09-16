@@ -203,10 +203,10 @@ export function TransactionEditModal({ transaction, onClose }: TransactionEditMo
             type="submit"
             variant={isExpense ? "danger" : "finance"}
             disabled={numAmount <= 0 || !dirty || isSubmitting}
-            className="w-full h-11 rounded-2xl font-bold"
+            className="w-full h-11 rounded-2xl font-bold flex items-center justify-center gap-1.5 shadow-xs"
           >
             <Check className="w-4 h-4" />
-            <span>{isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}</span>
+            <span>{isSubmitting ? "Memproses..." : "Perbarui"}</span>
           </Button>
         </form>
       </ModalContent>
