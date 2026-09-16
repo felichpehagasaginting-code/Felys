@@ -22,6 +22,7 @@ import {
   RotateCw,
   Sparkles,
   Cloud,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -75,7 +76,7 @@ export function AccountOverviewGrid() {
               </h3>
               {user ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1F8766] bg-[#E0FBF2] dark:bg-[#1E332A] px-2 py-0.5 rounded-full shrink-0">
-                  <Cloud className="w-3 h-3" /> Live Cloud
+                  <Check className="w-3 h-3" /> Terhubung
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full shrink-0">
@@ -114,7 +115,7 @@ export function AccountOverviewGrid() {
             variant="secondary"
             disabled={isSyncing}
             className="rounded-xl text-xs font-semibold flex items-center gap-1.5"
-            title="Paksa Sinkronkan Cloud Firestore"
+            title="Sinkronkan Data"
           >
             <RotateCw className={`w-3.5 h-3.5 text-muted ${isSyncing ? "animate-spin text-[#7C5CFA]" : ""}`} />
             <span className="hidden xs:inline">Sinkronkan</span>
