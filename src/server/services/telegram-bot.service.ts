@@ -132,7 +132,7 @@ export class TelegramBotService {
       const bankMutation = parseBankMutation(trimmed);
       if (bankMutation) {
         return {
-          replyText: `Transaksi Mutasi Dicatat! 💸\n\n• Rekening: ${bankMutation.provider.toUpperCase()}\n• Tipe: ${bankMutation.type === "income" ? "Pemasukan 🟢" : "Pengeluaran 🔴"}\n• Nominal: ${formatCurrencyIDR(bankMutation.amount)}\n• Keterangan: ${bankMutation.merchantOrNote}\n\n✓ Data telah disinkronkan ke Cloud Felys kamu.`,
+          replyText: `Transaksi Mutasi Dicatat! 💸\n\n• Rekening: ${bankMutation.provider.toUpperCase()}\n• Tipe: ${bankMutation.type === "income" ? "Pemasukan 🟢" : "Pengeluaran 🔴"}\n• Nominal: ${formatCurrencyIDR(bankMutation.amount)}\n• Keterangan: ${bankMutation.merchantOrNote}\n\n✓ Transaksi berhasil dicatat.`,
           action: "transaction_added",
           data: bankMutation,
         };
