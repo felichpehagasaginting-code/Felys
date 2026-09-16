@@ -20,6 +20,7 @@ import { ScratchpadPanel } from "@/components/shared/ScratchpadPanel";
 import { OnboardingWizard } from "@/components/shared/OnboardingWizard";
 import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useAIStore } from "@/stores/use-ai-store";
+import { OfflineStatusBanner } from "@/components/shared/OfflineStatusBanner";
 
 export default function DashboardLayout({
   children,
@@ -93,6 +94,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen min-h-dvh flex flex-col bg-background text-foreground transition-colors duration-300">
       <ScrollProgress />
+      <OfflineStatusBanner />
       {/* Top Navbar */}
       <Navbar onOpenQuickAdd={handleQuickAdd} />
 
