@@ -295,9 +295,10 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
               size="sm"
               onClick={handleSave}
               disabled={isScanning || !extractedAmount}
-              className="rounded-xl flex-1 font-bold text-xs"
+              className="rounded-xl flex-1 font-bold text-xs flex items-center justify-center gap-1.5"
             >
-              Simpan ke Pengeluaran
+              <Check className="w-4 h-4" />
+              <span>Simpan</span>
             </Button>
           </div>
         </div>
