@@ -81,6 +81,7 @@ interface DataState {
   toggleTaskStatus: (id: string) => Promise<void>;
   toggleSubtask: (taskId: string, subtaskId: string) => Promise<void>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
+  deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
 
   updateDDayEvent: (dday: { title: string; targetDate: string }) => Promise<void>;
 
@@ -492,7 +493,11 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     if (userId) {
       try {
-        await FirestoreService.updateTask(userId, id, updates);
+        await FirestoreService.updateTask(userId, id, {
+          ...updates,
+          ...(updatedTaskObj?.urgencyScore !== undefined ? { urgencyScore: updatedTaskObj.urgencyScore } : {}),
+          ...(updatedTaskObj?.updatedAt ? { updatedAt: updatedTaskObj.updatedAt } : {}),
+        });
         if (updatedTaskObj) {
           GoogleCalendarClient.syncSingleTaskInBackground(userId, "push", updatedTaskObj).catch(() => {});
         }
@@ -564,6 +569,19 @@ export const useDataStore = create<DataState>((set, get) => ({
     const updatedSubtasks = [...currentSubtasks, newSubtask];
     await get().updateTask(taskId, {
       subtasks: updatedSubtasks,
+      totalSubtasksCount: updatedSubtasks.length,
+    });
+  },
+
+  deleteSubtask: async (taskId, subtaskId) => {
+    const task = get().tasks.find((t) => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    const updatedSubtasks = task.subtasks.filter((st) => st.id !== subtaskId);
+    const completedCount = updatedSubtasks.filter((st) => st.isDone).length;
+    await get().updateTask(taskId, {
+      subtasks: updatedSubtasks,
+      completedSubtasksCount: completedCount,
       totalSubtasksCount: updatedSubtasks.length,
     });
   },
@@ -761,6 +779,27 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteTransaction: async (id) => {
     const userId = getCurrentUserId();
+    const targetTrx = get().transactions.find((t) => t.id === id);
+
+    // Auto-revert account balance if accountId is attached
+    if (targetTrx && targetTrx.accountId) {
+      const targetAcc = get().accounts.find((a) => a.id === targetTrx.accountId);
+      if (targetAcc) {
+        // Reverse: if it was expense, add money back; if it was income, deduct money
+        const delta = targetTrx.type === "income" ? -targetTrx.amount : targetTrx.amount;
+        const newBal = Math.max(0, targetAcc.currentBalance + delta);
+        const nextAccounts = get().accounts.map((a) =>
+          a.id === targetTrx.accountId ? { ...a, currentBalance: newBal, updatedAt: new Date().toISOString() } : a
+        );
+        set({ accounts: nextAccounts });
+        saveLocal("felys_accounts", nextAccounts);
+
+        if (userId) {
+          FirestoreService.adjustAccountBalance(userId, targetTrx.accountId, newBal);
+        }
+      }
+    }
+
     const nextTransactions = get().transactions.filter((t) => t.id !== id);
     set({ transactions: nextTransactions });
     saveLocal("felys_transactions", nextTransactions);
@@ -798,21 +837,36 @@ export const useDataStore = create<DataState>((set, get) => ({
       token = (await auth.currentUser?.getIdToken()) || "";
     } catch {}
 
-    const res = await fetch(`/api/finance/transactions/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(updates),
-    });
-    const json = await res.json().catch(() => null);
-    if (!res.ok || !json?.success) {
-      throw new Error(json?.error?.message || "Gagal memperbarui transaksi di server.");
+    try {
+      const res = await fetch(`/api/finance/transactions/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(updates),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.success) {
+        const merged: Transaction = { ...prev, ...(json.data as Partial<Transaction>), id };
+        const nextTransactions = get().transactions.map((t) => (t.id === id ? merged : t));
+        set({ transactions: nextTransactions });
+        saveLocal("felys_transactions", nextTransactions);
+        get().refreshInsights();
+        return;
+      }
+    } catch {
+      // Fallback to direct Firestore write
     }
-    const merged: Transaction = { ...prev, ...(json.data as Partial<Transaction>), id };
+
+    // Direct Firestore update fallback
+    try {
+      await FirestoreService.updateTransaction(userId, id, updates);
+    } catch (err: any) {
+      console.warn("Firestore updateTransaction fallback warning:", err?.message || err);
+    }
+    const merged: Transaction = { ...prev, ...updates, id };
     const nextTransactions = get().transactions.map((t) => (t.id === id ? merged : t));
-    // Saldo akun dihitung ulang dari server via listener; sinkron optimistis ringan:
     set({ transactions: nextTransactions });
     saveLocal("felys_transactions", nextTransactions);
     get().refreshInsights();
