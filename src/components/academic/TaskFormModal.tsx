@@ -7,7 +7,7 @@ import { IOSSlider } from "@/components/ui/IOSSlider";
 import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { useDataStore } from "@/stores/use-data-store";
 import { PriorityLevel, Task, SubTask } from "@/types/academic";
-import { Sparkles, Plus, Trash2, CheckCircle2, ListChecks, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Trash2, CheckCircle2, ListChecks, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
@@ -156,15 +156,20 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
 
       if (taskToEdit) {
         await updateTask(taskToEdit.id, taskPayload);
+        triggerHaptic("success");
+        toast.success(`Tugas "${title.trim()}" berhasil diperbarui! ✨`);
       } else {
         await addTask({
           ...taskPayload,
           status: "todo",
         });
+        triggerHaptic("success");
+        toast.success(`Tugas "${title.trim()}" berhasil ditambahkan! 🚀`);
       }
       onClose();
     } catch (err) {
       console.error("Error saving task:", err);
+      toast.error("Gagal menyimpan tugas.");
     } finally {
       setIsSubmitting(false);
     }
@@ -404,12 +409,15 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" variant="academic" size="sm" disabled={isSubmitting || !title.trim() || !deadline}>
-              {isSubmitting
-                ? "Menyimpan..."
-                : taskToEdit
-                ? "Simpan Perubahan"
-                : "Tambah Tugas"}
+            <Button
+              type="submit"
+              variant="academic"
+              size="sm"
+              className="rounded-xl font-bold px-3.5 flex items-center gap-1.5 shadow-xs"
+              disabled={isSubmitting || !title.trim() || !deadline}
+            >
+              <Check className="w-4 h-4" />
+              <span>{isSubmitting ? "Memproses..." : taskToEdit ? "Perbarui" : "Tambah"}</span>
             </Button>
           </div>
         </form>
