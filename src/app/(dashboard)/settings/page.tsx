@@ -21,6 +21,11 @@ import {
   AlertCircle,
   Send,
   ExternalLink,
+  Bot,
+  Copy,
+  Check,
+  MessageSquare,
+  Unlink,
 } from "lucide-react";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -47,7 +52,13 @@ export default function SettingsPage() {
   const [gcalLoading, setGcalLoading] = useState(false);
   const [gcalSyncLoading, setGcalSyncLoading] = useState(false);
 
-  // Load push status and calendar status on mount
+  // Telegram Bot Integration States
+  const [botStatus, setBotStatus] = useState<{ isPaired: boolean; chatId: string | null; botUsername: string } | null>(null);
+  const [botLoading, setBotLoading] = useState(false);
+  const [pairingData, setPairingData] = useState<{ code: string; expiresInSeconds: number; botUsername: string; deepLink: string } | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  // Load push status, calendar status, and bot status on mount
   useEffect(() => {
     const checkStatus = async () => {
       setIsPushSupported(PushNotificationClient.isSupported());
@@ -59,10 +70,80 @@ export default function SettingsPage() {
       if (user?.uid) {
         const status = await GoogleCalendarClient.getStatus(user.uid);
         setGcalStatus(status);
+
+        // Fetch Telegram Bot Status
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch("/api/user/bot-pairing", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const json = await res.json();
+          if (json.success) {
+            setBotStatus(json.data);
+          }
+        } catch {
+          // ignore error on load
+        }
       }
     };
     checkStatus();
   }, [user]);
+
+  // Handle Telegram Pairing Code Generation
+  const handleGeneratePairingCode = async () => {
+    if (!user) {
+      toast.info("Silakan masuk akun terlebih dahulu.");
+      return;
+    }
+    triggerHaptic("medium");
+    setBotLoading(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/user/bot-pairing", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPairingData(json.data);
+        toast.success("Kode pairing bot berhasil dibuat! 🤖", {
+          description: "Kirim kode ini ke bot Telegram Felys dalam 10 menit.",
+        });
+      } else {
+        toast.error(json.error?.message || "Gagal membuat kode pairing.");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Gagal membuat kode pairing.");
+    } finally {
+      setBotLoading(false);
+    }
+  };
+
+  // Handle Telegram Unpair
+  const handleUnpairBot = async () => {
+    if (!user) return;
+    triggerHaptic("medium");
+    setBotLoading(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/user/bot-pairing", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBotStatus(null);
+        setPairingData(null);
+        toast.success("Koneksi bot Telegram telah diputuskan.");
+      } else {
+        toast.error(json.error?.message || "Gagal memutuskan koneksi.");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Gagal memutuskan koneksi.");
+    } finally {
+      setBotLoading(false);
+    }
+  };
 
   // Handle Push Toggle
   const handleTogglePush = async () => {
@@ -383,6 +464,130 @@ export default function SettingsPage() {
               <span>
                 Terakhir disinkronkan: {new Date(gcalStatus.lastSyncedAt).toLocaleString("id-ID")}
               </span>
+            </div>
+          )}
+        </div>
+
+        {/* Telegram Bot Omnichannel Integration */}
+        <div className="p-6 rounded-3xl bg-surface border border-border shadow-soft space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#0088cc]/10 text-[#0088cc] flex items-center justify-center shrink-0 mt-0.5">
+                <Bot className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <span>Bot Asisten Telegram (Quick Input)</span>
+                  {botStatus?.isPaired ? (
+                    <span className="text-[10px] font-semibold bg-[#E0FBF2] dark:bg-[#1A3329] text-[#1F8766] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Terhubung
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-semibold bg-black/5 dark:bg-white/5 text-muted px-2 py-0.5 rounded-full">
+                      Belum Terhubung
+                    </span>
+                  )}
+                </h3>
+                <p className="text-xs text-muted mt-0.5 leading-relaxed">
+                  Catat tugas kuliah, pengeluaran & notifikasi SMS mutasi bank secara instan lewat chat Telegram tanpa buka web.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 sm:pt-0 shrink-0">
+              {botStatus?.isPaired ? (
+                <Button
+                  onClick={handleUnpairBot}
+                  disabled={botLoading}
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-xl text-xs border-[#FF7A85]/30 text-[#D93D4A]"
+                >
+                  <Unlink className="w-3.5 h-3.5" />
+                  <span>Putuskan Bot</span>
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleGeneratePairingCode}
+                  disabled={botLoading}
+                  variant="academic"
+                  size="sm"
+                  className="rounded-xl text-xs bg-[#0088cc] hover:bg-[#0077b5] text-white border-none"
+                >
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>{botLoading ? "Membuat Kode..." : "Hubungkan Telegram"}</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Pairing Code Display Modal/Banner */}
+          {pairingData && !botStatus?.isPaired && (
+            <div className="p-4 rounded-2xl bg-[#0088cc]/5 border border-[#0088cc]/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-foreground">Kode Pairing Akun Kamu</span>
+                <span className="text-[10px] text-muted">Berlaku selama 10 menit</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="px-4 py-2 bg-surface rounded-xl border border-border font-mono text-lg font-bold tracking-widest text-[#0088cc]">
+                  {pairingData.code}
+                </div>
+                <Button
+                  onClick={() => {
+                    triggerHaptic("light");
+                    navigator.clipboard.writeText(`/link ${pairingData.code}`);
+                    setCodeCopied(true);
+                    toast.success("Perintah disalin!", { description: `Ketik /link ${pairingData.code} di bot Telegram.` });
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-xl text-xs h-10"
+                >
+                  {codeCopied ? <Check className="w-4 h-4 text-[#1F8766]" /> : <Copy className="w-4 h-4" />}
+                  <span>{codeCopied ? "Tersalin!" : "Salin /link"}</span>
+                </Button>
+
+                <a
+                  href={pairingData.deepLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 h-10 rounded-xl bg-[#0088cc] text-white text-xs font-semibold hover:bg-[#0077b5] transition-all ml-auto"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Buka Bot</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              <div className="text-[11px] text-muted leading-relaxed space-y-1 pt-1 border-t border-[#0088cc]/10">
+                <p className="font-semibold text-foreground">Langkah aktivasi cepat:</p>
+                <ol className="list-decimal list-inside space-y-0.5 pl-1">
+                  <li>Klik tombol <span className="font-medium text-foreground">Buka Bot</span> di atas atau cari <code className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded">@{pairingData.botUsername}</code> di Telegram.</li>
+                  <li>Tekan <span className="font-medium text-foreground">Start</span> atau kirim pesan: <code className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded font-mono">/link {pairingData.code}</code></li>
+                  <li>Selesai! Kamu bisa langsung ketik: <em>"Makan siang 15rb"</em> atau <em>"Tugas kalkulus jumat 23:59"</em>.</li>
+                </ol>
+              </div>
+            </div>
+          )}
+
+          {botStatus?.isPaired && (
+            <div className="p-3 rounded-2xl bg-[#E0FBF2]/40 dark:bg-[#1A3329]/40 border border-[#37B98F]/20 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-[#1F8766]">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Bot aktif! Chat ID terhubung: <code className="font-mono">{botStatus.chatId || "Terkoneksi"}</code></span>
+              </div>
+              <a
+                href={`https://t.me/${botStatus.botUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-semibold text-[#0088cc] hover:underline flex items-center gap-1"
+              >
+                <span>Buka Chat</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           )}
         </div>
