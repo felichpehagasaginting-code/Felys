@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  Check,
   X,
   Share2,
   Calculator,
@@ -382,10 +383,10 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                     size="sm"
                     onClick={handleSaveEqualSplit}
                     disabled={!totalBill || friendList.length === 0}
-                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                    className="rounded-xl flex items-center justify-center text-xs font-bold shadow-soft"
+                    title="Simpan Talangan"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Catat Talangan</span>
+                    <Check className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -524,10 +525,10 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                     variant="academic"
                     size="sm"
                     onClick={handleSaveItemizedSplit}
-                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                    className="rounded-xl flex items-center justify-center text-xs font-bold shadow-soft"
+                    title="Simpan Talangan"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Catat ke Felys</span>
+                    <Check className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
