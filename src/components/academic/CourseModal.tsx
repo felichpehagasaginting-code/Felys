@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
 import { Course } from "@/types/academic";
 import { cn } from "@/lib/utils";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
+import { Check, Trash2 } from "lucide-react";
 
 interface CourseModalProps {
   isOpen: boolean;
@@ -52,24 +55,28 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
 
     try {
       setIsSubmitting(true);
+      triggerHaptic("success");
       if (courseToEdit) {
         await updateCourse(courseToEdit.id, {
           name: name.trim(),
           color,
           sks,
         });
+        toast.success(`Mata kuliah "${name.trim()}" berhasil diperbarui! ✨`);
       } else {
         await addCourse({
           name: name.trim(),
           color,
           sks,
         });
+        toast.success(`Mata kuliah "${name.trim()}" berhasil ditambahkan! 📚`);
       }
 
       setName("");
       onClose();
     } catch (err) {
       console.error("Error saving course:", err);
+      toast.error("Gagal menyimpan mata kuliah.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,10 +87,13 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
     if (confirm(`Hapus mata kuliah "${courseToEdit.name}" beserta semua tugas di dalamnya?`)) {
       setIsSubmitting(true);
       try {
+        triggerHaptic("warning");
         await deleteCourse(courseToEdit.id);
+        toast.success(`Mata kuliah "${courseToEdit.name}" berhasil dihapus.`);
         onClose();
       } catch (err) {
         console.error("Error deleting course:", err);
+        toast.error("Gagal menghapus mata kuliah.");
       } finally {
         setIsSubmitting(false);
       }
@@ -163,12 +173,15 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
               <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
                 Batal
               </Button>
-              <Button type="submit" variant="academic" size="sm" disabled={isSubmitting || !name.trim()}>
-                {isSubmitting
-                  ? "Menyimpan..."
-                  : courseToEdit
-                  ? "Simpan Perubahan"
-                  : "Simpan Mata Kuliah"}
+              <Button
+                type="submit"
+                variant="academic"
+                size="sm"
+                className="rounded-xl font-bold px-3.5 flex items-center gap-1.5 shadow-xs"
+                disabled={isSubmitting || !name.trim()}
+              >
+                <Check className="w-4 h-4" />
+                <span>{isSubmitting ? "Memproses..." : courseToEdit ? "Perbarui" : "Tambah"}</span>
               </Button>
             </div>
           </div>
