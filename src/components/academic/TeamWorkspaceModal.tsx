@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
@@ -24,6 +24,8 @@ import {
   X,
   ArrowRight,
   ShieldCheck,
+  UserPlus,
+  Check,
 } from "lucide-react";
 
 interface TeamWorkspaceModalProps {
@@ -35,54 +37,47 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
   const { user, cachedDisplayName } = useAuthStore();
   const [activeTab, setActiveTab] = useState<"kanban" | "members" | "new_task">("kanban");
 
-  // Sample default workspace for demo / storage
+  // Real workspace state loaded from localStorage or clean initialized for user
   const [workspace, setWorkspace] = useState<TeamWorkspace>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("felys_team_workspace");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.id && Array.isArray(parsed.members) && Array.isArray(parsed.tasks)) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse saved workspace", e);
+      }
+    }
     const ownerName = user?.displayName?.split(" ")[0] || cachedDisplayName || "Saya";
-    const initial = WorkspaceService.createWorkspace(
+    return WorkspaceService.createWorkspace(
       { uid: user?.uid || "my-uid", displayName: ownerName, email: user?.email || undefined },
-      "Makalah Riset Kolaboratif",
-      "Kecerdasan Buatan"
+      "Projek Kolaborasi Mandiri",
+      ""
     );
-    // Add sample initial teammates & tasks
-    initial.members.push({ uid: "u-andi", displayName: "Andi", role: "member" });
-    initial.members.push({ uid: "u-citra", displayName: "Citra", role: "member" });
-    initial.tasks.push({
-      id: "gt-1",
-      workspaceId: initial.id,
-      title: "Pencarian Literatur & Review Jurnal",
-      assigneeUid: "u-citra",
-      assigneeName: "Citra",
-      status: "done",
-      milestone: "Fase 1",
-      createdAt: new Date().toISOString(),
-    });
-    initial.tasks.push({
-      id: "gt-2",
-      workspaceId: initial.id,
-      title: "Desain Arsitektur & Diagram Sistem",
-      assigneeUid: user?.uid || "my-uid",
-      assigneeName: ownerName,
-      status: "in_progress",
-      milestone: "Fase 2",
-      createdAt: new Date().toISOString(),
-    });
-    initial.tasks.push({
-      id: "gt-3",
-      workspaceId: initial.id,
-      title: "Penyusunan Slide Presentasi Akhir",
-      assigneeUid: "u-andi",
-      assigneeName: "Andi",
-      status: "todo",
-      milestone: "Fase 3",
-      createdAt: new Date().toISOString(),
-    });
-    return initial;
   });
+
+  // Persist workspace changes to localStorage so user data is never lost
+  useEffect(() => {
+    if (typeof window !== "undefined" && workspace) {
+      try {
+        localStorage.setItem("felys_team_workspace", JSON.stringify(workspace));
+      } catch (e) {
+        console.error("Failed to save workspace", e);
+      }
+    }
+  }, [workspace]);
 
   // New task form state
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedAssigneeUid, setSelectedAssigneeUid] = useState(user?.uid || "my-uid");
   const [newTaskMilestone, setNewTaskMilestone] = useState("Fase 1");
+
+  // New member input state
+  const [newMemberName, setNewMemberName] = useState("");
 
   // Join code state
   const [joinCodeInput, setJoinCodeInput] = useState("");
@@ -140,6 +135,23 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
     triggerHaptic("success");
     toast.success(`Berhasil bergabung ke kelompok kode ${joinCodeInput.toUpperCase()}! 🎉`);
     setJoinCodeInput("");
+  };
+
+  const handleAddMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberName.trim()) return;
+    triggerHaptic("success");
+    const newMember: WorkspaceMember = {
+      uid: `mem-${Date.now()}`,
+      displayName: newMemberName.trim(),
+      role: "member",
+    };
+    setWorkspace((prev) => ({
+      ...prev,
+      members: [...prev.members, newMember],
+    }));
+    toast.success(`${newMember.displayName} berhasil ditambahkan ke tim! 👥`);
+    setNewMemberName("");
   };
 
   const kanbanColumns: { id: GroupTaskStatus; label: string; color: string }[] = [
@@ -379,6 +391,31 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
                 ))}
               </div>
             </div>
+
+            {/* Add Real Team Member */}
+            <form onSubmit={handleAddMember} className="pt-2 border-t border-border space-y-2">
+              <span className="text-xs font-bold text-muted block">
+                Tambah Teman ke Kelompok:
+              </span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nama Teman (contoh: Budi, Siti)"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="flex-1 p-2 text-xs rounded-xl bg-surface border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <Button
+                  type="submit"
+                  variant="academic"
+                  size="sm"
+                  className="rounded-xl font-bold px-3 flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Tambah</span>
+                </Button>
+              </div>
+            </form>
 
             {/* Join Another Group */}
             <div className="pt-2 border-t border-border space-y-2">
