@@ -375,9 +375,33 @@ export const useDataStore = create<DataState>((set, get) => ({
     set({ courses: nextCourses });
     saveLocal("felys_courses", nextCourses);
 
+    // If name or color changed, also update all associated tasks in state & storage
+    if (updates.name || updates.color) {
+      const nextTasks = get().tasks.map((t) =>
+        t.courseId === id
+          ? {
+              ...t,
+              ...(updates.name ? { courseName: updates.name } : {}),
+              ...(updates.color ? { courseColor: updates.color } : {}),
+            }
+          : t
+      );
+      set({ tasks: nextTasks });
+      saveLocal("felys_tasks", nextTasks);
+    }
+
     if (userId) {
       try {
         await FirestoreService.updateCourse(userId, id, updates);
+        if (updates.name || updates.color) {
+          const tasksToUpdate = get().tasks.filter((t) => t.courseId === id);
+          for (const task of tasksToUpdate) {
+            await FirestoreService.updateTask(userId, task.id, {
+              ...(updates.name ? { courseName: updates.name } : {}),
+              ...(updates.color ? { courseColor: updates.color } : {}),
+            });
+          }
+        }
       } catch (err: any) {
         console.warn("Firestore updateCourse sync warning:", err?.message || err);
       }
