@@ -8,6 +8,7 @@ import { AccountProviderLogo } from "./AccountProviderLogo";
 import { AdjustBalanceModal } from "./AdjustBalanceModal";
 import { AccountFormModal } from "./AccountFormModal";
 import { AccountTransferModal } from "./AccountTransferModal";
+import { SmartMutationModal } from "./SmartMutationModal";
 import { FirestoreService } from "@/lib/firebase/firestore-service";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
@@ -33,6 +34,7 @@ export function AccountOverviewGrid() {
   const [selectedEditAccount, setSelectedEditAccount] = useState<FinancialAccount | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isMutationOpen, setIsMutationOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const totalNetWorth = getTotalNetWorth();
@@ -90,6 +92,21 @@ export function AccountOverviewGrid() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
+          {/* Paste Mutasi Button */}
+          <Button
+            onClick={() => {
+              triggerHaptic("light");
+              setIsMutationOpen(true);
+            }}
+            size="sm"
+            variant="secondary"
+            className="rounded-xl text-xs font-semibold flex items-center gap-1.5 border-[#7FE3C0]/40 text-foreground hover:bg-[#E0FBF2]/30"
+            title="Paste Notifikasi Mutasi SMS / Bank"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#1F8766]" />
+            <span className="hidden xs:inline">Paste Mutasi</span>
+          </Button>
+
           {/* Sync Button */}
           <Button
             onClick={handleManualSync}
@@ -243,6 +260,11 @@ export function AccountOverviewGrid() {
       <AccountTransferModal
         isOpen={isTransferOpen}
         onClose={() => setIsTransferOpen(false)}
+      />
+
+      <SmartMutationModal
+        isOpen={isMutationOpen}
+        onClose={() => setIsMutationOpen(false)}
       />
     </section>
   );
