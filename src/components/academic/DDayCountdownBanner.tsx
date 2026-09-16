@@ -36,7 +36,7 @@ export function DDayCountdownBanner() {
       targetDate: tempDate,
     });
     setIsEditing(false);
-    toast.success("Target D-Day berhasil disimpan permanen ke Firebase! 🎯");
+    toast.success("Target D-Day berhasil disimpan! 🎯");
   };
 
   return (
@@ -125,10 +125,10 @@ export function DDayCountdownBanner() {
 
           <button
             type="submit"
-            className="w-full py-1.5 rounded-xl bg-[#7C5CFA] text-white text-xs font-bold shadow-soft hover:bg-[#6842f5] transition-all flex items-center justify-center gap-1.5"
+            className="w-full py-2 rounded-xl bg-accent text-white text-xs font-bold shadow-soft hover:brightness-110 active:scale-98 transition-all flex items-center justify-center"
+            title="Simpan Target"
           >
-            <Check className="w-3.5 h-3.5" />
-            <span>Simpan Permanen ke Firebase</span>
+            <Check className="w-4 h-4" />
           </button>
         </form>
       )}
