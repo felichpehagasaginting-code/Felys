@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  Check,
   Laptop,
   Sparkles,
   Plane,
@@ -243,9 +244,10 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
                   variant="academic"
                   size="sm"
                   disabled={!title.trim() || !targetAmount || isCreating}
-                  className="rounded-xl text-xs font-bold"
+                  className="rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs"
                 >
-                  {isCreating ? "Menyimpan..." : "Tambah Target"}
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Tambah</span>
                 </Button>
               </div>
             </form>
