@@ -12,6 +12,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  Check,
   X,
   CreditCard,
   Building,
@@ -227,9 +228,10 @@ export function RecurringBillsModal({ isOpen, onClose }: RecurringBillsModalProp
                   type="submit"
                   variant="academic"
                   size="sm"
-                  className="rounded-xl text-xs font-bold"
+                  className="rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs"
                 >
-                  Simpan Tagihan
+                  <Check className="w-4 h-4" />
+                  <span>Tambah</span>
                 </Button>
               </div>
             </form>
