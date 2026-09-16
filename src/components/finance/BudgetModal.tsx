@@ -7,6 +7,9 @@ import { useDataStore } from "@/stores/use-data-store";
 import { Category, Budget } from "@/types/finance";
 import { DEFAULT_EXPENSE_CATEGORIES } from "@/lib/firebase/firestore-service";
 import { formatCurrencyIDR } from "@/lib/utils";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
+import { Check } from "lucide-react";
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -50,10 +53,13 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
 
     try {
       setIsSubmitting(true);
+      triggerHaptic("success");
       await setBudgetLimit(selectedCategoryId, limit);
+      toast.success("Batas anggaran kategori berhasil diatur! 📊");
       onClose();
     } catch (err) {
       console.error("Error saving budget:", err);
+      toast.error("Gagal menyimpan batas anggaran.");
     } finally {
       setIsSubmitting(false);
     }
@@ -63,10 +69,13 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
     if (!budgetToEdit || isSubmitting) return;
     try {
       setIsSubmitting(true);
+      triggerHaptic("warning");
       await deleteBudgetLimit(budgetToEdit.categoryId);
+      toast.success("Batas anggaran berhasil dihapus.");
       onClose();
     } catch (err) {
       console.error("Error deleting budget:", err);
+      toast.error("Gagal menghapus batas anggaran.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,8 +159,15 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
               <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isSubmitting}>
                 Batal
               </Button>
-              <Button type="submit" variant="finance" size="sm" disabled={isSubmitting || limit <= 0}>
-                {isSubmitting ? "Menyimpan..." : "Simpan Budget"}
+              <Button
+                type="submit"
+                variant="finance"
+                size="sm"
+                className="rounded-xl font-bold px-3.5 flex items-center gap-1.5 shadow-xs"
+                disabled={isSubmitting || limit <= 0}
+              >
+                <Check className="w-4 h-4" />
+                <span>{isSubmitting ? "Memproses..." : budgetToEdit ? "Perbarui" : "Terapkan"}</span>
               </Button>
             </div>
           </div>
