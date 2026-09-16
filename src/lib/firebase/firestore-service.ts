@@ -283,12 +283,24 @@ export class FirestoreService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
-    await updateDoc(ref, payload);
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async deleteCourse(userId: string, courseId: string): Promise<void> {
     const ref = doc(db, "users", userId, "courses", courseId);
     await deleteDoc(ref);
+
+    // Cascade delete any tasks linked to this course in Firestore to prevent zombie tasks
+    try {
+      const tasksRef = collection(db, "users", userId, "tasks");
+      const q = query(tasksRef, where("courseId", "==", courseId));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
+      }
+    } catch (e) {
+      console.warn("Cascade delete tasks error:", e);
+    }
   }
 
   // --- TASKS (P6: paginated, server-ordered) ---
