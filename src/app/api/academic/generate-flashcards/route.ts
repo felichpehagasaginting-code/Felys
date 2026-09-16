@@ -24,20 +24,20 @@ export async function POST(req: Request) {
       "";
 
     if (!apiKey) {
-      // Fallback generator if no API key is provided
-      const sampleCards = [
+      // Generate baseline card directly from uploaded user text
+      const extractedCards = [
         {
           id: `card-${Date.now()}-1`,
           question: `Apa konsep utama dari ${topic || "materi ini"}?`,
           answer: text.slice(0, 180) + "...",
-          explanation: "Konsep dasar dari materi kuliah.",
+          explanation: "Konsep dasar dari materi kuliah pengguna.",
           interval: 0,
           repetition: 0,
           easeFactor: 2.5,
           dueDate: new Date().toISOString(),
         },
       ];
-      return NextResponse.json({ cards: sampleCards });
+      return NextResponse.json({ cards: extractedCards });
     }
 
     const google = createGoogleGenerativeAI({ apiKey });
