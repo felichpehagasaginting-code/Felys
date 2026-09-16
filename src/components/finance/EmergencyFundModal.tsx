@@ -8,7 +8,7 @@ import { useDataStore } from "@/stores/use-data-store";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
-import { Shield, Plus, Minus, ArrowRight, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { Shield, Plus, Minus, ArrowRight, Sparkles, AlertCircle, RefreshCw, Check } from "lucide-react";
 
 interface EmergencyFundModalProps {
   isOpen: boolean;
@@ -108,7 +108,7 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
                 className="rounded-xl shrink-0 flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Simpan ke Darurat</span>
+                <span>Setor</span>
               </Button>
             </div>
           )}
@@ -172,10 +172,11 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
               type="submit"
               variant={actionType === "deposit" ? "finance" : "danger"}
               size="md"
-              className="w-full rounded-2xl mt-2"
+              className="w-full rounded-2xl mt-2 flex items-center justify-center gap-2 font-bold"
               disabled={isProcessing || !amount || Number(amount) <= 0}
             >
-              {actionType === "deposit" ? "Simpan ke Dana Darurat" : "Tarik Dana Darurat"}
+              <Check className="w-4 h-4" />
+              <span>{actionType === "deposit" ? "Simpan" : "Tarik Dana"}</span>
             </Button>
           </form>
         </div>
