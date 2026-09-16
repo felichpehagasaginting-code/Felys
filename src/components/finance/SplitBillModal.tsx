@@ -272,103 +272,109 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
               </button>
             </div>
 
-            {/* Judul Tagihan */}
-            <div>
-              <label className="text-xs font-bold text-muted block mb-1">
-                Nama Acara / Resto:
-              </label>
-              <input
-                type="text"
-                placeholder="Contoh: Makan Siang Warung SS, McD Malam, dll."
-                value={billTitle}
-                onChange={(e) => setBillTitle(e.target.value)}
-                className="w-full p-2.5 rounded-2xl bg-surface border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
-              />
-            </div>
+            {/* Detail Acara & Rekening (Clean Minimal Row) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="text-[11px] font-semibold text-muted block mb-1">
+                  Nama Acara / Resto
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Makan Siang Bersama"
+                  value={billTitle}
+                  onChange={(e) => setBillTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-xs text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
 
-            {/* Rekening Tujuan Tagihan */}
-            <div>
-              <label className="text-xs font-bold text-muted block mb-1">
-                Tujuan Transfer Saya (untuk pesan WA):
-              </label>
-              <input
-                type="text"
-                placeholder="BCA: 1234567890 (a.n Nama) / GoPay: 08123456789"
-                value={myPaymentInfo}
-                onChange={(e) => setMyPaymentInfo(e.target.value)}
-                className="w-full p-2.5 rounded-2xl bg-surface border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
-              />
+              <div>
+                <label className="text-[11px] font-semibold text-muted block mb-1">
+                  Rekening / E-Wallet Saya
+                </label>
+                <input
+                  type="text"
+                  placeholder="BCA: 1234567890 / GoPay"
+                  value={myPaymentInfo}
+                  onChange={(e) => setMyPaymentInfo(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-xs text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
             </div>
 
             {splitMode === "equal" ? (
-              /* EQUAL SPLIT MODE */
-              <div className="space-y-3 p-4 rounded-2xl bg-surface border border-border">
+              /* EQUAL SPLIT MODE - MINIMAL & AIRY */
+              <div className="space-y-3.5 p-4 rounded-2xl bg-surface border border-border/80 shadow-xs">
                 <div>
-                  <label className="text-xs font-bold text-muted block mb-1">
-                    Total Tagihan Keseluruhan (Rp):
+                  <label className="text-[11px] font-semibold text-muted block mb-1">
+                    Total Tagihan Keseluruhan
                   </label>
-                  <input
-                    type="number"
-                    placeholder="Contoh: 120000"
-                    value={totalBill}
-                    onChange={(e) => setTotalBill(e.target.value ? Number(e.target.value) : "")}
-                    className="w-full p-3 text-base font-mono font-bold rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-muted">
+                      Rp
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={totalBill}
+                      onChange={(e) => setTotalBill(e.target.value ? Number(e.target.value) : "")}
+                      className="w-full pl-10 pr-4 py-2.5 text-base font-mono font-bold rounded-xl bg-black/3 dark:bg-white/3 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-[#37B98F]"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-muted block mb-1">
-                    Nama Teman (Pisahkan dengan koma):
+                  <label className="text-[11px] font-semibold text-muted block mb-1">
+                    Nama Teman (Pisahkan koma)
                   </label>
                   <input
                     type="text"
-                    placeholder="Budi, Siti, Aldo, Dimas"
+                    placeholder="Budi, Siti, Dimas, Aldo"
                     value={friendsInput}
                     onChange={(e) => setFriendsInput(e.target.value)}
-                    className="w-full p-2.5 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-xs text-foreground focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-black/3 dark:bg-white/3 border border-border text-xs text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-[#37B98F]"
                   />
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-0.5">
                   <input
                     type="checkbox"
                     id="includeMe"
                     checked={includeMe}
                     onChange={(e) => setIncludeMe(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#1F8766] accent-[#1F8766]"
+                    className="w-4 h-4 rounded text-[#1F8766] accent-[#1F8766] cursor-pointer"
                   />
-                  <label htmlFor="includeMe" className="text-xs text-foreground font-medium cursor-pointer">
-                    Ikutkan Saya dalam Pembagian ({includeMe ? totalPeople : totalPeople} orang total)
+                  <label htmlFor="includeMe" className="text-xs text-foreground cursor-pointer select-none">
+                    Ikutkan saya ({totalPeople} orang)
                   </label>
                 </div>
 
                 {perPersonAmount > 0 && (
-                  <div className="p-3.5 rounded-2xl bg-[#E0FBF2] dark:bg-[#1A2E26] border border-[#7FE3C0]/40 flex items-center justify-between">
+                  <div className="p-4 rounded-2xl bg-[#E0FBF2]/60 dark:bg-[#1A2E26]/60 border border-[#7FE3C0]/40 flex items-center justify-between">
                     <div>
-                      <span className="text-[11px] font-bold text-[#1F8766] dark:text-[#7FE3C0] block">
-                        Bagian per Orang:
+                      <span className="text-[11px] font-medium text-[#1F8766] dark:text-[#7FE3C0] block">
+                        Per Orang Membayar
                       </span>
-                      <span className="text-xl font-mono font-black text-foreground">
+                      <span className="text-xl font-mono font-extrabold text-foreground">
                         {formatCurrencyIDR(perPersonAmount)}
                       </span>
                     </div>
-                    <span className="text-xs text-muted">
-                      ({totalPeople} orang)
+                    <span className="text-xs font-semibold text-muted bg-surface/80 px-2.5 py-1 rounded-full border border-border/60">
+                      {totalPeople} Orang
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-1">
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
                     onClick={generateWhatsAppBroadcast}
                     disabled={!totalBill || friendList.length === 0}
-                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold"
+                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
-                    <span>Kirim ke WhatsApp</span>
+                    <span>Kirim ke WA</span>
                   </Button>
                   <Button
                     type="button"
@@ -376,7 +382,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                     size="sm"
                     onClick={handleSaveEqualSplit}
                     disabled={!totalBill || friendList.length === 0}
-                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Catat Talangan</span>
@@ -384,16 +390,16 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                 </div>
               </div>
             ) : (
-              /* PROPORTIONAL ITEMIZED MODE */
-              <div className="space-y-3 p-4 rounded-2xl bg-surface border border-border">
+              /* PROPORTIONAL ITEMIZED MODE - CLEAN & STRUCTURED */
+              <div className="space-y-3.5 p-4 rounded-2xl bg-surface border border-border/80 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-foreground">
-                    Daftar Pesanan per Orang:
+                  <span className="text-xs font-bold text-foreground">
+                    Daftar Pesanan per Orang
                   </span>
                   <button
                     type="button"
                     onClick={handleAddItemizedPerson}
-                    className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-accent hover:underline flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Tambah Teman</span>
@@ -401,11 +407,11 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                 </div>
 
                 {/* List of Persons */}
-                <div className="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1">
-                  {itemizedList.map((person, idx) => (
+                <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                  {itemizedList.map((person) => (
                     <div
                       key={person.id}
-                      className="p-3 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border space-y-2"
+                      className="p-3 rounded-xl bg-black/2 dark:bg-white/2 border border-border/70 space-y-1.5 hover:border-border transition-colors"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <input
@@ -413,7 +419,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                           value={person.name}
                           onChange={(e) => handleUpdateItemizedPerson(person.id, "name", e.target.value)}
                           placeholder="Nama"
-                          className="font-bold text-xs bg-transparent border-b border-dashed border-border/80 focus:outline-none w-28 text-foreground"
+                          className="font-bold text-xs bg-transparent border-b border-border/60 focus:outline-none w-28 text-foreground"
                         />
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] text-muted font-mono">Rp</span>
@@ -421,14 +427,15 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                             type="number"
                             value={person.subtotal || ""}
                             onChange={(e) => handleUpdateItemizedPerson(person.id, "subtotal", Number(e.target.value) || 0)}
-                            placeholder="Nominal"
-                            className="font-mono font-extrabold text-xs bg-surface p-1 rounded-lg border border-border w-28 text-right text-foreground focus:outline-none"
+                            placeholder="0"
+                            className="font-mono font-bold text-xs bg-surface px-2 py-1 rounded-lg border border-border w-28 text-right text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                           />
                           {itemizedList.length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveItemizedPerson(person.id)}
-                              className="p-1 text-muted hover:text-[#D93D4A] transition-colors"
+                              className="p-1 text-muted hover:text-[#D93D4A] transition-colors rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                              title="Hapus"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -439,43 +446,43 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                         type="text"
                         value={person.items || ""}
                         onChange={(e) => handleUpdateItemizedPerson(person.id, "items", e.target.value)}
-                        placeholder="Catatan menu (contoh: Bebek Goreng + Es Jeruk)"
-                        className="w-full text-[11px] text-muted bg-transparent focus:outline-none"
+                        placeholder="Pesanan (cth: Nasi Goreng, Es Teh)"
+                        className="w-full text-[11px] text-muted placeholder:text-muted/50 bg-transparent focus:outline-none"
                       />
                     </div>
                   ))}
                 </div>
 
                 {/* Tax & Service Settings */}
-                <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/60">
+                <div className="grid grid-cols-2 gap-2.5 pt-1 border-t border-border/60">
                   <div>
-                    <label className="text-[10px] font-bold text-muted block mb-1">
-                      Pajak Resto (%):
+                    <label className="text-[10px] font-semibold text-muted block mb-1">
+                      Pajak Resto (%)
                     </label>
                     <input
                       type="number"
                       value={taxPercent}
                       onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
                       placeholder="11"
-                      className="w-full p-2 text-xs font-mono rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
+                      className="w-full px-2.5 py-1.5 text-xs font-mono rounded-xl bg-black/2 dark:bg-white/2 border border-border text-foreground focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-muted block mb-1">
-                      Service Charge (%):
+                    <label className="text-[10px] font-semibold text-muted block mb-1">
+                      Service Charge (%)
                     </label>
                     <input
                       type="number"
                       value={servicePercent}
                       onChange={(e) => setServicePercent(Number(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-full p-2 text-xs font-mono rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
+                      className="w-full px-2.5 py-1.5 text-xs font-mono rounded-xl bg-black/2 dark:bg-white/2 border border-border text-foreground focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Live Proportional Calculation Breakdown */}
-                <div className="p-3 rounded-2xl bg-[#EDE5FF]/60 dark:bg-[#2D263B]/60 border border-[#B69CFF]/40 space-y-2 text-xs">
+                <div className="p-3.5 rounded-2xl bg-surface border border-border/80 space-y-1.5 text-xs">
                   <div className="flex justify-between text-muted text-[11px]">
                     <span>Subtotal Menu:</span>
                     <span className="font-mono">{formatCurrencyIDR(proportionalResult.subtotal)}</span>
@@ -483,31 +490,31 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                   {taxPercent > 0 && (
                     <div className="flex justify-between text-muted text-[11px]">
                       <span>Pajak ({taxPercent}%):</span>
-                      <span className="font-mono">+{formatCurrencyIDR(proportionalResult.taxAmount)}</span>
+                      <span className="font-mono text-foreground">+{formatCurrencyIDR(proportionalResult.taxAmount)}</span>
                     </div>
                   )}
                   {servicePercent > 0 && (
                     <div className="flex justify-between text-muted text-[11px]">
                       <span>Service ({servicePercent}%):</span>
-                      <span className="font-mono">+{formatCurrencyIDR(proportionalResult.serviceAmount)}</span>
+                      <span className="font-mono text-foreground">+{formatCurrencyIDR(proportionalResult.serviceAmount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-extrabold text-sm text-foreground pt-1 border-t border-border/40">
-                    <span>Grand Total:</span>
-                    <span className="font-mono text-[#7C5CFA] dark:text-[#B69CFF]">
+                  <div className="flex justify-between font-extrabold text-sm text-foreground pt-1.5 border-t border-border/60">
+                    <span>Total Tagihan:</span>
+                    <span className="font-mono text-accent">
                       {formatCurrencyIDR(proportionalResult.grandTotal)}
                     </span>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-1">
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
                     onClick={generateWhatsAppBroadcast}
-                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold"
+                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
                     <span>Broadcast WA</span>
@@ -517,7 +524,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                     variant="academic"
                     size="sm"
                     onClick={handleSaveItemizedSplit}
-                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                    className="rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Catat ke Felys</span>
