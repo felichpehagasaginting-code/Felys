@@ -522,16 +522,16 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Pairing Code Display Modal/Banner */}
+          {/* Pairing Code Display Box - Clean & Minimal */}
           {pairingData && !botStatus?.isPaired && (
-            <div className="p-4 rounded-2xl bg-[#0088cc]/5 border border-[#0088cc]/20 space-y-3">
+            <div className="p-4 rounded-2xl bg-surface border border-border/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground">Kode Pairing Akun Kamu</span>
-                <span className="text-[10px] text-muted">Berlaku selama 10 menit</span>
+                <span className="text-xs font-bold text-foreground">Kode Pairing (10 Menit)</span>
+                <span className="text-[11px] text-muted">Kirim ke bot Telegram</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="px-4 py-2 bg-surface rounded-xl border border-border font-mono text-lg font-bold tracking-widest text-[#0088cc]">
+                <div className="px-3.5 py-1.5 bg-black/2 dark:bg-white/2 rounded-xl border border-border font-mono text-base font-extrabold tracking-widest text-[#0088cc]">
                   {pairingData.code}
                 </div>
                 <Button
@@ -539,22 +539,22 @@ export default function SettingsPage() {
                     triggerHaptic("light");
                     navigator.clipboard.writeText(`/link ${pairingData.code}`);
                     setCodeCopied(true);
-                    toast.success("Perintah disalin!", { description: `Ketik /link ${pairingData.code} di bot Telegram.` });
+                    toast.success("Perintah disalin!");
                     setTimeout(() => setCodeCopied(false), 2000);
                   }}
                   variant="secondary"
                   size="sm"
-                  className="rounded-xl text-xs h-10"
+                  className="rounded-xl text-xs h-9"
                 >
-                  {codeCopied ? <Check className="w-4 h-4 text-[#1F8766]" /> : <Copy className="w-4 h-4" />}
-                  <span>{codeCopied ? "Tersalin!" : "Salin /link"}</span>
+                  {codeCopied ? <Check className="w-3.5 h-3.5 text-[#1F8766]" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{codeCopied ? "Tersalin" : "Salin /link"}</span>
                 </Button>
 
                 <a
                   href={pairingData.deepLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 h-10 rounded-xl bg-[#0088cc] text-white text-xs font-semibold hover:bg-[#0077b5] transition-all ml-auto"
+                  className="inline-flex items-center gap-1.5 px-3 h-9 rounded-xl bg-[#0088cc] text-white text-xs font-semibold hover:bg-[#0077b5] transition-all ml-auto"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Buka Bot</span>
@@ -562,13 +562,10 @@ export default function SettingsPage() {
                 </a>
               </div>
 
-              <div className="text-[11px] text-muted leading-relaxed space-y-1 pt-1 border-t border-[#0088cc]/10">
-                <p className="font-semibold text-foreground">Langkah aktivasi cepat:</p>
-                <ol className="list-decimal list-inside space-y-0.5 pl-1">
-                  <li>Klik tombol <span className="font-medium text-foreground">Buka Bot</span> di atas atau cari <code className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded">@{pairingData.botUsername}</code> di Telegram.</li>
-                  <li>Tekan <span className="font-medium text-foreground">Start</span> atau kirim pesan: <code className="bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded font-mono">/link {pairingData.code}</code></li>
-                  <li>Selesai! Kamu bisa langsung ketik: <em>"Makan siang 15rb"</em> atau <em>"Tugas kalkulus jumat 23:59"</em>.</li>
-                </ol>
+              <div className="text-[11px] text-muted space-y-0.5 pt-1 border-t border-border/40">
+                <p>1. Buka bot <code className="text-foreground">@{pairingData.botUsername}</code></p>
+                <p>2. Kirim pesan: <code className="font-mono text-accent">/link {pairingData.code}</code></p>
+                <p>3. Mulai catat tugas & pengeluaran santai via chat kapan saja!</p>
               </div>
             </div>
           )}
