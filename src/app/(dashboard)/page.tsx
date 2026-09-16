@@ -18,7 +18,9 @@ import {
   TrendingUp,
   Wallet,
   Clock,
+  FolderGit2,
 } from "lucide-react";
+import { TeamWorkspaceModal } from "@/components/academic/TeamWorkspaceModal";
 import { useModeStore } from "@/stores/use-mode-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -69,6 +71,7 @@ export default function DashboardPage() {
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
   const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
 
   // GSAP hero intro: badge pop → sapaan per-huruf (SplitText) → paragraf → tombol stagger
   const heroRef = useRef<HTMLElement>(null);
@@ -173,6 +176,16 @@ export default function DashboardPage() {
         <div className="hero-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
           {activeMode === "academic" ? (
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              <Button
+                onClick={() => setIsWorkspaceOpen(true)}
+                variant="secondary"
+                size="md"
+                className="rounded-2xl w-full sm:w-auto font-bold flex items-center gap-1.5 shadow-xs"
+                title="Workspace Kolaborasi Tugas Kelompok"
+              >
+                <FolderGit2 className="w-4 h-4 text-[#7C5CFA]" />
+                <span>Tugas Kelompok</span>
+              </Button>
               <Link href="/academic/calendar" className="w-full sm:w-auto">
                 <Button variant="secondary" size="md" className="rounded-2xl w-full sm:w-auto">
                   <Clock className="w-4 h-4 text-[#7C5CFA]" />
@@ -616,6 +629,10 @@ export default function DashboardPage() {
       <EmergencyFundModal
         isOpen={isEmergencyFundOpen}
         onClose={() => setIsEmergencyFundOpen(false)}
+      />
+      <TeamWorkspaceModal
+        isOpen={isWorkspaceOpen}
+        onClose={() => setIsWorkspaceOpen(false)}
       />
     </div>
   );
