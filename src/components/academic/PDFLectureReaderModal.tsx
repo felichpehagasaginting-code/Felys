@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { FormattedMessage } from "@/components/ai/FormattedMessage";
 import { triggerHaptic } from "@/lib/haptics";
 import { extractText } from "unpdf";
-import { FileText, Upload, Sparkles, Send, X, BookOpen, HelpCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { FileText, Upload, Sparkles, Send, X, BookOpen, HelpCircle, CheckCircle2, Loader2, Brain } from "lucide-react";
+import { FlashcardStudyModal } from "./FlashcardStudyModal";
+import { FlashcardItem } from "@/types/flashcard";
 import { toast } from "sonner";
 
 interface PDFLectureReaderModalProps {
@@ -27,8 +29,50 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
   ]);
   const [queryInput, setQueryInput] = useState("");
   const [isAsking, setIsAsking] = useState(false);
+  const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
+  const [generatedCards, setGeneratedCards] = useState<FlashcardItem[]>([]);
+  const [isGeneratingCards, setIsGeneratingCards] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleGenerateFlashcards = async () => {
+    if (!pdfTextContent.trim()) {
+      toast.error("Teks PDF belum selesai dibaca atau dokumen kosong.");
+      return;
+    }
+
+    try {
+      setIsGeneratingCards(true);
+      triggerHaptic("medium");
+      toast.info("Sedang membuat flashcards Active Recall dari slide kuliah...");
+
+      const res = await fetch("/api/academic/generate-flashcards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: pdfTextContent.slice(0, 8000),
+          topic: pdfFile?.name.replace(/\.pdf$/i, "") || "Kuliah",
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal membuat flashcards dari AI");
+      }
+
+      const data = await res.json();
+      if (data.cards && data.cards.length > 0) {
+        setGeneratedCards(data.cards);
+        setIsFlashcardsOpen(true);
+        toast.success(`Berhasil membuat ${data.cards.length} kartu konsep kuliah! 🗂️`);
+      } else {
+        toast.error("Tidak ada kartu yang berhasil diekstrak.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Gagal membuat flashcards.");
+    } finally {
+      setIsGeneratingCards(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,6 +240,19 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
             {/* Quick Prompt Chips */}
             <div className="p-2 border-b border-border flex gap-1.5 overflow-x-auto text-[10px] font-bold">
               <button
+                type="button"
+                onClick={handleGenerateFlashcards}
+                disabled={isAsking || isExtracting || isGeneratingCards || !pdfTextContent}
+                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#7C5CFA] to-[#9E86FA] text-white hover:brightness-105 disabled:opacity-50 transition-all shrink-0 flex items-center gap-1 shadow-xs"
+              >
+                {isGeneratingCards ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Brain className="w-3 h-3" />
+                )}
+                <span>🗂️ Buat Flashcards SM-2</span>
+              </button>
+              <button
                 onClick={() => handleSendPrompt("Rangkum poin-poin utama dokumen ini secara komprehensif dan terstruktur")}
                 disabled={isAsking || isExtracting}
                 className="px-2.5 py-1 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] hover:bg-[#7C5CFA] hover:text-white disabled:opacity-50 transition-all shrink-0"
@@ -266,6 +323,13 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
           </div>
         </div>
       </ModalContent>
+
+      <FlashcardStudyModal
+        isOpen={isFlashcardsOpen}
+        onClose={() => setIsFlashcardsOpen(false)}
+        deckTitle={pdfFile?.name.replace(/\.pdf$/i, "") || "Slide Kuliah"}
+        cards={generatedCards}
+      />
     </Modal>
   );
 }
