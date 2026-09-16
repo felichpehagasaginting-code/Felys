@@ -426,10 +426,10 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             <Check className="w-4 h-4" />
             <span>
               {isSubmitting
-                ? "Menyimpan ke Cloud..."
+                ? "Menyimpan..."
                 : willOverbudget
-                  ? "Tetap Catat (Overbudget)"
-                  : `Simpan ${type === "expense" ? "Pengeluaran" : "Pemasukan"}`}
+                  ? "Tetap Catat"
+                  : "Simpan"}
             </span>
           </Button>
         </form>
