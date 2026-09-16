@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Modal, ModalContent } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
+import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 import { useDataStore } from "@/stores/use-data-store";
 import { formatCurrencyIDR, formatDateRelative } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
+import { calculateProportionalSplit, SplitItem } from "@/lib/split-bill";
 import {
   Users,
   Plus,
@@ -19,6 +20,9 @@ import {
   MessageSquare,
   ArrowDownLeft,
   ArrowUpRight,
+  Receipt,
+  Percent,
+  Copy,
 } from "lucide-react";
 
 interface SplitBillModalProps {
@@ -29,16 +33,26 @@ interface SplitBillModalProps {
 export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
   const { debts, addDebt, settleDebt, deleteDebt } = useDataStore();
   const [activeTab, setActiveTab] = useState<"calculator" | "list">("calculator");
+  const [splitMode, setSplitMode] = useState<"equal" | "itemized">("equal");
 
-  // Calculator Form State
+  // Equal Split Form State
   const [totalBill, setTotalBill] = useState<number | "">("");
   const [billTitle, setBillTitle] = useState("");
   const [friendsInput, setFriendsInput] = useState("");
   const [includeMe, setIncludeMe] = useState(true);
 
+  // Itemized Proportional Split State
+  const [itemizedList, setItemizedList] = useState<SplitItem[]>([
+    { id: "1", name: "Saya", subtotal: 35000, items: "Nasi Goreng Spesial" },
+    { id: "2", name: "Teman 1", subtotal: 25000, items: "Ayam Geprek" },
+  ]);
+  const [taxPercent, setTaxPercent] = useState<number>(11);
+  const [servicePercent, setServicePercent] = useState<number>(0);
+  const [myPaymentInfo, setMyPaymentInfo] = useState<string>("BCA / GoPay");
+
   if (!isOpen) return null;
 
-  // Split calculation
+  // Equal Split calculation
   const friendList = friendsInput
     .split(",")
     .map((s) => s.trim())
@@ -48,7 +62,46 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
   const perPersonAmount =
     totalBill && totalPeople > 0 ? Math.round(Number(totalBill) / totalPeople) : 0;
 
-  const handleSaveSplitAsDebts = async () => {
+  // Proportional Split calculation
+  const proportionalResult = calculateProportionalSplit(
+    itemizedList,
+    taxPercent || 0,
+    servicePercent || 0
+  );
+
+  const handleAddItemizedPerson = () => {
+    triggerHaptic("light");
+    setItemizedList((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        name: `Teman ${prev.length}`,
+        subtotal: 20000,
+        items: "",
+      },
+    ]);
+  };
+
+  const handleRemoveItemizedPerson = (id: string) => {
+    triggerHaptic("light");
+    if (itemizedList.length <= 1) {
+      toast.error("Minimal harus ada 1 orang dalam daftar.");
+      return;
+    }
+    setItemizedList((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleUpdateItemizedPerson = (
+    id: string,
+    field: "name" | "subtotal" | "items",
+    val: any
+  ) => {
+    setItemizedList((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: val } : p))
+    );
+  };
+
+  const handleSaveEqualSplit = async () => {
     if (!totalBill || Number(totalBill) <= 0 || friendList.length === 0) {
       toast.error("Masukkan total tagihan dan minimal 1 nama teman.");
       return;
@@ -71,16 +124,54 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
     setFriendsInput("");
   };
 
-  const handleSendWhatsApp = (name: string, amount: number, desc: string, phone?: string) => {
-    triggerHaptic("light");
-    const message = encodeURIComponent(
-      `Hai ${name}! ✨\nMau info rincian patungan untuk "${desc}" sebesar ${formatCurrencyIDR(
-        amount
-      )} yaa.\nBoleh transfer via BCA / GoPay / ShopeePay / QRIS kalau senggang ya. Terima kasih banyak! 🙏`
+  const handleSaveItemizedSplit = async () => {
+    const others = proportionalResult.results.filter(
+      (r) => r.name.toLowerCase() !== "saya" && r.total > 0
     );
 
-    const targetUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${message}` : `https://wa.me/?text=${message}`;
-    window.open(targetUrl, "_blank");
+    if (others.length === 0) {
+      toast.error("Tambahkan minimal 1 teman selain diri sendiri.");
+      return;
+    }
+
+    triggerHaptic("success");
+    for (const person of others) {
+      await addDebt({
+        friendName: person.name,
+        amount: person.total,
+        description: `${billTitle.trim() || "Makan Bersama"} (${person.items || "Pesanan"})`,
+        type: "they_owe_me",
+      });
+    }
+
+    toast.success(`Berhasil mencatat talangan proporsional untuk ${others.length} teman! 🍽️`);
+    setActiveTab("list");
+  };
+
+  const generateWhatsAppBroadcast = () => {
+    triggerHaptic("light");
+    const title = billTitle.trim() || "Makan Bersama";
+    let text = `Halo temen-temen! ✨\nIni rincian patungan untuk *${title}* yaa:\n\n`;
+
+    if (splitMode === "equal") {
+      text += `Total tagihan: ${formatCurrencyIDR(Number(totalBill) || 0)}\n`;
+      text += `Per orang: *${formatCurrencyIDR(perPersonAmount)}*\n\n`;
+    } else {
+      proportionalResult.results.forEach((r) => {
+        text += `• *${r.name}*: ${formatCurrencyIDR(r.total)}${
+          r.items ? ` _(${r.items})_` : ""
+        }\n`;
+      });
+      text += `\n_Subtotal: ${formatCurrencyIDR(proportionalResult.subtotal)}_`;
+      if (taxPercent > 0) text += ` | _Pajak ${taxPercent}%_`;
+      if (servicePercent > 0) text += ` | _Service ${servicePercent}%_`;
+      text += `\n*Total Bayar: ${formatCurrencyIDR(proportionalResult.grandTotal)}*\n\n`;
+    }
+
+    text += `Bisa transfer talangan ke:\n💳 ${myPaymentInfo}\n\nMakasih banyak semuanya! 🙏`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank");
   };
 
   const handleSettle = async (id: string, name: string, amount: number) => {
@@ -104,235 +195,406 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
 
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <ModalContent className="max-w-lg p-6 max-h-[85vh] overflow-y-auto">
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-border">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-foreground">
-                  Split Bill & Catatan Talangan 👥
-                </h3>
-                <p className="text-xs text-muted">
-                  Bagi tagihan makan kelompok & pantau piutang antar teman
-                </p>
-              </div>
+      <ModalContent className="max-w-lg p-5 sm:p-6 max-h-[88vh] overflow-y-auto space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] flex items-center justify-center shadow-xs">
+              <Users className="w-5 h-5" />
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div>
+              <h3 className="text-base font-extrabold text-foreground">
+                Split Bill & Catatan Talangan 👥
+              </h3>
+              <p className="text-xs text-muted">
+                Bagi tagihan makan kelompok proporsional & tagih via WhatsApp
+              </p>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-          {/* Apple-style Drag Tab Switcher */}
-          <IOSSegmentedControl<"calculator" | "list">
-            options={[
-              {
-                id: "calculator",
-                label: "Kalkulator Patungan 🧮",
-                activeColor: "bg-[#7FE3C0]",
-                activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
-              },
-              {
-                id: "list",
-                label: (
-                  <span className="flex items-center gap-1.5">
-                    <span>Daftar Talangan</span>
-                    {unsettledDebts.length > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-[#FF7A85] text-white text-[10px] flex items-center justify-center font-extrabold">
-                        {unsettledDebts.length}
-                      </span>
-                    )}
-                  </span>
-                ),
-                activeColor: "bg-[#7C5CFA]",
-                activeTextColor: "text-white",
-              },
-            ]}
-            value={activeTab}
-            onChange={(val) => {
-              triggerHaptic("light");
-              setActiveTab(val);
-            }}
-            size="md"
-            className="w-full shadow-xs"
-          />
+        {/* Tab Switcher: Kalkulator vs Daftar Tagihan */}
+        <IOSSegmentedControl<"calculator" | "list">
+          options={[
+            {
+              id: "calculator",
+              label: "Kalkulator Patungan 🧮",
+              activeColor: "bg-[#7FE3C0]",
+              activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
+            },
+            {
+              id: "list",
+              label: `Daftar Piutang (${unsettledDebts.length})`,
+              activeColor: "bg-[#7C5CFA]",
+              activeTextColor: "text-white",
+            },
+          ]}
+          value={activeTab}
+          onChange={(tab) => {
+            triggerHaptic("light");
+            setActiveTab(tab);
+          }}
+          size="sm"
+          className="w-full"
+        />
 
-          {/* TAB 1: CALCULATOR */}
-          {activeTab === "calculator" ? (
-            <div className="space-y-3.5">
-              <div>
-                <label className="text-[11px] font-bold text-muted block mb-1">
-                  Nama Acara / Makanan
-                </label>
-                <input
-                  type="text"
-                  value={billTitle}
-                  onChange={(e) => setBillTitle(e.target.value)}
-                  placeholder="Contoh: Makan Siang Nasi Padang, Print Makalah..."
-                  className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-[#7FE3C0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-muted block mb-1">
-                  Total Tagihan Keseluruhan (IDR)
-                </label>
-                <input
-                  type="number"
-                  value={totalBill}
-                  onChange={(e) => setTotalBill(e.target.value ? Number(e.target.value) : "")}
-                  placeholder="Contoh: 90000"
-                  className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-sm font-extrabold text-foreground focus:outline-none focus:ring-2 focus:ring-[#7FE3C0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-muted block mb-1">
-                  Daftar Nama Teman (Pisahkan dengan tanda koma)
-                </label>
-                <input
-                  type="text"
-                  value={friendsInput}
-                  onChange={(e) => setFriendsInput(e.target.value)}
-                  placeholder="Contoh: Budi, Andi, Siti"
-                  className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-[#7FE3C0]"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="includeMe"
-                  checked={includeMe}
-                  onChange={(e) => setIncludeMe(e.target.checked)}
-                  className="rounded text-[#1F8766] focus:ring-[#7FE3C0]"
-                />
-                <label htmlFor="includeMe" className="text-xs text-foreground font-medium">
-                  Saya ikut patungan (Dihitung 1 porsi untuk diri sendiri)
-                </label>
-              </div>
-
-              {/* Split Result Card */}
-              {perPersonAmount > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-tr from-[#E0FBF2] to-[#EDE5FF] dark:from-[#1E2E28] dark:to-[#2A2338] border border-[#7FE3C0]/40 space-y-2 text-center">
-                  <span className="text-[11px] text-muted font-bold block uppercase tracking-wider">
-                    Nominal Patungan Per Orang ({totalPeople} Orang)
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-[#1F8766] dark:text-[#7FE3C0] block">
-                    {formatCurrencyIDR(perPersonAmount)}
-                  </span>
-                  <p className="text-[11px] text-muted">
-                    {friendList.length} teman akan dicatat memiliki talangan ke kamu.
-                  </p>
-                </div>
-              )}
-
-              <Button
+        {activeTab === "calculator" ? (
+          <div className="space-y-4 pt-1">
+            {/* Mode Split Sub-Tabs: Bagi Rata vs Rinci Proporsional */}
+            <div className="flex items-center gap-1.5 p-1 bg-surface border border-border rounded-2xl">
+              <button
                 type="button"
-                variant="finance"
-                onClick={handleSaveSplitAsDebts}
-                disabled={!perPersonAmount || friendList.length === 0}
-                className="w-full rounded-2xl text-xs font-bold py-2.5"
+                onClick={() => setSplitMode("equal")}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  splitMode === "equal"
+                    ? "bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
               >
-                Simpan ke Catatan Talangan 👥
-              </Button>
+                Bagi Rata (Equal)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitMode("itemized")}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  splitMode === "itemized"
+                    ? "bg-[#EDE5FF] dark:bg-[#2D263B] text-[#7C5CFA] dark:text-[#B69CFF] shadow-xs"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                Rinci per Menu + Pajak (Proporsional) ✨
+              </button>
             </div>
-          ) : (
-            /* TAB 2: DEBTS LIST */
-            <div className="space-y-3">
-              {totalReceivable > 0 && (
-                <div className="p-3.5 rounded-2xl bg-[#E0FBF2] dark:bg-[#1E2E28] border border-[#7FE3C0]/40 flex items-center justify-between">
-                  <span className="text-xs text-muted font-bold">Total Piutang Belum Lunas</span>
-                  <span className="text-sm font-extrabold text-[#1F8766]">
-                    {formatCurrencyIDR(totalReceivable)}
-                  </span>
-                </div>
-              )}
 
-              {debts.length === 0 ? (
-                <div className="p-8 text-center text-muted space-y-1">
-                  <p className="text-xs">Belum ada catatan talangan aktif.</p>
-                  <p className="text-[11px]">Gunakan tab kalkulator untuk membagi tagihan makan.</p>
+            {/* Judul Tagihan */}
+            <div>
+              <label className="text-xs font-bold text-muted block mb-1">
+                Nama Acara / Resto:
+              </label>
+              <input
+                type="text"
+                placeholder="Contoh: Makan Siang Warung SS, McD Malam, dll."
+                value={billTitle}
+                onChange={(e) => setBillTitle(e.target.value)}
+                className="w-full p-2.5 rounded-2xl bg-surface border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
+              />
+            </div>
+
+            {/* Rekening Tujuan Tagihan */}
+            <div>
+              <label className="text-xs font-bold text-muted block mb-1">
+                Tujuan Transfer Saya (untuk pesan WA):
+              </label>
+              <input
+                type="text"
+                placeholder="BCA: 1234567890 (a.n Nama) / GoPay: 08123456789"
+                value={myPaymentInfo}
+                onChange={(e) => setMyPaymentInfo(e.target.value)}
+                className="w-full p-2.5 rounded-2xl bg-surface border border-border text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-[#7C5CFA]"
+              />
+            </div>
+
+            {splitMode === "equal" ? (
+              /* EQUAL SPLIT MODE */
+              <div className="space-y-3 p-4 rounded-2xl bg-surface border border-border">
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1">
+                    Total Tagihan Keseluruhan (Rp):
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Contoh: 120000"
+                    value={totalBill}
+                    onChange={(e) => setTotalBill(e.target.value ? Number(e.target.value) : "")}
+                    className="w-full p-3 text-base font-mono font-bold rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {debts.map((debt) => (
+
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1">
+                    Nama Teman (Pisahkan dengan koma):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Budi, Siti, Aldo, Dimas"
+                    value={friendsInput}
+                    onChange={(e) => setFriendsInput(e.target.value)}
+                    className="w-full p-2.5 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-xs text-foreground focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="includeMe"
+                    checked={includeMe}
+                    onChange={(e) => setIncludeMe(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#1F8766] accent-[#1F8766]"
+                  />
+                  <label htmlFor="includeMe" className="text-xs text-foreground font-medium cursor-pointer">
+                    Ikutkan Saya dalam Pembagian ({includeMe ? totalPeople : totalPeople} orang total)
+                  </label>
+                </div>
+
+                {perPersonAmount > 0 && (
+                  <div className="p-3.5 rounded-2xl bg-[#E0FBF2] dark:bg-[#1A2E26] border border-[#7FE3C0]/40 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold text-[#1F8766] dark:text-[#7FE3C0] block">
+                        Bagian per Orang:
+                      </span>
+                      <span className="text-xl font-mono font-black text-foreground">
+                        {formatCurrencyIDR(perPersonAmount)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted">
+                      ({totalPeople} orang)
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={generateWhatsAppBroadcast}
+                    disabled={!totalBill || friendList.length === 0}
+                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                    <span>Kirim ke WhatsApp</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="finance"
+                    size="sm"
+                    onClick={handleSaveEqualSplit}
+                    disabled={!totalBill || friendList.length === 0}
+                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Catat Talangan</span>
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* PROPORTIONAL ITEMIZED MODE */
+              <div className="space-y-3 p-4 rounded-2xl bg-surface border border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-foreground">
+                    Daftar Pesanan per Orang:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddItemizedPerson}
+                    className="text-xs font-bold text-[#7C5CFA] hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Tambah Teman</span>
+                  </button>
+                </div>
+
+                {/* List of Persons */}
+                <div className="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1">
+                  {itemizedList.map((person, idx) => (
                     <div
-                      key={debt.id}
-                      className="p-3.5 rounded-2xl bg-[#FAF9FC] dark:bg-[#2B2735] border border-border flex items-center justify-between gap-3 hover:shadow-soft transition-all"
+                      key={person.id}
+                      className="p-3 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border space-y-2"
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-foreground truncate">
-                            {debt.friendName}
-                          </h4>
-                          {debt.isSettled ? (
-                            <span className="px-2 py-0.5 rounded-full bg-[#E0FBF2] text-[#1F8766] text-[9px] font-bold">
-                              Lunas
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-[#FFE8EA] text-[#D93D4A] text-[9px] font-bold">
-                              Belum Lunas
-                            </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <input
+                          type="text"
+                          value={person.name}
+                          onChange={(e) => handleUpdateItemizedPerson(person.id, "name", e.target.value)}
+                          placeholder="Nama"
+                          className="font-bold text-xs bg-transparent border-b border-dashed border-border/80 focus:outline-none w-28 text-foreground"
+                        />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted font-mono">Rp</span>
+                          <input
+                            type="number"
+                            value={person.subtotal || ""}
+                            onChange={(e) => handleUpdateItemizedPerson(person.id, "subtotal", Number(e.target.value) || 0)}
+                            placeholder="Nominal"
+                            className="font-mono font-extrabold text-xs bg-surface p-1 rounded-lg border border-border w-28 text-right text-foreground focus:outline-none"
+                          />
+                          {itemizedList.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItemizedPerson(person.id)}
+                              className="p-1 text-muted hover:text-[#D93D4A] transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           )}
                         </div>
-                        <p className="text-[11px] text-muted truncate">
-                          {debt.description} • {formatCurrencyIDR(debt.amount)}
-                        </p>
                       </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {!debt.isSettled && (
-                          <>
-                            <button
-                              onClick={() =>
-                                handleSendWhatsApp(
-                                  debt.friendName,
-                                  debt.amount,
-                                  debt.description,
-                                  debt.friendPhone
-                                )
-                              }
-                              className="p-1.5 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-all text-xs font-bold flex items-center gap-1 px-2.5"
-                              title="Kirim pengingat WhatsApp"
-                            >
-                              <MessageSquare className="w-3.5 h-3.5" />
-                              <span className="text-[10px]">WA</span>
-                            </button>
-                            <Button
-                              size="sm"
-                              variant="finance"
-                              onClick={() =>
-                                handleSettle(debt.id, debt.friendName, debt.amount)
-                              }
-                              className="rounded-xl h-7 text-[10px] px-2 font-bold"
-                            >
-                              Lunas
-                            </Button>
-                          </>
-                        )}
-
-                        <button
-                          onClick={() => handleDelete(debt.id, debt.friendName)}
-                          className="p-1.5 rounded-lg text-muted hover:text-[#FF7A85] hover:bg-black/5"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <input
+                        type="text"
+                        value={person.items || ""}
+                        onChange={(e) => handleUpdateItemizedPerson(person.id, "items", e.target.value)}
+                        placeholder="Catatan menu (contoh: Bebek Goreng + Es Jeruk)"
+                        className="w-full text-[11px] text-muted bg-transparent focus:outline-none"
+                      />
                     </div>
                   ))}
                 </div>
-              )}
+
+                {/* Tax & Service Settings */}
+                <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/60">
+                  <div>
+                    <label className="text-[10px] font-bold text-muted block mb-1">
+                      Pajak Resto (%):
+                    </label>
+                    <input
+                      type="number"
+                      value={taxPercent}
+                      onChange={(e) => setTaxPercent(Number(e.target.value) || 0)}
+                      placeholder="11"
+                      className="w-full p-2 text-xs font-mono rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-muted block mb-1">
+                      Service Charge (%):
+                    </label>
+                    <input
+                      type="number"
+                      value={servicePercent}
+                      onChange={(e) => setServicePercent(Number(e.target.value) || 0)}
+                      placeholder="0"
+                      className="w-full p-2 text-xs font-mono rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border text-foreground focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Proportional Calculation Breakdown */}
+                <div className="p-3 rounded-2xl bg-[#EDE5FF]/60 dark:bg-[#2D263B]/60 border border-[#B69CFF]/40 space-y-2 text-xs">
+                  <div className="flex justify-between text-muted text-[11px]">
+                    <span>Subtotal Menu:</span>
+                    <span className="font-mono">{formatCurrencyIDR(proportionalResult.subtotal)}</span>
+                  </div>
+                  {taxPercent > 0 && (
+                    <div className="flex justify-between text-muted text-[11px]">
+                      <span>Pajak ({taxPercent}%):</span>
+                      <span className="font-mono">+{formatCurrencyIDR(proportionalResult.taxAmount)}</span>
+                    </div>
+                  )}
+                  {servicePercent > 0 && (
+                    <div className="flex justify-between text-muted text-[11px]">
+                      <span>Service ({servicePercent}%):</span>
+                      <span className="font-mono">+{formatCurrencyIDR(proportionalResult.serviceAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-extrabold text-sm text-foreground pt-1 border-t border-border/40">
+                    <span>Grand Total:</span>
+                    <span className="font-mono text-[#7C5CFA] dark:text-[#B69CFF]">
+                      {formatCurrencyIDR(proportionalResult.grandTotal)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={generateWhatsAppBroadcast}
+                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                    <span>Broadcast WA</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="academic"
+                    size="sm"
+                    onClick={handleSaveItemizedSplit}
+                    className="flex-1 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-soft"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Catat ke Felys</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* LIST OF UNSETTLED DEBTS */
+          <div className="space-y-3 pt-1">
+            <div className="p-3.5 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                  Total Piutang Belum Dilunasi:
+                </span>
+                <span className="text-xl font-mono font-black text-[#1F8766] dark:text-[#7FE3C0]">
+                  {formatCurrencyIDR(totalReceivable)}
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-muted bg-surface px-2.5 py-1 rounded-full border border-border">
+                {unsettledDebts.length} catatan aktif
+              </span>
             </div>
-          )}
-        </div>
+
+            {unsettledDebts.length === 0 ? (
+              <div className="py-8 text-center space-y-2 text-muted">
+                <CheckCircle2 className="w-8 h-8 text-[#1F8766] mx-auto opacity-70" />
+                <p className="text-xs font-bold text-foreground">Semua Talangan Lunas!</p>
+                <p className="text-[11px]">Tidak ada teman yang berutang padamu saat ini.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                {unsettledDebts.map((debt) => (
+                  <div
+                    key={debt.id}
+                    className="p-3.5 rounded-2xl bg-surface border border-border shadow-xs flex items-center justify-between gap-2.5 hover:shadow-soft transition-all"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold text-foreground truncate">
+                          {debt.friendName}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-[#1F8766] bg-[#E0FBF2] dark:bg-[#1E332A] px-2 py-0.5 rounded-full">
+                          {formatCurrencyIDR(debt.amount)}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted truncate mt-0.5">
+                        {debt.description} • {formatDateRelative(debt.createdAt)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSettle(debt.id, debt.friendName, debt.amount)}
+                        className="px-2.5 py-1.5 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] text-xs font-bold hover:scale-105 active:scale-95 transition-all flex items-center gap-1"
+                        title="Tandai Sudah Lunas"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Lunas</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(debt.id, debt.friendName)}
+                        className="p-1.5 rounded-xl text-muted hover:text-[#D93D4A] hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </ModalContent>
     </Modal>
   );
