@@ -350,7 +350,7 @@ export class FirestoreService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
-    await updateDoc(ref, payload);
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async deleteTask(userId: string, taskId: string): Promise<void> {
@@ -415,6 +415,15 @@ export class FirestoreService {
     });
     await setDoc(ref, payload);
     return docId;
+  }
+
+  public static async updateTransaction(userId: string, transactionId: string, updates: Partial<Transaction>): Promise<void> {
+    const ref = doc(db, "users", userId, "transactions", transactionId);
+    const payload = cleanFirestoreData({
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    });
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async deleteTransaction(userId: string, transactionId: string): Promise<void> {
@@ -529,7 +538,7 @@ export class FirestoreService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
-    await updateDoc(ref, payload);
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async deleteSavingsGoal(userId: string, goalId: string): Promise<void> {
@@ -602,7 +611,7 @@ export class FirestoreService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
-    await updateDoc(ref, payload);
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async deleteDebt(userId: string, debtId: string): Promise<void> {
@@ -644,15 +653,19 @@ export class FirestoreService {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
-    await updateDoc(ref, payload);
+    await setDoc(ref, payload, { merge: true });
   }
 
   public static async adjustAccountBalance(userId: string, accountId: string, newBalance: number): Promise<void> {
     const ref = doc(db, "users", userId, "accounts", accountId);
-    await updateDoc(ref, {
-      currentBalance: newBalance,
-      updatedAt: new Date().toISOString(),
-    });
+    await setDoc(
+      ref,
+      cleanFirestoreData({
+        currentBalance: newBalance,
+        updatedAt: new Date().toISOString(),
+      }),
+      { merge: true }
+    );
   }
 
   public static async deleteAccount(userId: string, accountId: string): Promise<void> {
