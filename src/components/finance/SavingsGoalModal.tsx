@@ -352,38 +352,37 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
           </div>
         ) : (
           /* PROJECTIONS & INVESTMENT SIMULATOR */
-          <div className="space-y-4 pt-1">
+          <div className="space-y-3.5 pt-1">
             {activeSimGoal && timeline && simulation ? (
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#EDE5FF]/50 to-[#E0FBF2]/50 dark:from-[#2A2338] dark:to-[#1A2E26] border border-[#B69CFF]/40 space-y-3">
+              <div className="p-4 rounded-2xl bg-surface border border-border/80 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-foreground">
+                  <span className="text-xs font-bold text-foreground truncate">
                     Target: {activeSimGoal.title}
                   </span>
-                  <span className="text-xs font-mono font-bold text-[#7C5CFA]">
+                  <span className="text-xs font-mono font-bold text-accent shrink-0">
                     Sisa {formatCurrencyIDR(timeline.remainingAmount)}
                   </span>
                 </div>
 
                 {/* Timeline Box */}
-                <div className="p-3 rounded-xl bg-surface border border-border text-xs space-y-1">
-                  <div className="flex items-center justify-between text-muted">
-                    <span>Estimasi selesai dengan laju tabungan saat ini:</span>
-                    <span className="font-bold text-foreground font-mono">
+                <div className="p-3 rounded-xl bg-black/2 dark:bg-white/2 border border-border/60 text-xs flex items-center justify-between">
+                  <span className="text-muted text-[11px]">Estimasi selesai:</span>
+                  <div className="text-right font-mono">
+                    <span className="font-extrabold text-foreground block">
                       ~{timeline.daysNeeded} hari lagi
                     </span>
+                    <span className="text-[10px] text-muted block">
+                      ({formatDateRelative(timeline.projectedDate)})
+                    </span>
                   </div>
-                  <p className="text-[11px] text-muted">
-                    Perkiraan tanggal:{" "}
-                    <b className="text-foreground">{formatDateRelative(timeline.projectedDate)}</b>
-                  </p>
                 </div>
 
                 {/* What-If Extra Savings Slider */}
                 <div className="space-y-2 pt-1 border-t border-border/60">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-foreground flex items-center gap-1">
+                    <span className="font-semibold text-foreground flex items-center gap-1.5">
                       <Sliders className="w-3.5 h-3.5 text-[#1F8766]" />
-                      <span>Skenario Hemat Ekstra:</span>
+                      <span>Skenario Tabungan Ekstra</span>
                     </span>
                     <span className="font-mono font-extrabold text-[#1F8766]">
                       +{formatCurrencyIDR(extraDailySavings)}/hari
@@ -401,10 +400,10 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
                   />
 
                   {simulation.daysSaved > 0 && (
-                    <div className="p-2.5 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] text-xs font-bold flex items-center gap-1.5 animate-in fade-in-50">
+                    <div className="p-2.5 rounded-xl bg-[#E0FBF2]/80 dark:bg-[#1E332A]/80 text-[#1F8766] dark:text-[#7FE3C0] text-xs font-semibold flex items-center gap-1.5 animate-in fade-in-50">
                       <Sparkles className="w-4 h-4 shrink-0" />
                       <span>
-                        Targetmu akan tercapai {simulation.daysSaved} hari lebih cepat (~{simulation.newDays} hari total)!
+                        Target tercapai <b>{simulation.daysSaved} hari lebih cepat</b> (~{simulation.newDays} hari total)!
                       </span>
                     </div>
                   )}
@@ -417,14 +416,14 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
             )}
 
             {/* Micro-Investing Simulator */}
-            <div className="p-4 rounded-2xl bg-surface border border-border space-y-3">
+            <div className="p-4 rounded-2xl bg-surface border border-border/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-extrabold text-foreground">
-                    Literasi Komparasi Tabungan Mahasiswa
+                  <h4 className="text-xs font-bold text-foreground">
+                    Simulasi Pertumbuhan Tabungan
                   </h4>
                   <p className="text-[10px] text-muted">
-                    Jika sisihkan {formatCurrencyIDR(extraDailySavings * 30)}/bulan selama {investmentMonths} bulan
+                    Tabungan {formatCurrencyIDR(extraDailySavings * 30)}/bulan selama {investmentMonths} bulan
                   </p>
                 </div>
                 <div className="flex gap-1">
@@ -435,8 +434,8 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
                       onClick={() => setInvestmentMonths(m)}
                       className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all ${
                         investmentMonths === m
-                          ? "bg-[#7C5CFA] text-white border-transparent"
-                          : "border-border text-muted"
+                          ? "bg-accent text-white border-transparent"
+                          : "border-border text-muted hover:text-foreground"
                       }`}
                     >
                       {m} bln
@@ -445,24 +444,24 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                {investmentComparisons.map((v, i) => (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                {investmentComparisons.map((v) => (
                   <div
                     key={v.name}
-                    className="p-3 rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border space-y-1.5 text-xs"
+                    className="p-3 rounded-xl bg-black/2 dark:bg-white/2 border border-border/60 space-y-1 text-xs"
                   >
-                    <span className="text-[10px] font-bold text-muted block leading-tight">
+                    <span className="text-[10px] font-semibold text-muted block leading-tight">
                       {v.name} ({v.annualRate}%)
                     </span>
-                    <div className="font-mono font-black text-sm text-foreground">
+                    <div className="font-mono font-bold text-sm text-foreground">
                       {formatCurrencyIDR(v.finalBalance)}
                     </div>
                     <span
-                      className={`text-[10px] font-bold block ${
+                      className={`text-[10px] font-semibold block ${
                         v.gain > 0 ? "text-[#1F8766] dark:text-[#7FE3C0]" : "text-muted"
                       }`}
                     >
-                      {v.gain > 0 ? `+${formatCurrencyIDR(v.gain)} imbal balik` : "Tanpa pertumbuhan"}
+                      {v.gain > 0 ? `+${formatCurrencyIDR(v.gain)} imbal hasil` : "Stabil"}
                     </span>
                   </div>
                 ))}
@@ -470,18 +469,22 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
             </div>
 
             {/* Auto Round-up Spare Change Box */}
-            <div className="p-4 rounded-2xl bg-surface border border-dashed border-border flex items-center justify-between gap-3 text-xs">
-              <div>
-                <span className="font-bold text-foreground flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-[#FFC978]" />
-                  <span>Potensi Celengan Kembalian (Round-Up)</span>
-                </span>
-                <p className="text-[11px] text-muted mt-0.5">
-                  Membulatkan belanja ke Rp 2.500 terdekat berpotensi mengumpulkan:
-                </p>
+            <div className="p-3.5 rounded-2xl bg-surface border border-border/80 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                  <Coins className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold text-foreground block">
+                    Celengan Pembulatan Belanja (Round-Up)
+                  </span>
+                  <p className="text-[11px] text-muted">
+                    Potensi sisa kembalian receh otomatis
+                  </p>
+                </div>
               </div>
               <div className="text-right shrink-0 font-mono">
-                <span className="font-extrabold text-sm text-[#1F8766] block">
+                <span className="font-bold text-sm text-[#1F8766] block">
                   ~{formatCurrencyIDR(roundUp.in1Year)}/thn
                 </span>
                 <span className="text-[10px] text-muted">tanpa terasa</span>
