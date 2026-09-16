@@ -10,6 +10,8 @@ import { DDayCountdownBanner } from "@/components/academic/DDayCountdownBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Course } from "@/types/academic";
+import { triggerHaptic } from "@/lib/haptics";
+import { toast } from "sonner";
 
 export default function CoursesPage() {
   const { courses, tasks, deleteCourse } = useDataStore();
@@ -32,7 +34,11 @@ export default function CoursesPage() {
     if (!courseToDelete) return;
     try {
       setIsDeleting(true);
+      triggerHaptic("warning");
       await deleteCourse(courseToDelete.id);
+      toast.success(`Mata kuliah "${courseToDelete.name}" berhasil dihapus.`);
+    } catch (err) {
+      toast.error("Gagal menghapus mata kuliah.");
     } finally {
       setIsDeleting(false);
       setCourseToDelete(null);
@@ -180,7 +186,7 @@ export default function CoursesPage() {
         onClose={() => setCourseToDelete(null)}
         onConfirm={handleDeleteCourse}
         title="Hapus Mata Kuliah?"
-        description={`Mata kuliah "${courseToDelete?.name}" (${courseToDelete?.sks || 3} SKS) akan dihapus dari Firestore.`}
+        description={`Mata kuliah "${courseToDelete?.name}" (${courseToDelete?.sks || 3} SKS) dan seluruh tugas di dalamnya akan dihapus permanen.`}
         isSubmitting={isDeleting}
       />
     </div>
