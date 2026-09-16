@@ -106,17 +106,17 @@ export function FlashcardStudyModal({
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted font-semibold">
+        {/* Progress Bar - Sleek & Thin */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[11px] text-muted">
             <span>
               {isFinished ? "Selesai!" : `Kartu ${currentIndex + 1} dari ${cards.length}`}
             </span>
-            <span className="font-mono">{progressPercent}%</span>
+            <span className="font-mono font-semibold">{progressPercent}%</span>
           </div>
-          <div className="w-full h-2 bg-surface border border-border rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#7C5CFA] via-[#B69CFF] to-[#7FE3C0] transition-all duration-300 rounded-full"
+              className="h-full bg-accent transition-all duration-300 rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -124,81 +124,81 @@ export function FlashcardStudyModal({
 
         {!isFinished && currentCard ? (
           <div className="space-y-4 pt-1">
-            {/* 3D Flashcard Box */}
+            {/* 3D Flashcard Box - Zen & Airy */}
             <div
               onClick={handleFlip}
-              className="min-h-[220px] sm:min-h-[260px] p-6 rounded-3xl bg-surface border-2 border-border shadow-soft hover:shadow-md cursor-pointer transition-all flex flex-col justify-between select-none relative group"
+              className="min-h-[220px] sm:min-h-[250px] p-6 rounded-3xl bg-surface border border-border/80 shadow-xs hover:border-border cursor-pointer transition-all flex flex-col justify-between select-none relative group"
             >
               {/* Badge Top */}
-              <div className="flex items-center justify-between text-[11px] font-bold">
-                <span className={`px-2.5 py-0.5 rounded-full ${
+              <div className="flex items-center justify-between text-[11px]">
+                <span className={`px-2.5 py-0.5 rounded-full font-semibold ${
                   isFlipped
                     ? "bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0]"
                     : "bg-[#EDE5FF] dark:bg-[#342A45] text-[#7C5CFA]"
                 }`}>
-                  {isFlipped ? "💡 Jawaban & Konsep Kunci" : "❓ Pertanyaan Ujian"}
+                  {isFlipped ? "Konsep Kunci" : "Pertanyaan"}
                 </span>
-                <span className="text-muted flex items-center gap-1 group-hover:text-foreground transition-colors">
+                <span className="text-muted flex items-center gap-1 text-[10px]">
                   <RotateCw className="w-3 h-3" />
-                  <span>Klik untuk membalik</span>
+                  <span>Klik untuk balik</span>
                 </span>
               </div>
 
               {/* Card Content */}
-              <div className="py-4 my-auto text-center space-y-3">
+              <div className="py-4 my-auto text-center space-y-2.5">
                 <p className="text-base sm:text-lg font-bold text-foreground leading-relaxed">
                   {isFlipped ? currentCard.answer : currentCard.question}
                 </p>
                 {isFlipped && currentCard.explanation && (
-                  <p className="text-xs text-muted leading-relaxed max-w-sm mx-auto bg-black/5 dark:bg-white/5 p-2.5 rounded-xl">
-                    ℹ️ {currentCard.explanation}
+                  <p className="text-xs text-muted leading-relaxed max-w-sm mx-auto bg-black/2 dark:bg-white/2 p-2.5 rounded-xl border border-border/40">
+                    {currentCard.explanation}
                   </p>
                 )}
               </div>
 
               {/* Footer hint */}
-              <div className="text-center text-[10px] text-muted font-medium">
+              <div className="text-center text-[10px] text-muted">
                 {isFlipped
-                  ? "Seberapa mudah kamu mengingat ini tadi?"
-                  : "Coba tebak jawabannya dalam pikiranmu sebelum membalik kartu."}
+                  ? "Pilih tingkat kemudahan ingatan kamu di bawah"
+                  : "Coba jawab dalam hati sebelum membuka kunci"}
               </div>
             </div>
 
             {/* Answer Ratings (Only shown when flipped) */}
             {isFlipped ? (
-              <div className="space-y-1.5 animate-in fade-in-50">
+              <div className="space-y-1 animate-in fade-in-50">
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => handleRating(1)}
-                    className="p-2.5 rounded-2xl bg-[#FFE8EA] dark:bg-[#361E22] text-[#D93D4A] hover:brightness-95 active:scale-95 transition-all text-xs font-bold flex flex-col items-center gap-0.5 shadow-xs"
+                    className="p-2 rounded-xl bg-[#FFE8EA] dark:bg-[#361E22] text-[#D93D4A] hover:brightness-95 active:scale-95 transition-all text-xs font-semibold flex flex-col items-center gap-0.5"
                   >
-                    <span>Lupa 🔄</span>
-                    <span className="text-[10px] opacity-80 font-normal">Besok diulang</span>
+                    <span>Lupa</span>
+                    <span className="text-[10px] opacity-75 font-normal">Besok ulang</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(2)}
-                    className="p-2.5 rounded-2xl bg-[#FFF4E5] dark:bg-[#3A2A1A] text-[#B86B14] dark:text-[#F3A536] hover:brightness-95 active:scale-95 transition-all text-xs font-bold flex flex-col items-center gap-0.5 shadow-xs"
+                    className="p-2 rounded-xl bg-[#FFF4E5] dark:bg-[#3A2A1A] text-[#B86B14] dark:text-[#F3A536] hover:brightness-95 active:scale-95 transition-all text-xs font-semibold flex flex-col items-center gap-0.5"
                   >
-                    <span>Sulit ⏱️</span>
-                    <span className="text-[10px] opacity-80 font-normal">2 hari lagi</span>
+                    <span>Sulit</span>
+                    <span className="text-[10px] opacity-75 font-normal">2 hari lagi</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(3)}
-                    className="p-2.5 rounded-2xl bg-[#E8F4FD] dark:bg-[#1A2D3E] text-[#1E70B8] dark:text-[#6AB3ED] hover:brightness-95 active:scale-95 transition-all text-xs font-bold flex flex-col items-center gap-0.5 shadow-xs"
+                    className="p-2 rounded-xl bg-[#E8F4FD] dark:bg-[#1A2D3E] text-[#1E70B8] dark:text-[#6AB3ED] hover:brightness-95 active:scale-95 transition-all text-xs font-semibold flex flex-col items-center gap-0.5"
                   >
-                    <span>Baik 👍</span>
-                    <span className="text-[10px] opacity-80 font-normal">Ingat jelas</span>
+                    <span>Baik</span>
+                    <span className="text-[10px] opacity-75 font-normal">Ingat jelas</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(4)}
-                    className="p-2.5 rounded-2xl bg-[#E0FBF2] dark:bg-[#1A3328] text-[#1F8766] dark:text-[#7FE3C0] hover:brightness-95 active:scale-95 transition-all text-xs font-bold flex flex-col items-center gap-0.5 shadow-xs"
+                    className="p-2 rounded-xl bg-[#E0FBF2] dark:bg-[#1A3328] text-[#1F8766] dark:text-[#7FE3C0] hover:brightness-95 active:scale-95 transition-all text-xs font-semibold flex flex-col items-center gap-0.5"
                   >
-                    <span>Mudah ⚡</span>
-                    <span className="text-[10px] opacity-80 font-normal">Sangat paham</span>
+                    <span>Mudah</span>
+                    <span className="text-[10px] opacity-75 font-normal">Sangat paham</span>
                   </button>
                 </div>
               </div>
@@ -210,7 +210,7 @@ export function FlashcardStudyModal({
                 onClick={handleFlip}
                 className="w-full rounded-2xl font-bold flex items-center justify-center gap-2 shadow-soft"
               >
-                <span>Lihat Kunci Jawaban</span>
+                <span>Buka Kunci Jawaban</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             )}
