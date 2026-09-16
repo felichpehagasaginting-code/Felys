@@ -42,14 +42,13 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
   const [friendsInput, setFriendsInput] = useState("");
   const [includeMe, setIncludeMe] = useState(true);
 
-  // Itemized Proportional Split State
+  // Itemized Proportional Split State (clean user data)
   const [itemizedList, setItemizedList] = useState<SplitItem[]>([
-    { id: "1", name: "Saya", subtotal: 35000, items: "Nasi Goreng Spesial" },
-    { id: "2", name: "Teman 1", subtotal: 25000, items: "Ayam Geprek" },
+    { id: "1", name: "Saya", subtotal: 0, items: "" },
   ]);
-  const [taxPercent, setTaxPercent] = useState<number>(11);
+  const [taxPercent, setTaxPercent] = useState<number>(0);
   const [servicePercent, setServicePercent] = useState<number>(0);
-  const [myPaymentInfo, setMyPaymentInfo] = useState<string>("BCA / GoPay");
+  const [myPaymentInfo, setMyPaymentInfo] = useState<string>("");
 
   if (!isOpen) return null;
 
