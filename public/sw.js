@@ -1,11 +1,77 @@
-// Service Worker for Felys PWA & Background Web Push Notifications
+// Service Worker for Felys PWA & Background Web Push Notifications & Offline Caching
+
+const CACHE_NAME = 'felys-cache-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/academic',
+  '/finance',
+  '/settings',
+  '/manifest.json',
+  '/favicon.ico',
+];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Cache pre-fill partial failure:', err);
+      });
+    })
+  );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Fetch strategy: Network-first for dynamic navigation, Stale-while-revalidate for static assets
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests and chrome-extension or external analytics
+  if (request.method !== 'GET' || !url.origin.includes(self.location.origin)) {
+    return;
+  }
+
+  // API calls are handled with network only (offline sync via Firestore persistence)
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      try {
+        const networkResponse = await fetch(request);
+        if (networkResponse && networkResponse.status === 200) {
+          cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        // If network fails, serve from cache
+        const cachedResponse = await cache.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Fallback to home page if navigating to a page
+        if (request.mode === 'navigate') {
+          return cache.match('/');
+        }
+        throw error;
+      }
+    })
+  );
 });
 
 self.addEventListener('push', (event) => {
@@ -51,7 +117,6 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Focus if an open tab already matches
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           if (targetUrl && client.url !== self.location.origin + targetUrl) {
@@ -60,7 +125,6 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus();
         }
       }
-      // Otherwise open a new window
       if (self.clients.openWindow) {
         return self.clients.openWindow(targetUrl);
       }
