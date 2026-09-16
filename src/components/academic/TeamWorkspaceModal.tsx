@@ -179,20 +179,20 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
           </button>
         </div>
 
-        {/* Progress & Accountability Bar */}
-        <div className="p-3.5 rounded-2xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border space-y-2">
+        {/* Progress Bar - Minimal & Clean */}
+        <div className="p-3 rounded-2xl bg-surface border border-border/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-foreground flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-[#7C5CFA]" />
-              <span>Progres Tim: {progress.completedTasks}/{progress.totalTasks} Tugas Tuntas</span>
+            <span className="font-semibold text-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              <span>Progres Tim: {progress.completedTasks}/{progress.totalTasks} Selesai</span>
             </span>
-            <span className="font-mono font-extrabold text-[#7C5CFA]">
+            <span className="font-mono font-bold text-accent">
               {progress.percentage}%
             </span>
           </div>
-          <div className="w-full h-2 bg-surface rounded-full overflow-hidden border border-border/80">
+          <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#7C5CFA] via-[#B69CFF] to-[#7FE3C0] transition-all duration-300 rounded-full"
+              className="h-full bg-accent transition-all duration-300 rounded-full"
               style={{ width: `${progress.percentage}%` }}
             />
           </div>
@@ -203,8 +203,8 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
           options={[
             {
               id: "kanban",
-              label: `Papan Kanban (${workspace.tasks.length})`,
-              activeColor: "bg-[#7C5CFA]",
+              label: `Kanban (${workspace.tasks.length})`,
+              activeColor: "bg-accent",
               activeTextColor: "text-white",
             },
             {
@@ -230,78 +230,77 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
         />
 
         {activeTab === "kanban" ? (
-          /* KANBAN BOARD */
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          /* KANBAN BOARD - MINIMAL & SPACIOUS */
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
             {kanbanColumns.map((col) => {
               const colTasks = workspace.tasks.filter((t) => t.status === col.id);
               return (
                 <div
                   key={col.id}
-                  className="p-3 rounded-2xl bg-surface border border-border flex flex-col space-y-2.5 min-h-[220px]"
+                  className="p-3 rounded-2xl bg-black/2 dark:bg-white/2 border border-border/70 flex flex-col space-y-2 min-h-[200px]"
                 >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-border/60">
+                  <div className="flex items-center justify-between pb-1 border-b border-border/50">
                     <span className="text-xs font-bold text-foreground">
                       {col.label}
                     </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-muted">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-muted">
                       {colTasks.length}
                     </span>
                   </div>
 
                   <div className="space-y-2 flex-1">
                     {colTasks.length === 0 ? (
-                      <p className="text-[11px] text-muted text-center py-6 italic opacity-70">
-                        Kosong
+                      <p className="text-[11px] text-muted text-center py-6 opacity-60">
+                        Belum ada tugas
                       </p>
                     ) : (
                       colTasks.map((task) => (
                         <div
                           key={task.id}
-                          className="p-2.5 rounded-xl bg-[#FAF9FC] dark:bg-[#201D28] border border-border shadow-xs space-y-1.5 text-xs hover:border-[#7C5CFA]/40 transition-all"
+                          className="p-2.5 rounded-xl bg-surface border border-border/80 shadow-xs space-y-1.5 text-xs hover:border-accent/50 transition-all"
                         >
-                          <div className="font-bold text-foreground leading-snug">
+                          <div className="font-semibold text-foreground leading-snug">
                             {task.title}
                           </div>
 
                           <div className="flex items-center justify-between text-[10px] text-muted pt-1 border-t border-border/40">
-                            <span className="font-semibold text-[#7C5CFA] bg-[#EDE5FF] dark:bg-[#342A45] px-1.5 py-0.5 rounded-md">
-                              👤 {task.assigneeName}
+                            <span className="font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">
+                              {task.assigneeName}
                             </span>
                             {task.milestone && (
-                              <span className="opacity-80 font-mono">
+                              <span className="opacity-75 font-mono text-[9px]">
                                 {task.milestone}
                               </span>
                             )}
                           </div>
 
                           {/* Quick Status Mover Buttons */}
-                          <div className="flex items-center justify-end gap-1 pt-1">
+                          <div className="flex items-center justify-end gap-1 pt-0.5">
                             {task.status !== "todo" && (
                               <button
                                 type="button"
                                 onClick={() => handleTaskStatusChange(task.id, "todo")}
-                                className="text-[9px] px-1.5 py-0.5 rounded bg-surface hover:bg-black/5 text-muted"
-                                title="Kembalikan ke Todo"
+                                className="text-[9px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 hover:bg-black/10 text-muted"
                               >
-                                ← Antre
+                                ← Todo
                               </button>
                             )}
                             {task.status !== "in_progress" && task.status !== "done" && (
                               <button
                                 type="button"
                                 onClick={() => handleTaskStatusChange(task.id, "in_progress")}
-                                className="text-[9px] px-1.5 py-0.5 rounded bg-[#EDE5FF] text-[#7C5CFA] font-bold"
+                                className="text-[9px] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-semibold"
                               >
-                                Mulai →
+                                Kerjakan →
                               </button>
                             )}
                             {task.status !== "done" && (
                               <button
                                 type="button"
                                 onClick={() => handleTaskStatusChange(task.id, "done")}
-                                className="text-[9px] px-1.5 py-0.5 rounded bg-[#E0FBF2] text-[#1F8766] font-bold"
+                                className="text-[9px] px-1.5 py-0.5 rounded bg-[#E0FBF2] dark:bg-[#1A3329] text-[#1F8766] dark:text-[#7FE3C0] font-semibold"
                               >
-                                Beres ✓
+                                Selesai ✓
                               </button>
                             )}
                           </div>
