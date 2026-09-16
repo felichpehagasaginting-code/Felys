@@ -177,7 +177,7 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                     </p>
                     {user ? (
                       <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#1F8766] dark:text-[#7FE3C0]">
-                        <ShieldCheck className="w-3 h-3" /> Cloud Connected
+                        <ShieldCheck className="w-3 h-3" /> Terhubung
                       </span>
                     ) : (
                       <span className="text-[9px] text-muted">Mode Demo Lokal</span>
