@@ -1,12 +1,26 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
+import { RateLimiterService } from "@/server/services/rate-limiter.service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const clientId = RateLimiterService.getClientIdentifier(req);
+    const limit = await RateLimiterService.checkRateLimit(clientId, "ai_flashcards", {
+      windowMs: 60_000,
+      maxRequests: 6,
+    });
+
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: `Terlalu banyak permintaan generate flashcard. Tunggu ${limit.resetInSeconds} detik lagi.` },
+        { status: 429, headers: { "Retry-After": String(limit.resetInSeconds) } }
+      );
+    }
+
     const { text, topic } = await req.json();
 
     if (!text || text.trim().length < 20) {

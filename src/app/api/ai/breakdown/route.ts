@@ -1,11 +1,33 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { RateLimiterService } from "@/server/services/rate-limiter.service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    const clientId = RateLimiterService.getClientIdentifier(req);
+    const limit = await RateLimiterService.checkRateLimit(clientId, "ai_breakdown", {
+      windowMs: 60_000,
+      maxRequests: 6,
+    });
+
+    if (!limit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: `Terlalu banyak permintaan breakdown tugas. Mohon tunggu ${limit.resetInSeconds} detik lagi.`,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(limit.resetInSeconds),
+          },
+        }
+      );
+    }
+
     const { taskTitle, courseName, deadline, estimatedHours } = await req.json();
 
     if (!taskTitle || typeof taskTitle !== "string" || !taskTitle.trim()) {

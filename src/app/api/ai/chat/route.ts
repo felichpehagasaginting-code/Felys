@@ -2,6 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { getVerifiedUid } from "@/lib/firebase/auth-helpers";
 import { checkAiQuota, truncateDocText } from "@/server/services/ai-usage.service";
+import { RateLimiterService } from "@/server/services/rate-limiter.service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,6 +11,29 @@ export async function POST(req: Request) {
   try {
     // P2+P4: identitas dari session terverifikasi, kuota persisten di Firestore
     const uid = await getVerifiedUid(req);
+
+    // Burst Protection: maksimal 10 pesan / menit per user/IP
+    const clientId = RateLimiterService.getClientIdentifier(req, uid);
+    const burstLimit = await RateLimiterService.checkRateLimit(clientId, "ai_chat", {
+      windowMs: 60_000,
+      maxRequests: 10,
+    });
+
+    if (!burstLimit.allowed) {
+      return new Response(
+        `Fio lagi istirahat sejenak nih ✨ Terlalu banyak pesan terkirim dalam 1 menit. Silakan tunggu ${burstLimit.resetInSeconds} detik lagi ya!`,
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Retry-After": String(burstLimit.resetInSeconds),
+            "X-RateLimit-Limit": String(burstLimit.totalLimit),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": String(burstLimit.resetInSeconds),
+          },
+        }
+      );
+    }
 
     let remaining = 50;
     try {
