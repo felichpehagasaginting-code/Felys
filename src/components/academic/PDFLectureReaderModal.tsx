@@ -136,6 +136,15 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
       if (res.ok) {
         const reply = await res.text();
         setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      } else if (res.status === 429) {
+        const reply = await res.text();
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: reply || "Fio lagi istirahat sejenak nih ✨ Tunggu 1 menit lagi ya!",
+          },
+        ]);
       } else {
         setChatMessages((prev) => [
           ...prev,

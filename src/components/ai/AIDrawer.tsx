@@ -190,9 +190,10 @@ export function AIDrawer() {
       });
 
       if (res.status === 429) {
+        const rateLimitMsg = await res.text();
         addMessage({
           role: "assistant",
-          content: "Hai! Kamu sudah mencapai batas 50 pertanyaan AI hari ini. Coba lagi besok ya! ✨",
+          content: rateLimitMsg || "Fio lagi istirahat sejenak nih ✨ Coba lagi sebentar ya!",
         });
         return;
       }
