@@ -39,3 +39,11 @@ next-env.d.ts
 # scratch & temp
 scratch/
 *.tmp
+
+# playwright (drive F custom path)
+.playwright-browsers/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
