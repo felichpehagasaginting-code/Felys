@@ -35,6 +35,7 @@ import { triggerHaptic } from "@/lib/haptics";
 import { PushNotificationClient } from "@/lib/push-notification-client";
 import { GoogleCalendarClient, GoogleCalendarIntegrationInfo } from "@/lib/google-calendar-client";
 import { toast } from "sonner";
+import { SystemHealthCard } from "@/components/settings/SystemHealthCard";
 
 export default function SettingsPage() {
   const { activeMode, setActiveMode } = useModeStore();
@@ -723,6 +724,9 @@ export default function SettingsPage() {
             agar kehidupan kuliah kamu tetap terkendali dan tenang.
           </p>
         </div>
+
+        {/* System Diagnostics & Telemetry */}
+        <SystemHealthCard />
       </div>
     </div>
   );
