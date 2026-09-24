@@ -2,7 +2,23 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, ArrowUp, Bot, Trash2, Zap, Wallet, ListTodo, PiggyBank, Clock } from "lucide-react";
+import {
+  Sparkles,
+  X,
+  ArrowUp,
+  Bot,
+  Trash2,
+  Zap,
+  Wallet,
+  ListTodo,
+  PiggyBank,
+  Clock,
+  Maximize2,
+  Minimize2,
+  ChevronDown,
+  Activity,
+  ShieldCheck,
+} from "lucide-react";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -11,6 +27,7 @@ import { playPop, playWhoosh } from "@/lib/sounds";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { differenceInDays } from "date-fns";
 import { FormattedMessage } from "./FormattedMessage";
+import { ContextSummaryPopover } from "./ContextSummaryPopover";
 import {
   detectSkillIntent,
   callFioSkill,
@@ -43,10 +60,105 @@ export function AIDrawer() {
   } = useDataStore();
   const [input, setInput] = useState("");
 
+  // Mode lebar (wide) untuk membaca lebih lega di layar besar
+  const [isWideMode, setIsWideMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("felys_ai_wide_mode") === "true";
+    }
+    return false;
+  });
+
+  // State popover ringkasan data sesi aktif
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  // Multi-step thinking rotation
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const thinkingTexts = [
+    "Membaca data tugas & saldo akun...",
+    "Menganalisis skenario optimal...",
+    "Menyusun strategi terbaik untukmu...",
+  ];
+
+  useEffect(() => {
+    if (!isLoading) {
+      setThinkingStep(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setThinkingStep((prev) => (prev + 1) % thinkingTexts.length);
+    }, 1250);
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
   // Konteks live untuk header + kartu skill (dihitung saat drawer dibuka)
   const activeTasks = tasks.filter((t) => t.status !== "done");
   const liveSummary = getMonthlyBudgetSummary();
   const isFresh = messages.length <= 1;
+
+  // Hitung sisa hari D-Day jika ada
+  let ddayDaysLeft: number | null = null;
+  if (ddayEvent?.targetDate) {
+    try {
+      const target = new Date(ddayEvent.targetDate);
+      target.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      ddayDaysLeft = differenceInDays(target, today);
+    } catch {}
+  }
+
+  // Dynamic Contextual Next-Action Chips (Prioritas 4)
+  const getContextualPrompts = (): string[] => {
+    if (messages.length <= 1) {
+      return [
+        "Boleh aku jajan 30000 hari ini?",
+        "Buatkan rencana cicil tugas",
+        "Simulasi hemat 50% jajan",
+        "Tips hemat makan anak kos",
+      ];
+    }
+
+    const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant");
+    const text = lastAssistantMsg?.content.toLowerCase() || "";
+
+    if (
+      text.includes("jajan") ||
+      text.includes("hemat") ||
+      text.includes("budget") ||
+      text.includes("pengeluaran") ||
+      text.includes("saldo")
+    ) {
+      return [
+        "⚡ Pasang Limit Jajan",
+        "📊 Coba simulasi hemat 30%",
+        "🎯 Simpan selisih ke Celengan",
+        "☕ Tips hemat makan & ngopi",
+      ];
+    }
+
+    if (
+      text.includes("tugas") ||
+      text.includes("deadline") ||
+      text.includes("urgent") ||
+      text.includes("kuliah")
+    ) {
+      return [
+        "⏱️ Mulai Pomodoro 25 menit",
+        "📅 Rencana cicilan per hari",
+        "📋 Urutkan dari yang termudah",
+        "💡 Tips fokus anti-distraksi",
+      ];
+    }
+
+    return [
+      "Boleh aku jajan 30000 hari ini?",
+      "Buatkan rencana cicil tugas",
+      "Simulasi hemat 50% jajan",
+      "Rangkum kondisi minggu ini",
+    ];
+  };
+
+  const contextualPrompts = getContextualPrompts();
 
   const skillCards = [
     {
@@ -104,13 +216,6 @@ export function AIDrawer() {
       handleSendMessage(promptToSend);
     }
   }, [isDrawerOpen, pendingPrompt]);
-
-  const quickPrompts = [
-    "Boleh aku jajan 30000 hari ini?",
-    "Buatkan rencana cicil tugas",
-    "Simulasi hemat 50% jajan",
-    "Tips hemat makan anak kos",
-  ];
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = textToSend || input;
@@ -368,46 +473,81 @@ export function AIDrawer() {
           {/* Minimalist Apple Intelligence Drawer */}
           <motion.div
             initial={{ x: "100%" }}
-            animate={{ x: 0 }}
+            animate={{
+              x: 0,
+              width: typeof window !== "undefined" && window.innerWidth < 640
+                ? "100%"
+                : isWideMode
+                ? 640
+                : 440,
+            }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 320 }}
-            className="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[440px] bg-surface border-l border-border shadow-2xl flex flex-col overflow-hidden"
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            className="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[440px] bg-[#FAF9FC]/92 dark:bg-[#16151B]/92 backdrop-blur-2xl border-l border-border/80 shadow-2xl flex flex-col overflow-hidden transition-[width] duration-300"
           >
-            {/* Header with Breathing AI Orb */}
-            <div className="p-4 sm:p-5 border-b border-border/80 flex items-center justify-between bg-surface/90 backdrop-blur-lg">
-              <div className="flex items-center gap-3">
+            {/* Ambient Radial Top Glow */}
+            <div className="absolute top-0 right-0 left-0 h-44 bg-gradient-to-b from-[#7C5CFA]/15 via-[#7FE3C0]/8 to-transparent blur-3xl pointer-events-none" />
+
+            {/* Header with Dual Live Badge & Maximize/Minimize Action */}
+            <div className="relative p-3.5 sm:p-4 border-b border-border/80 flex items-center justify-between bg-surface/80 dark:bg-[#16151B]/80 backdrop-blur-xl z-20">
+              <div className="flex items-center gap-2.5 min-w-0">
                 {/* Glowing AI Halo Avatar */}
-                <div className="relative flex items-center justify-center">
+                <div className="relative flex items-center justify-center shrink-0">
                   <span className="animate-ping absolute inline-flex h-7 w-7 rounded-full bg-[#7C5CFA]/30" />
-                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#7C5CFA] via-[#B69CFF] to-[#7FE3C0] flex items-center justify-center text-white shadow-soft relative z-10">
+                  <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-[#7C5CFA] via-[#B69CFF] to-[#7FE3C0] flex items-center justify-center text-white shadow-soft relative z-10">
                     <Sparkles className="w-4 h-4" />
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h3 className="text-sm font-extrabold text-foreground tracking-tight">
+                    <h3 className="text-xs sm:text-sm font-extrabold text-foreground tracking-tight truncate">
                       Fio Assistant
                     </h3>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#7FE3C0] inline-block" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7FE3C0] inline-block shrink-0" />
                   </div>
-                  <p className="text-[11px] text-muted">
-                    {activeTasks.length > 0 ? (
-                      <>
-                        {activeTasks.length} tugas aktif • sisa{" "}
-                        <span className="font-bold text-foreground/80">
-                          {formatCurrencyIDR(liveSummary.remaining)}
-                        </span>
-                      </>
-                    ) : (
-                      "Kecerdasan Kontekstual Mahasiswa"
-                    )}
-                  </p>
+
+                  {/* Interactive Dual Live Badge (Prioritas 3) */}
+                  <button
+                    onClick={() => {
+                      triggerHaptic("light");
+                      setIsPopoverOpen(!isPopoverOpen);
+                    }}
+                    className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted hover:text-foreground transition-all group cursor-pointer"
+                    title="Klik untuk melihat ringkasan data aktif"
+                  >
+                    <span className="font-semibold text-foreground/85 truncate max-w-[150px] sm:max-w-[220px]">
+                      {activeTasks.length} tugas • {liveSummary.isDeficit ? "Defisit" : "Sisa"}{" "}
+                      {formatCurrencyIDR(Math.abs(liveSummary.remaining))}
+                    </span>
+                    <ChevronDown
+                      className={`w-3 h-3 text-muted group-hover:text-foreground transition-transform duration-200 shrink-0 ${
+                        isPopoverOpen ? "rotate-180 text-[#7C5CFA]" : ""
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
 
-              {/* Minimal Action Buttons */}
-              <div className="flex items-center gap-1">
+              {/* Action Buttons: Wide Toggle, Clear Messages, Close */}
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Wide Mode Toggle (Prioritas 6) */}
+                <button
+                  onClick={() => {
+                    triggerHaptic("light");
+                    const next = !isWideMode;
+                    setIsWideMode(next);
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("felys_ai_wide_mode", String(next));
+                    }
+                  }}
+                  className="hidden sm:flex p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                  title={isWideMode ? "Kecilkan ke mode standar (440px)" : "Perlebar ke mode wide (640px)"}
+                  aria-label="Toggle lebar drawer"
+                >
+                  {isWideMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+
                 {!isFresh && (
                   <button
                     onClick={() => {
@@ -415,16 +555,17 @@ export function AIDrawer() {
                       clearMessages();
                     }}
                     aria-label="Bersihkan percakapan"
-                    className="p-2 rounded-xl text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] transition-all"
+                    className="p-1.5 rounded-xl text-muted hover:text-[#FF7A85] hover:bg-[#FFE8EA] dark:hover:bg-[#3D1E22] transition-all"
                     title="Bersihkan percakapan"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
+
                 <button
                   onClick={handleClose}
                   aria-label="Tutup asisten Fio"
-                  className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                  className="p-1.5 rounded-xl text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
                   title="Tutup"
                 >
                   <X className="w-4 h-4" />
@@ -432,8 +573,21 @@ export function AIDrawer() {
               </div>
             </div>
 
+            {/* Interactive Context Popover (Prioritas 3) */}
+            <ContextSummaryPopover
+              isOpen={isPopoverOpen}
+              onClose={() => setIsPopoverOpen(false)}
+              activeTasksCount={activeTasks.length}
+              totalNetWorth={getTotalNetWorth ? getTotalNetWorth() : 0}
+              remainingBudget={liveSummary.remaining}
+              isDeficit={liveSummary.isDeficit}
+              ddayTitle={ddayEvent?.title}
+              ddayDaysLeft={ddayDaysLeft}
+              coursesCount={courses.length}
+            />
+
             {/* Message Conversation Stream */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 relative z-10">
               {isFresh && (
                 /* Welcome Screen + Skill Shortcut Cards */
                 <div className="flex flex-col items-center text-center pt-2 pb-1 space-y-3">
@@ -494,7 +648,7 @@ export function AIDrawer() {
                       : "border-[#FFA8B0]/70"
                     : msg.skill
                       ? "border-[#B69CFF]/50"
-                      : "border-border";
+                      : "border-border/80";
                 return (
                   <motion.div
                     key={msg.id}
@@ -515,8 +669,8 @@ export function AIDrawer() {
                       <div
                         className={`rounded-3xl p-3.5 sm:p-4 text-xs leading-relaxed transition-all ${
                           msg.role === "user"
-                            ? "bg-[#7C5CFA] text-white rounded-br-xs shadow-soft"
-                            : `bg-[#FAF9FC] dark:bg-[#23211F] text-foreground rounded-bl-xs border ${verdictBorder} shadow-xs`
+                            ? "bg-gradient-to-tr from-[#7C5CFA] via-[#8B6BFA] to-[#A085FA] text-white rounded-br-xs shadow-soft font-medium"
+                            : `bg-surface/90 dark:bg-[#1E1C23]/90 text-foreground rounded-bl-xs border ${verdictBorder} shadow-soft`
                         }`}
                       >
                         {skillLabel && (
@@ -546,31 +700,32 @@ export function AIDrawer() {
                 );
               })}
 
-              {/* Minimalist Typing Pulse */}
+              {/* Multi-step Thinking Shimmer Loader (Prioritas 5) */}
               {isLoading && (
                 <div className="flex gap-2.5 items-center">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#7C5CFA] to-[#7FE3C0] flex items-center justify-center text-white shrink-0 shadow-xs">
-                    <Sparkles className="w-3 h-3 animate-spin" />
+                  <div className="w-7 h-7 rounded-2xl bg-gradient-to-tr from-[#7C5CFA] via-[#B69CFF] to-[#7FE3C0] flex items-center justify-center text-white shrink-0 shadow-xs relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7C5CFA]/40" />
+                    <Sparkles className="w-3.5 h-3.5 relative z-10" />
                   </div>
-                  <div className="bg-[#FAF9FC] dark:bg-[#23211F] border border-border rounded-2xl px-3.5 py-2.5 text-xs text-muted flex items-center gap-1 shadow-xs">
-                    <span>Fio sedang merangkai solusi</span>
-                    <span className="animate-bounce">.</span>
-                    <span className="animate-bounce delay-100">.</span>
-                    <span className="animate-bounce delay-200">.</span>
+                  <div className="bg-surface/90 dark:bg-[#201E24]/90 border border-[#7C5CFA]/30 rounded-2xl px-4 py-2.5 text-xs text-foreground flex items-center gap-2.5 shadow-soft overflow-hidden">
+                    <span className="w-2 h-2 rounded-full bg-[#7C5CFA] animate-ping shrink-0" />
+                    <span className="font-semibold text-foreground/90 transition-all duration-300">
+                      {thinkingTexts[thinkingStep]}
+                    </span>
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Suggestion Chips (Minimalist Pills) */}
-            <div className="px-4 py-2.5 border-t border-border/50 overflow-x-auto flex gap-1.5 no-scrollbar bg-surface/50">
-              {quickPrompts.map((prompt, idx) => (
+            {/* Dynamic Contextual Next-Action Chips (Prioritas 4) */}
+            <div className="px-3.5 py-2.5 border-t border-border/50 overflow-x-auto flex gap-1.5 no-scrollbar bg-surface/50 dark:bg-[#16151B]/50 backdrop-blur-md">
+              {contextualPrompts.map((prompt, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSendMessage(prompt)}
+                  onClick={() => handleSendMessage(prompt.replace(/^[^\w\s]+\s?/, ""))}
                   aria-label={`Kirim saran: ${prompt}`}
-                  className="shrink-0 px-3 py-1.5 rounded-full bg-[#FAF9FC] dark:bg-[#23211F] border border-border text-muted hover:text-[#7C5CFA] dark:hover:text-[#B69CFF] hover:border-[#7C5CFA]/40 text-[11px] font-medium transition-all active:scale-95 shadow-2xs"
+                  className="shrink-0 px-3 py-1.5 rounded-full bg-surface dark:bg-[#201E24] border border-border/80 text-muted hover:text-[#7C5CFA] dark:hover:text-[#B69CFF] hover:border-[#7C5CFA]/40 text-[11px] font-semibold transition-all active:scale-95 shadow-2xs"
                 >
                   {prompt}
                 </button>
@@ -578,20 +733,20 @@ export function AIDrawer() {
             </div>
 
             {/* Minimalist Floating Input Bar */}
-            <div className="p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-border bg-surface">
+            <div className="p-3.5 sm:p-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-border bg-surface/90 dark:bg-[#16151B]/90 backdrop-blur-xl">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-center gap-2 bg-[#FAF9FC] dark:bg-[#23211F] border border-border rounded-full px-4 py-1.5 focus-within:ring-2 focus-within:ring-[#7C5CFA]/30 focus-within:border-[#7C5CFA] transition-all shadow-xs"
+                className="flex items-center gap-2 bg-[#FAF9FC] dark:bg-[#201E24] border border-border rounded-full px-4 py-1.5 focus-within:ring-2 focus-within:ring-[#7C5CFA]/30 focus-within:border-[#7C5CFA] transition-all shadow-xs"
               >
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ketik pertanyaan untuk Fio..."
+                  placeholder="Tanya Fio tentang tugas, pengeluaran, atau strategi kuliah..."
                   aria-label="Ketik pertanyaan untuk Fio"
                   className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted focus:outline-none py-1.5"
                 />

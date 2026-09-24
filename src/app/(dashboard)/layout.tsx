@@ -43,6 +43,18 @@ export default function DashboardLayout({
   // P6-B: FAB sembunyi saat scroll ke bawah, muncul saat scroll ke atas
   const [isFabVisible, setIsFabVisible] = useState(true);
 
+  // Listen to in-chat action dispatches from Fio (e.g. [Tambah Tugas], [Catat Transaksi])
+  useEffect(() => {
+    const handleOpenTask = () => setIsTaskModalOpen(true);
+    const handleOpenFinance = () => setIsFinanceModalOpen(true);
+    window.addEventListener("felys-open-task-modal", handleOpenTask);
+    window.addEventListener("felys-open-finance-modal", handleOpenFinance);
+    return () => {
+      window.removeEventListener("felys-open-task-modal", handleOpenTask);
+      window.removeEventListener("felys-open-finance-modal", handleOpenFinance);
+    };
+  }, []);
+
   // Synchronize with real Firestore handled globally by useAuthStore with automatic unsubscription on logout
 
   // P6-B: auto-hide FAB (pakai event Lenis bila ada, fallback scroll native)
