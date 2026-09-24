@@ -207,21 +207,9 @@ export class FirestoreService {
         }
       }
 
-      // 2. Sync courses
-      if (localData.courses && localData.courses.length > 0 && (await isRemoteEmpty("courses"))) {
-        for (const course of localData.courses) {
-          const ref = doc(db, "users", userId, "courses", course.id);
-          await setDoc(ref, cleanFirestoreData(course), { merge: true });
-        }
-      }
-
-      // 3. Sync tasks
-      if (localData.tasks && localData.tasks.length > 0 && (await isRemoteEmpty("tasks"))) {
-        for (const task of localData.tasks) {
-          const ref = doc(db, "users", userId, "tasks", task.id);
-          await setDoc(ref, cleanFirestoreData(task), { merge: true });
-        }
-      }
+      // 2. Sync courses & tasks ONLY if guest data needs initial onboarding migration, not on routine startup
+      // Once a user is authenticated, Firestore is the authoritative source of truth.
+      // Do not re-upload empty/cached local courses/tasks to avoid resurrecting deleted records.
 
       // 4. Sync transactions
       if (localData.transactions && localData.transactions.length > 0 && (await isRemoteEmpty("transactions"))) {

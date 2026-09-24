@@ -238,8 +238,6 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     FirestoreService.syncLocalDataToFirestore(userId, {
       accounts: localAccounts,
-      courses: localCourses,
-      tasks: localTasks,
       transactions: localTransactions,
       ddayEvent: localDDay,
       emergencyFund: localEmergency,
@@ -411,8 +409,13 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   deleteCourse: async (id) => {
     const userId = getCurrentUserId();
-    const nextCourses = get().courses.filter((c) => c.id !== id);
-    const nextTasks = get().tasks.filter((t) => t.courseId !== id);
+    const prevCourses = get().courses;
+    const prevTasks = get().tasks;
+
+    const nextCourses = prevCourses.filter((c) => c.id !== id);
+    const nextTasks = prevTasks.filter((t) => t.courseId !== id);
+
+    // Optimistic local update
     set({
       courses: nextCourses,
       tasks: nextTasks,
@@ -424,7 +427,15 @@ export const useDataStore = create<DataState>((set, get) => ({
       try {
         await FirestoreService.deleteCourse(userId, id);
       } catch (err: any) {
-        console.warn("Firestore deleteCourse sync warning:", err?.message || err);
+        // Rollback state if server deletion fails
+        set({
+          courses: prevCourses,
+          tasks: prevTasks,
+        });
+        saveLocal("felys_courses", prevCourses);
+        saveLocal("felys_tasks", prevTasks);
+        console.error("Firestore deleteCourse sync error:", err?.message || err);
+        throw err;
       }
     }
   },
