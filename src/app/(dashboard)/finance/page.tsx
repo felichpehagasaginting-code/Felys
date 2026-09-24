@@ -23,7 +23,7 @@ import { formatCurrencyIDR, cn } from "@/lib/utils";
 import { Target, Shield } from "lucide-react";
 
 export default function FinanceTransactionsPage() {
-  const { transactions, categories, getMonthlyBudgetSummary, emergencyFund, isLoaded } = useDataStore();
+  const { transactions, categories, getMonthlyBudgetSummary, emergencyFund, isLoaded, isFirestoreReady } = useDataStore();
 
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | "expense" | "income">("all");
@@ -34,12 +34,13 @@ export default function FinanceTransactionsPage() {
   const [isSplitBillOpen, setIsSplitBillOpen] = useState(false);
   const [isSavingsGoalOpen, setIsSavingsGoalOpen] = useState(false);
   const [isEmergencyFundOpen, setIsEmergencyFundOpen] = useState(false);
-  const { user } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuthStore();
 
-  // Fresh-boot: sync belum tiba + cache kosong → skeleton hanya untuk user login
-  if (user && !isLoaded && transactions.length === 0) {
+  // Fresh-boot / Firestore sync barrier
+  const isSyncing = authLoading || (!!user && !isFirestoreReady);
+  if (isSyncing) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in-50 duration-300">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <MetricCardSkeleton />
           <MetricCardSkeleton />

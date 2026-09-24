@@ -132,3 +132,5 @@ export function ListSkeleton({ rows = 5, variant = "task" }: { rows?: number; va
     </div>
   );
 }
+
+export { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";

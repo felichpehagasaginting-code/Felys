@@ -61,6 +61,8 @@ interface DataState {
   scratchpadText: string;
   insights: AIInsight[];
   isLoaded: boolean;
+  isFirestoreReady: boolean;
+  isFirestoreSyncing: boolean;
   /** P3: wizard onboarding selesai (device-level + Firestore). */
   hasOnboarded: boolean;
   completeOnboarding: (name?: string) => Promise<void>;
@@ -158,6 +160,8 @@ export const useDataStore = create<DataState>((set, get) => ({
   scratchpadText: loadLocal<string>("felys_scratchpad_content", ""),
   insights: [],
   isLoaded: false,
+  isFirestoreReady: false,
+  isFirestoreSyncing: false,
   hasOnboarded: loadLocal<boolean>("felys_onboarded", false),
 
   completeOnboarding: async (name) => {
@@ -207,6 +211,8 @@ export const useDataStore = create<DataState>((set, get) => ({
       scratchpadText: "",
       insights: [],
       isLoaded: true,
+      isFirestoreReady: true,
+      isFirestoreSyncing: false,
       hasOnboarded: false,
       ddayEvent: { title: "Target Ujian / Sidang", targetDate: "" },
     });
@@ -241,6 +247,27 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   // Real-time Firestore synchronizer
   initFirestoreSync: (userId: string) => {
+    // 0. Tandai sinkronisasi awal sedang berlangsung & barrier aktif
+    set({ isFirestoreSyncing: true, isFirestoreReady: false, isLoaded: false });
+
+    const REQUIRED_CHANNELS = 10;
+    const syncedChannels = new Set<string>();
+
+    const markChannelReady = (channel: string) => {
+      syncedChannels.add(channel);
+      if (syncedChannels.size >= REQUIRED_CHANNELS && !get().isFirestoreReady) {
+        set({ isFirestoreReady: true, isFirestoreSyncing: false, isLoaded: true });
+      }
+    };
+
+    // Safety timeout: jika dalam 3.5 detik belum semua snapshot tiba (misal offline/koneksi lambat),
+    // lepaskan barrier agar user tetap bisa berinteraksi dengan data lokal/cache tanpa stuck.
+    const safetyTimer = setTimeout(() => {
+      if (!get().isFirestoreReady) {
+        set({ isFirestoreReady: true, isFirestoreSyncing: false, isLoaded: true });
+      }
+    }, 3500);
+
     // 1. Ensure categories are seeded in Firestore if brand new user
     FirestoreService.seedDefaultCategoriesIfEmpty(userId);
 
@@ -297,6 +324,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         set({ hasOnboarded: data.hasOnboarded });
         saveLocal("felys_onboarded", data.hasOnboarded);
       }
+      markChannelReady("profile");
     });
 
     // 4. Subscribe to real-time collections
@@ -304,12 +332,14 @@ export const useDataStore = create<DataState>((set, get) => ({
       set({ courses });
       saveLocal("felys_courses", courses);
       get().refreshInsights();
+      markChannelReady("courses");
     });
 
     const unsubTasks = FirestoreService.subscribeTasks(userId, (tasks) => {
       set({ tasks });
       saveLocal("felys_tasks", tasks);
       get().refreshInsights();
+      markChannelReady("tasks");
     });
 
     const unsubAccounts = FirestoreService.subscribeAccounts(userId, (accounts) => {
@@ -326,42 +356,50 @@ export const useDataStore = create<DataState>((set, get) => ({
           saveLocal("felys_accounts", []);
         }
       }
+      markChannelReady("accounts");
     });
 
     const unsubCategories = FirestoreService.subscribeCategories(userId, (categories) => {
       set({ categories });
       saveLocal("felys_categories", categories);
       get().refreshInsights();
+      markChannelReady("categories");
     });
 
     const unsubTransactions = FirestoreService.subscribeTransactions(userId, (transactions) => {
       set({ transactions });
       saveLocal("felys_transactions", transactions);
       get().refreshInsights();
+      markChannelReady("transactions");
     });
 
     const unsubBudgets = FirestoreService.subscribeBudgets(userId, (budgetLimits) => {
-      set({ budgetLimits, isLoaded: true });
+      set({ budgetLimits });
       saveLocal("felys_budgets", budgetLimits);
       get().refreshInsights();
+      markChannelReady("budgets");
     });
 
     const unsubSavings = FirestoreService.subscribeSavingsGoals(userId, (savingsGoals) => {
       set({ savingsGoals });
       saveLocal("felys_savings", savingsGoals);
+      markChannelReady("savings");
     });
 
     const unsubBills = FirestoreService.subscribeRecurringBills(userId, (recurringBills) => {
       set({ recurringBills });
       saveLocal("felys_bills", recurringBills);
+      markChannelReady("bills");
     });
 
     const unsubDebts = FirestoreService.subscribeDebts(userId, (debts) => {
       set({ debts });
       saveLocal("felys_debts", debts);
+      markChannelReady("debts");
     });
 
     return () => {
+      clearTimeout(safetyTimer);
       unsubProfile();
       unsubCourses();
       unsubTasks();

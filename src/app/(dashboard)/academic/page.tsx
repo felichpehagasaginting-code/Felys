@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Plus, Search, Filter, BookOpen, CheckCircle2, ListFilter } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
+import { useAuthStore } from "@/stores/use-auth-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TaskFormModal } from "@/components/academic/TaskFormModal";
 import { CourseModal } from "@/components/academic/CourseModal";
@@ -15,7 +16,8 @@ import { cn } from "@/lib/utils";
 import { ListSkeleton } from "@/components/ui/Skeleton";
 
 export default function AcademicTasksPage() {
-  const { tasks, courses, isLoaded } = useDataStore();
+  const { user, isLoading: authLoading } = useAuthStore();
+  const { tasks, courses, isLoaded, isFirestoreReady } = useDataStore();
 
   const [search, setSearch] = useState("");
   const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
@@ -78,10 +80,11 @@ export default function AcademicTasksPage() {
     setIsTaskModalOpen(true);
   };
 
-  // Fresh-boot: sync belum tiba + cache kosong → skeleton list (bukan empty state palsu)
-  if (!isLoaded && tasks.length === 0) {
+  // Loading barrier: tampilkan skeleton list saat auth/sync awal Firestore masih berjalan
+  const isSyncing = authLoading || (!!user && !isFirestoreReady);
+  if (isSyncing) {
     return (
-      <div className="space-y-5 sm:space-y-6">
+      <div className="space-y-5 sm:space-y-6 animate-in fade-in-50 duration-300">
         <AcademicNavTabs />
         <ListSkeleton rows={5} variant="task" />
       </div>

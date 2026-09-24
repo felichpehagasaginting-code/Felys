@@ -26,7 +26,8 @@ import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { TaskCard } from "@/components/academic/TaskCard";
 import { TransactionCard } from "@/components/finance/TransactionCard";
-import { ChartSkeleton, DashboardSkeleton } from "@/components/ui/Skeleton";
+import { ChartSkeleton, DashboardLayoutSkeleton } from "@/components/ui/Skeleton";
+import { motion } from "framer-motion";
 // Heavy components lazy-loaded (recharts/tesseract); chart pakai skeleton anti layout-shift,
 // modal tanpa fallback (tertutup = null, tidak ada visual glitch).
 const DonutExpenseChart = dynamic(() => import("@/components/finance/DonutExpenseChart").then((m) => m.DonutExpenseChart), { ssr: false, loading: () => <ChartSkeleton /> });
@@ -52,13 +53,14 @@ import { ensureGsap, prefersReducedMotion } from "@/lib/motion/gsap-setup";
 
 export default function DashboardPage() {
   const { activeMode } = useModeStore();
-  const { user, cachedDisplayName } = useAuthStore();
+  const { user, isLoading: authLoading, cachedDisplayName } = useAuthStore();
   const {
     tasks,
     courses,
     transactions,
     insights,
     isLoaded,
+    isFirestoreReady,
     getMonthlyBudgetSummary,
     getTotalNetWorth,
   } = useDataStore();
@@ -130,10 +132,12 @@ export default function DashboardPage() {
   // Recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
 
-  // Skeleton hanya ditampilkan jika user login sedang menunggu sync pertama dari Firestore.
-  // Bila user belum login / mode pratinjau, atau sync sudah selesai, tampilkan dashboard langsung.
-  if (user && !isLoaded && tasks.length === 0 && transactions.length === 0) {
-    return <DashboardSkeleton />;
+  // High-Fidelity Skeleton Loading:
+  // Tampil saat status autentikasi masih dimuat (authLoading) ATAU user login sedang menunggu seluruh 10 listener Firestore selesai sync (isFirestoreReady).
+  const isSyncing = authLoading || (!!user && !isFirestoreReady);
+
+  if (isSyncing) {
+    return <DashboardLayoutSkeleton mode={activeMode} />;
   }
 
   const handleEditTask = (task: Task) => {
@@ -147,7 +151,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="space-y-8 max-w-7xl mx-auto pb-12"
+    >
       {/* 1. Welcoming Hero Banner (Apple Minimalist Aesthetics) */}
       <section
         ref={heroRef}
@@ -634,6 +643,6 @@ export default function DashboardPage() {
         isOpen={isWorkspaceOpen}
         onClose={() => setIsWorkspaceOpen(false)}
       />
-    </div>
+    </motion.div>
   );
 }
