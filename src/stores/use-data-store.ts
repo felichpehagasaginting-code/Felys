@@ -127,10 +127,26 @@ interface DataState {
 export const useDataStore = create<DataState>((set, get) => ({
   courses: loadLocal<Course[]>("felys_courses", []),
   tasks: loadLocal<Task[]>("felys_tasks", []),
-  ddayEvent: loadLocal<DDayEvent>("felys_dday", {
-    title: "Target Ujian / Sidang",
-    targetDate: "",
-  }),
+  ddayEvent: (() => {
+    const fromJson = loadLocal<DDayEvent | null>("felys_dday", null);
+    if (fromJson && (fromJson.targetDate || fromJson.title)) {
+      return fromJson;
+    }
+    if (typeof window !== "undefined") {
+      const fallbackTitle = localStorage.getItem("felys_dday_title");
+      const fallbackDate = localStorage.getItem("felys_dday_date");
+      if (fallbackDate || fallbackTitle) {
+        return {
+          title: fallbackTitle || "Target Ujian / Sidang",
+          targetDate: fallbackDate || "",
+        };
+      }
+    }
+    return {
+      title: "Target Ujian / Sidang",
+      targetDate: "",
+    };
+  })(),
   accounts: loadLocal<FinancialAccount[]>("felys_accounts", []),
   categories: loadLocal<Category[]>("felys_categories", []),
   transactions: loadLocal<Transaction[]>("felys_transactions", []),
@@ -233,7 +249,21 @@ export const useDataStore = create<DataState>((set, get) => ({
     const localCourses = loadLocal<Course[]>("felys_courses", []);
     const localTasks = loadLocal<Task[]>("felys_tasks", []);
     const localTransactions = loadLocal<Transaction[]>("felys_transactions", []);
-    const localDDay = loadLocal<DDayEvent>("felys_dday", { title: "", targetDate: "" });
+    const localDDay = (() => {
+      const fromJson = loadLocal<DDayEvent | null>("felys_dday", null);
+      if (fromJson && fromJson.targetDate?.trim()) return fromJson;
+      if (typeof window !== "undefined") {
+        const fallbackDate = localStorage.getItem("felys_dday_date");
+        const fallbackTitle = localStorage.getItem("felys_dday_title");
+        if (fallbackDate?.trim()) {
+          return {
+            title: fallbackTitle || "Target Ujian / Sidang",
+            targetDate: fallbackDate.trim(),
+          };
+        }
+      }
+      return undefined;
+    })();
     const localEmergency = loadLocal<number>("felys_emergency_fund", 0);
 
     FirestoreService.syncLocalDataToFirestore(userId, {
@@ -599,12 +629,15 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateDDayEvent: async (dday) => {
     const userId = getCurrentUserId();
+    const prevDDay = get().ddayEvent;
     const updated: DDayEvent = {
       ...dday,
       updatedAt: new Date().toISOString(),
     };
 
+    // Optimistically update store & local storage
     set({ ddayEvent: updated });
+    saveLocal("felys_dday", updated);
 
     if (typeof window !== "undefined") {
       localStorage.setItem("felys_dday_title", dday.title);
@@ -614,8 +647,16 @@ export const useDataStore = create<DataState>((set, get) => ({
     if (userId) {
       try {
         await FirestoreService.updateDDayEvent(userId, updated);
-      } catch (err) {
-        console.warn("Firestore updateDDayEvent warning:", err);
+      } catch (err: any) {
+        // Rollback state if server update fails
+        set({ ddayEvent: prevDDay });
+        saveLocal("felys_dday", prevDDay);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("felys_dday_title", prevDDay.title);
+          localStorage.setItem("felys_dday_date", prevDDay.targetDate);
+        }
+        console.error("Firestore updateDDayEvent error:", err?.message || err);
+        throw err;
       }
     }
   },

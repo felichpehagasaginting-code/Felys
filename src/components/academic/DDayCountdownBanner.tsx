@@ -31,13 +31,17 @@ export function DDayCountdownBanner() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tempTitle.trim() || !tempDate) return;
-    triggerHaptic("medium");
-    await updateDDayEvent({
-      title: tempTitle.trim(),
-      targetDate: tempDate,
-    });
-    setIsEditing(false);
-    toast.success("Target D-Day berhasil disimpan! 🎯");
+    try {
+      triggerHaptic("medium");
+      await updateDDayEvent({
+        title: tempTitle.trim(),
+        targetDate: tempDate,
+      });
+      setIsEditing(false);
+      toast.success("Target D-Day berhasil disimpan! 🎯");
+    } catch {
+      toast.error("Gagal menyimpan Target D-Day ke server.");
+    }
   };
 
   return (

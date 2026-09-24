@@ -220,13 +220,16 @@ export class FirestoreService {
       }
 
       // 5. Sync profile (dday, emergency fund)
-      if (localData.ddayEvent?.targetDate || typeof localData.emergencyFund === "number") {
+      const hasValidDDay = Boolean(localData.ddayEvent?.targetDate && localData.ddayEvent.targetDate.trim().length > 0);
+      const hasEmergencyFund = typeof localData.emergencyFund === "number";
+
+      if (hasValidDDay || hasEmergencyFund) {
         const userRef = doc(db, "users", userId);
         await setDoc(
           userRef,
           cleanFirestoreData({
-            ...(localData.ddayEvent ? { ddayEvent: localData.ddayEvent } : {}),
-            ...(typeof localData.emergencyFund === "number" ? { emergencyFund: localData.emergencyFund } : {}),
+            ...(hasValidDDay ? { ddayEvent: localData.ddayEvent } : {}),
+            ...(hasEmergencyFund ? { emergencyFund: localData.emergencyFund } : {}),
             updatedAt: new Date().toISOString(),
           }),
           { merge: true }

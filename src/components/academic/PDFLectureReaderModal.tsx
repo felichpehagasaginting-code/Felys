@@ -10,6 +10,7 @@ import { FileText, Upload, Sparkles, Send, X, BookOpen, HelpCircle, CheckCircle2
 import { FlashcardStudyModal } from "./FlashcardStudyModal";
 import { FlashcardItem } from "@/types/flashcard";
 import { toast } from "sonner";
+import { auth } from "@/lib/firebase/client";
 
 interface PDFLectureReaderModalProps {
   isOpen: boolean;
@@ -46,9 +47,13 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
       triggerHaptic("medium");
       toast.info("Sedang membuat flashcards Active Recall dari slide kuliah...");
 
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch("/api/academic/generate-flashcards", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           text: pdfTextContent.slice(0, 8000),
           topic: pdfFile?.name.replace(/\.pdf$/i, "") || "Kuliah",
@@ -121,9 +126,13 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
     setIsAsking(true);
 
     try {
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch("/api/ai/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
           context: {

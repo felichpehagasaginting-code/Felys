@@ -3,6 +3,7 @@ import { generateText } from "ai";
 import { getVerifiedUid } from "@/lib/firebase/auth-helpers";
 import { checkAiQuota, truncateDocText } from "@/server/services/ai-usage.service";
 import { RateLimiterService } from "@/server/services/rate-limiter.service";
+import { AIContextService } from "@/server/services/ai-context.service";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -61,24 +62,8 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
       "";
 
-    // Construct context summary for system prompt
-    const tasksContext = context?.tasks && context.tasks.length > 0
-      ? context.tasks
-          .map(
-            (t: any, i: number) =>
-              `${i + 1}. ${t.title} (MK: ${t.course || "-"}, Deadline: ${t.deadline}, Urgensi: ${t.urgencyScore}/100, Prioritas: ${t.priority})`
-          )
-          .join("\n")
-      : "Tidak ada data tugas aktif saat ini.";
-
-    const budgetContext = context?.budgetSummary
-      ? `Total Limit: Rp ${context.budgetSummary.totalLimit?.toLocaleString("id-ID")}, Terpakai: Rp ${context.budgetSummary.totalSpent?.toLocaleString("id-ID")}, Sisa: Rp ${context.budgetSummary.remaining?.toLocaleString("id-ID")}\nRincian Kategori:\n${context.budgetSummary.categories
-          ?.map(
-            (c: any) =>
-              `- ${c.name}: Terpakai Rp ${c.spent?.toLocaleString("id-ID")} dari Limit Rp ${c.limit?.toLocaleString("id-ID")} (${c.usedPercentage}%, Status: ${c.status})`
-          )
-          .join("\n")}`
-      : "Tidak ada data budget.";
+    // Construct rich & isolated context summary for system prompt via AIContextService
+    const userRealtimeContext = AIContextService.formatRealtimeContext(context);
 
     const pdfContext = context?.lectureDocText
       ? `
@@ -97,13 +82,10 @@ Gaya Komunikasi & Persona:
 - Berikan respon yang kontekstual, cerdas, kreatif, dan spesifik sesuai pertanyaan dan data mahasiswa di bawah.
 - Ringkas, to-the-point, dan actionable (maksimal 2-3 paragraf pendek).
 - Selalu hubungkan saran akademik dengan kondisi keuangan jika relevan (misal: saat minggu deadline padat, ingatkan untuk menjaga fisik tanpa boros jajan pesan-antar makanan).
+- Jawaban kamu HARUS mengacu pada data mahasiswa yang sedang aktif login di bawah ini.
 
-DATA REAL-TIME MAHASISWA:
---- TUGAS AKADEMIK AKTIF ---
-${tasksContext}
-
---- ANGGARAN & PENGELUARAN BULAN INI ---
-${budgetContext}
+DATA REAL-TIME MAHASISWA SAAT INI (ISOLATED SESSION):
+${userRealtimeContext}
 ${pdfContext}
 ---
     `.trim();

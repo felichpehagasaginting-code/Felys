@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/use-auth-store";
 import { triggerHaptic } from "@/lib/haptics";
 import { playPop, playWhoosh } from "@/lib/sounds";
 import { formatCurrencyIDR } from "@/lib/utils";
+import { differenceInDays } from "date-fns";
 import { FormattedMessage } from "./FormattedMessage";
 import {
   detectSkillIntent,
@@ -29,7 +30,17 @@ export function AIDrawer() {
     pendingPrompt,
     clearPendingPrompt,
   } = useAIStore();
-  const { tasks, categories, getMonthlyBudgetSummary } = useDataStore();
+  const {
+    courses,
+    tasks,
+    categories,
+    ddayEvent,
+    accounts,
+    savingsGoals,
+    debts,
+    getTotalNetWorth,
+    getMonthlyBudgetSummary,
+  } = useDataStore();
   const [input, setInput] = useState("");
 
   // Konteks live untuk header + kartu skill (dihitung saat drawer dibuka)
@@ -151,7 +162,7 @@ export function AIDrawer() {
     }
 
     try {
-      // Gather context
+      // Gather full realtime multi-tenant isolated context
       const activeTasks = tasks.filter((t) => t.status !== "done");
       const summary = getMonthlyBudgetSummary();
 
@@ -162,6 +173,95 @@ export function AIDrawer() {
         } catch {}
       }
 
+      // Hitung jadwal kuliah hari ini (1 = Senin, ..., 7 = Minggu)
+      const jsDay = new Date().getDay();
+      const currentDayOfWeek = jsDay === 0 ? 7 : jsDay;
+
+      // Hitung sisa hari D-Day jika ada
+      let ddayDaysLeft: number | null = null;
+      if (ddayEvent?.targetDate) {
+        try {
+          const target = new Date(ddayEvent.targetDate);
+          target.setHours(0, 0, 0, 0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          ddayDaysLeft = differenceInDays(target, today);
+        } catch {}
+      }
+
+      const userContext = {
+        userProfile: {
+          name: user?.displayName || user?.email?.split("@")[0] || "Mahasiswa",
+          email: user?.email || undefined,
+        },
+        ddayEvent: ddayEvent?.targetDate
+          ? {
+              title: ddayEvent.title || "Target D-Day",
+              targetDate: ddayEvent.targetDate,
+              daysLeft: ddayDaysLeft,
+            }
+          : undefined,
+        courses: (courses || []).map((c) => ({
+          id: c.id,
+          name: c.name,
+          sks: c.sks,
+          todaySchedules: (c.schedules || [])
+            .filter((s) => s.dayOfWeek === currentDayOfWeek)
+            .map((s) => ({
+              dayOfWeek: s.dayOfWeek,
+              startTime: s.startTime,
+              endTime: s.endTime,
+              room: s.room,
+            })),
+        })),
+        tasks: activeTasks.map((t) => ({
+          id: t.id,
+          title: t.title,
+          course: t.courseName,
+          deadline: t.deadline,
+          urgencyScore: t.urgencyScore,
+          priority: t.priority,
+          status: t.status,
+          completedSubtasks: t.subtasks?.filter((st) => st.isDone).length ?? t.completedSubtasksCount ?? 0,
+          totalSubtasks: t.subtasks?.length ?? t.totalSubtasksCount ?? 0,
+        })),
+        accounts: (accounts || []).map((a) => ({
+          name: a.name,
+          provider: a.provider,
+          currentBalance: a.currentBalance,
+        })),
+        totalNetWorth: getTotalNetWorth ? getTotalNetWorth() : undefined,
+        budgetSummary: {
+          totalLimit: summary.totalLimit,
+          totalSpent: summary.totalSpent,
+          remaining: summary.remaining,
+          percentage: summary.overallPercentage,
+          categories: (summary.categories || []).map((c) => ({
+            name: c.categoryName || c.categoryId,
+            spent: c.spentAmount,
+            limit: c.monthlyLimit,
+            usedPercentage: c.usedPercentage,
+            status: c.status,
+          })),
+        },
+        savingsGoals: (savingsGoals || [])
+          .filter((s) => !s.isCompleted)
+          .map((s) => ({
+            title: s.title,
+            currentAmount: s.currentAmount,
+            targetAmount: s.targetAmount,
+            percentage: s.targetAmount > 0 ? Math.round((s.currentAmount / s.targetAmount) * 100) : 0,
+          })),
+        debts: (debts || [])
+          .filter((d) => !d.isSettled)
+          .map((d) => ({
+            friendName: d.friendName,
+            amount: d.amount,
+            type: d.type,
+            description: d.description,
+          })),
+      };
+
       // Call streaming API
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -171,21 +271,7 @@ export function AIDrawer() {
         },
         body: JSON.stringify({
           messages: [...messages, { role: "user", content: query }],
-          context: {
-            tasks: activeTasks.map((t) => ({
-              title: t.title,
-              course: t.courseName,
-              deadline: t.deadline,
-              urgencyScore: t.urgencyScore,
-              priority: t.priority,
-            })),
-            budgetSummary: {
-              totalLimit: summary.totalLimit,
-              totalSpent: summary.totalSpent,
-              remaining: summary.remaining,
-              percentage: summary.overallPercentage,
-            },
-          },
+          context: userContext,
         }),
       });
 
