@@ -5,7 +5,7 @@ import { usePomodoroStore, PomodoroMode } from "@/stores/use-pomodoro-store";
 import { useDataStore } from "@/stores/use-data-store";
 import { notificationService } from "@/lib/notification-service";
 import { triggerHaptic } from "@/lib/haptics";
-import { Play, Pause, RotateCcw, CheckSquare, Bell, Sparkles, X, Minimize2, Maximize2, Coffee, Flame, PictureInPicture2 } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckSquare, Bell, Sparkles, X, Minimize2, Maximize2, Coffee, Flame, PictureInPicture2, Timer } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { IOSSegmentedControl, SegmentOption } from "@/components/ui/IOSSegmentedControl";
 import { PiPCompanionModal } from "@/components/shared/PiPCompanionModal";
@@ -48,16 +48,16 @@ export function PomodoroWidget() {
     };
   }, [isRunning, tick]);
 
-  // Tab Title Sync ([🍅 24:59] Task Name | Felys)
+  // Tab Title Sync ([Fokus 24:59] Task Name | Felys)
   useEffect(() => {
     const originalTitle = "Felys — Atur Waktu, Atur Uang, Tenang Aja";
     if (isRunning) {
       const minutes = Math.floor(timeLeft / 60);
       const seconds = timeLeft % 60;
       const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-      const emoji = mode === "focus" ? "🍅" : "☕";
+      const modeLabel = mode === "focus" ? "Fokus" : "Istirahat";
       const taskLabel = activeTaskTitle ? ` ${activeTaskTitle} |` : "";
-      document.title = `[${emoji} ${formattedTime}]${taskLabel} Felys`;
+      document.title = `[${modeLabel} ${formattedTime}]${taskLabel} Felys`;
     } else {
       document.title = originalTitle;
     }
@@ -100,7 +100,13 @@ export function PomodoroWidget() {
         {/* Top Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-base">{mode === "focus" ? "🍅" : "☕"}</span>
+            <div className="w-6 h-6 rounded-lg bg-[#7C5CFA]/15 flex items-center justify-center text-[#7C5CFA]">
+              {mode === "focus" ? (
+                <Timer className="w-3.5 h-3.5" />
+              ) : (
+                <Coffee className="w-3.5 h-3.5 text-[#FFC978]" />
+              )}
+            </div>
             <span className="text-xs font-bold text-foreground">
               {mode === "focus" ? "Sesi Fokus Belajar" : "Waktu Istirahat"}
             </span>
@@ -154,7 +160,7 @@ export function PomodoroWidget() {
             {formatTime(timeLeft)}
           </div>
           <p className="text-[10px] text-muted mt-1">
-            {isRunning ? "Fokus berjalan... Judul tab browser disinkronkan ✨" : "Siap memulai fokus nugas"}
+            {isRunning ? "Fokus berjalan... Judul tab browser disinkronkan" : "Siap memulai fokus nugas"}
           </p>
         </div>
 

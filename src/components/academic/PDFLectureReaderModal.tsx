@@ -25,7 +25,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
     {
       role: "assistant",
-      content: "Hai! Upload slide kuliah atau dokumen materi PDF kamu di sebelah kiri, Fio akan langsung membaca seluruh isinya dan siap merangkum atau menjawab pertanyaanmu! ✨",
+      content: "Hai! Upload slide kuliah atau dokumen materi PDF kamu di sebelah kiri, Fio akan langsung membaca seluruh isinya dan siap merangkum atau menjawab pertanyaanmu!",
     },
   ]);
   const [queryInput, setQueryInput] = useState("");
@@ -68,7 +68,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
       if (data.cards && data.cards.length > 0) {
         setGeneratedCards(data.cards);
         setIsFlashcardsOpen(true);
-        toast.success(`Berhasil membuat ${data.cards.length} kartu konsep kuliah! 🗂️`);
+        toast.success(`Berhasil membuat ${data.cards.length} kartu konsep kuliah!`);
       } else {
         toast.error("Tidak ada kartu yang berhasil diekstrak.");
       }
@@ -100,10 +100,10 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
         setChatMessages([
           {
             role: "assistant",
-            content: `📖 Dokumen **"${file.name}"** (${extracted.totalPages || 1} halaman) berhasil dibaca dan dipahami oleh Fio! \n\nKamu bisa klik tombol cepat di atas untuk langsung minta rangkuman, kuis latihan, atau tanyakan bagian materi mana pun yang belum kamu pahami ✨`,
+            content: `Dokumen **"${file.name}"** (${extracted.totalPages || 1} halaman) berhasil dibaca dan dipahami oleh Fio! \n\nKamu bisa klik tombol cepat di atas untuk langsung minta rangkuman, kuis latihan, atau tanyakan bagian materi mana pun yang belum kamu pahami.`,
           },
         ]);
-        toast.success(`Dokumen "${file.name}" berhasil dipindai & dipahami AI! 📖`);
+        toast.success(`Dokumen "${file.name}" berhasil dipindai & dipahami AI!`);
       } catch (err) {
         console.error("Failed to parse PDF text:", err);
         toast.warning("Dokumen ditampilkan, namun teks otomatis perlu diproses lebih lanjut.");
@@ -151,7 +151,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
           ...prev,
           {
             role: "assistant",
-            content: reply || "Fio lagi istirahat sejenak nih ✨ Tunggu 1 menit lagi ya!",
+            content: reply || "Fio lagi istirahat sejenak nih. Tunggu 1 menit lagi ya!",
           },
         ]);
       } else {
@@ -179,7 +179,7 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Split-Screen PDF Lecture Reader & Sidekick AI 📖"
+        title="Split-Screen PDF Lecture Reader & Sidekick AI"
         description="Buka slide dosen berdampingan dengan asisten AI Fio untuk rangkuman dan kuis materi kilat."
         className="max-w-5xl! w-[95vw] h-[88vh] flex flex-col p-4 sm:p-6"
       >
@@ -198,8 +198,9 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
                         <Loader2 className="w-3 h-3 animate-spin" /> Membaca teks...
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[#1F8766] dark:text-[#7FE3C0] font-bold">
-                        ✓ AI Ready
+                      <span className="text-[10px] text-[#1F8766] dark:text-[#7FE3C0] font-bold inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>AI Ready</span>
                       </span>
                     )}
                   </div>
@@ -249,8 +250,9 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
                 </div>
               </div>
               {pdfTextContent && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0]">
-                  Teks Terbaca ✓
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] dark:text-[#7FE3C0] inline-flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Teks Terbaca</span>
                 </span>
               )}
             </div>
@@ -268,21 +270,23 @@ export function PDFLectureReaderModal({ isOpen, onClose }: PDFLectureReaderModal
                 ) : (
                   <Brain className="w-3 h-3" />
                 )}
-                <span>🗂️ Buat Flashcards SM-2</span>
+                <span>Buat Flashcards SM-2</span>
               </button>
               <button
                 onClick={() => handleSendPrompt("Rangkum poin-poin utama dokumen ini secara komprehensif dan terstruktur")}
                 disabled={isAsking || isExtracting}
-                className="px-2.5 py-1 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] hover:bg-[#7C5CFA] hover:text-white disabled:opacity-50 transition-all shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-[#EDE5FF] dark:bg-[#383442] text-[#7C5CFA] hover:bg-[#7C5CFA] hover:text-white disabled:opacity-50 transition-all shrink-0 flex items-center gap-1"
               >
-                📌 Rangkum Dokumen Ini
+                <FileText className="w-3 h-3 shrink-0" />
+                <span>Rangkum Dokumen Ini</span>
               </button>
               <button
                 onClick={() => handleSendPrompt("Buatkan 3 pertanyaan kuis pilihan ganda lengkap dengan opsi jawaban dan kunci jawabannya dari isi materi dokumen ini")}
                 disabled={isAsking || isExtracting}
-                className="px-2.5 py-1 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] hover:bg-[#1F8766] hover:text-white disabled:opacity-50 transition-all shrink-0"
+                className="px-2.5 py-1 rounded-xl bg-[#E0FBF2] dark:bg-[#1E332A] text-[#1F8766] hover:bg-[#1F8766] hover:text-white disabled:opacity-50 transition-all shrink-0 flex items-center gap-1"
               >
-                ❓ Buatkan Kuis Latihan
+                <HelpCircle className="w-3 h-3 shrink-0" />
+                <span>Buatkan Kuis Latihan</span>
               </button>
             </div>
 

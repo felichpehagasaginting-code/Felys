@@ -80,7 +80,7 @@ export class GoogleCalendarService {
 
     const subtasksText =
       task.subtasks && task.subtasks.length > 0
-        ? `\n\nSubtasks:\n` + task.subtasks.map((s, i) => `${i + 1}. [${s.isDone ? "✓" : " "}] ${s.title}`).join("\n")
+        ? `\n\nSubtasks:\n` + task.subtasks.map((s, i) => `${i + 1}. [${s.isDone ? "x" : " "}] ${s.title}`).join("\n")
         : "";
 
     const description =

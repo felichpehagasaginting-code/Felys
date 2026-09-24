@@ -39,7 +39,7 @@ export function HealthyMealModal({ isOpen, onClose, onSelectMeal }: HealthyMealM
       price: Math.min(budget, 9000),
       items: ["Nasi Kosan", "Tumis Kangkung Bawang", "Telur Ceplok", "Tahu Goreng"],
       nutrition: "Serat Alami & Vitamin A/C (Hemat 50%)",
-      badge: "Super Hemat 💰",
+      badge: "Super Hemat",
       color: "from-[#EDE5FF]/40 to-[#B69CFF]/20 border-[#B69CFF]/50",
     },
     {
@@ -48,7 +48,7 @@ export function HealthyMealModal({ isOpen, onClose, onSelectMeal }: HealthyMealM
       price: Math.min(budget, 18000),
       items: ["Nasi Putih", "Ayam Bakar / Suwir Dada", "Lalapan Timun & Sambal", "Es Teh Tawar"],
       nutrition: "Asupan Kalori Optimal untuk Tugas Padat",
-      badge: "Energi Maksimal 🔥",
+      badge: "Energi Maksimal",
       color: "from-[#FFF4E5]/40 to-[#FFC978]/20 border-[#FFC978]/50",
     },
   ];
@@ -65,7 +65,7 @@ export function HealthyMealModal({ isOpen, onClose, onSelectMeal }: HealthyMealM
         date: new Date().toISOString(),
       });
 
-      toast.success(`Pengeluaran makan ${formatCurrencyIDR(price)} berhasil dicatat! Selamat makan ✨`);
+      toast.success(`Pengeluaran makan ${formatCurrencyIDR(price)} berhasil dicatat! Selamat makan`);
       onClose();
     } catch (err) {
       toast.error("Gagal mencatat transaksi.");
@@ -75,7 +75,7 @@ export function HealthyMealModal({ isOpen, onClose, onSelectMeal }: HealthyMealM
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Rekomendasi Menu Makan Sehat Mahasiswa 🥗"
+        title="Rekomendasi Menu Makan Sehat Mahasiswa"
         description="Pilihan makanan hemat bernutrisi yang pas dengan sisa jatah belanja kamu hari ini."
       >
         <div className="space-y-4 pt-2">

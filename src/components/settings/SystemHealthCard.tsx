@@ -63,7 +63,7 @@ export function SystemHealthCard() {
 
       if (isManual) {
         triggerHaptic("success");
-        toast.success(`System Operational (${duration}ms) ⚡`, {
+        toast.success(`System Operational (${duration}ms)`, {
           description: "Seluruh subsistem, AI guardrail, dan rate limiter aktif normal.",
         });
       }

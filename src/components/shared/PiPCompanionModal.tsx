@@ -66,7 +66,7 @@ export function PiPCompanionModal() {
         pipWindow.document.body.innerHTML = `
           <div style="font-family: system-ui, sans-serif; text-align: center; display: flex; flex-direction: column; height: 100%; justify-content: space-between;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 11px; font-weight: bold; color: #B69CFF;">${mode === "focus" ? "🍅 FOCUS SESSION" : "☕ BREAK TIME"}</span>
+              <span style="font-size: 11px; font-weight: bold; color: #B69CFF;">${mode === "focus" ? "FOCUS SESSION" : "BREAK TIME"}</span>
               <span style="font-size: 10px; color: #7FE3C0; font-weight: bold;">Sisa Jajan: ${formatCurrencyIDR(daily.todayRemaining)}</span>
             </div>
 
@@ -80,7 +80,7 @@ export function PiPCompanionModal() {
           </div>
         `;
 
-        toast.success("Mini-Widget PiP melayang aktif di layar desktop! ✨");
+        toast.success("Mini-Widget PiP melayang aktif di layar desktop!");
         setIsPiPActive(true);
       } catch (err) {
         toast.info("Browser membatasi PiP atau ditutup.");

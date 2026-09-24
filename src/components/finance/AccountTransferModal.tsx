@@ -54,7 +54,7 @@ export function AccountTransferModal({
     triggerHaptic("medium");
     await transferBetweenAccounts(fromId, toId, transferNum, note.trim() || undefined);
     toast.success(
-      `Berhasil memindahkan ${formatCurrencyIDR(transferNum)} dari ${fromAcc?.name} ke ${toAcc?.name}! 🔄`
+      `Berhasil memindahkan ${formatCurrencyIDR(transferNum)} dari ${fromAcc?.name} ke ${toAcc?.name}!`
     );
     onClose();
   };
@@ -62,7 +62,7 @@ export function AccountTransferModal({
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Pindah / Transfer Saldo Antar Akun 🔄"
+        title="Pindah / Transfer Saldo Antar Akun"
         description="Pindahkan dana antar-rekening atau top-up e-wallet tanpa mengubah total pengeluaran dan pemasukan bulanan."
         className="max-w-md w-[95vw]"
       >

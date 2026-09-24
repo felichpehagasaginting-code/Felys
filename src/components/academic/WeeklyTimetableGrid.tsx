@@ -63,7 +63,7 @@ export function WeeklyTimetableGrid() {
       const updatedSchedules = [...(course.schedules || []), newSchedule];
       await updateCourse(course.id, { schedules: updatedSchedules });
 
-      toast.success(`Jadwal kuliah ${course.name} berhasil ditambahkan! 📚`);
+      toast.success(`Jadwal kuliah ${course.name} berhasil ditambahkan!`);
       setIsAdding(false);
     } catch (err) {
       toast.error("Gagal menambahkan jadwal.");

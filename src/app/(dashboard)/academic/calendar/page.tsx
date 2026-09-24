@@ -90,7 +90,7 @@ export default function AcademicCalendarPage() {
 
       const syncRes = await GoogleCalendarClient.syncNow(user.uid);
       if (syncRes.success) {
-        toast.success("Sinkronisasi Google Calendar Berhasil! 📅", {
+        toast.success("Sinkronisasi Google Calendar Berhasil!", {
           description: `${syncRes.pushed || 0} tugas diunggah, ${syncRes.pulled || 0} jadwal ditarik ke Felys.`,
         });
       } else {
@@ -112,7 +112,8 @@ export default function AcademicCalendarPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Kalender Deadline 📅
+            <CalendarIcon className="w-7 h-7 text-[#7C5CFA]" />
+            Kalender Deadline
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
             Pantau jadwal pengumpulan tugas dan sinkronkan ke Google / Apple Calendar.
@@ -255,7 +256,7 @@ export default function AcademicCalendarPage() {
           ) : (
             <div className="p-8 rounded-3xl bg-surface border border-border text-center space-y-2">
               <p className="text-xs text-muted">
-                Tidak ada deadline tugas pada tanggal ini 🎉
+                Tidak ada deadline tugas pada tanggal ini.
               </p>
             </div>
           )}

@@ -55,7 +55,7 @@ export function BudgetModal({ isOpen, onClose, budgetToEdit }: BudgetModalProps)
       setIsSubmitting(true);
       triggerHaptic("success");
       await setBudgetLimit(selectedCategoryId, limit);
-      toast.success("Batas anggaran kategori berhasil diatur! 📊");
+      toast.success("Batas anggaran kategori berhasil diatur!");
       onClose();
     } catch (err) {
       console.error("Error saving budget:", err);

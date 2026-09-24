@@ -95,7 +95,7 @@ export function TransactionEditModal({ transaction, onClose }: TransactionEditMo
         ...(dateStr ? { date: new Date(`${dateStr}T12:00:00`).toISOString() } : {}),
       });
       triggerHaptic("success");
-      toast.success("Transaksi diperbarui ✨");
+      toast.success("Transaksi diperbarui");
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memperbarui transaksi.");

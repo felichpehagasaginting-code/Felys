@@ -232,13 +232,13 @@ export function Navbar({ onOpenQuickAdd }: NavbarProps) {
                     options={[
                       {
                         id: "academic",
-                        label: "🎓 Akademik",
+                        label: "Akademik",
                         activeColor: "bg-[#7C5CFA]",
                         activeTextColor: "text-white",
                       },
                       {
                         id: "finance",
-                        label: "💸 Finansial",
+                        label: "Finansial",
                         activeColor: "bg-[#7FE3C0]",
                         activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
                       },

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     if (!burstLimit.allowed) {
       return new Response(
-        `Fio lagi istirahat sejenak nih ✨ Terlalu banyak pesan terkirim dalam 1 menit. Silakan tunggu ${burstLimit.resetInSeconds} detik lagi ya!`,
+        `Fio lagi istirahat sejenak nih. Terlalu banyak pesan terkirim dalam 1 menit. Silakan tunggu ${burstLimit.resetInSeconds} detik lagi ya!`,
         {
           status: 429,
           headers: {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         const q = await checkAiQuota(uid, "chat");
         if (!q.allowed) {
           return new Response(
-            `Hai! Kamu sudah mencapai batas maksimal 50 pertanyaan AI untuk hari ini. Silakan coba lagi besok ya! ✨`,
+            `Hai! Kamu sudah mencapai batas maksimal 50 pertanyaan AI untuk hari ini. Silakan coba lagi besok ya!`,
             { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": "0" } }
           );
         }
@@ -93,7 +93,7 @@ ${pdfContext}
     if (!apiKey) {
       console.warn("GEMINI_API_KEY is not configured in environment variables.");
       return new Response(
-        `Hai! Fio di sini ✨. Saat ini API Key Gemini belum terpasang di environment production (Vercel/Hosting). Berdasarkan datamu, prioritaskan tugas dengan urgensi tertinggi dan jaga sisa budget kamu ya!`,
+        `Hai! Fio di sini. Saat ini API Key Gemini belum terpasang di environment production (Vercel/Hosting). Berdasarkan datamu, prioritaskan tugas dengan urgensi tertinggi dan jaga sisa budget kamu ya!`,
         { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8", "X-RateLimit-Remaining": String(remaining) } }
       );
     }
@@ -135,7 +135,7 @@ ${pdfContext}
   } catch (error: any) {
     console.error("AI Chat API Error:", error);
     return new Response(
-      `Hai! Fio siap bantu kamu mengatur tugas kuliah dan pengeluaran bulan ini ✨ Silakan periksa kembali koneksi atau API Key Gemini kamu.`,
+      `Hai! Fio siap bantu kamu mengatur tugas kuliah dan pengeluaran bulan ini. Silakan periksa kembali koneksi atau API Key Gemini kamu.`,
       { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } }
     );
   }

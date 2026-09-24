@@ -223,7 +223,7 @@ export function FlashcardStudyModal({
             </div>
             <div className="space-y-1">
               <h4 className="text-base font-extrabold text-foreground">
-                Sesi Belajar Selesai! 🎉
+                Sesi Belajar Selesai!
               </h4>
               <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
                 Kamu telah menyelesaikan review {cards.length} kartu konsep kuliah. Algoritma SM-2 telah menjadwalkan tanggal pengulangan berikutnya agar memorimu tahan lama!

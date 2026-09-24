@@ -53,7 +53,7 @@ export function RecurringBillsModal({ isOpen, onClose }: RecurringBillsModalProp
       isActive: true,
     });
 
-    toast.success(`Tagihan "${name}" berhasil ditambahkan! 📅`);
+    toast.success(`Tagihan "${name}" berhasil ditambahkan!`);
     setName("");
     setAmount("");
     setIsAdding(false);
@@ -62,7 +62,7 @@ export function RecurringBillsModal({ isOpen, onClose }: RecurringBillsModalProp
   const handlePay = async (billId: string, billName: string) => {
     triggerHaptic("success");
     await payRecurringBill(billId);
-    toast.success(`Pembayaran "${billName}" berhasil dicatat ke pengeluaran! 💳`);
+    toast.success(`Pembayaran "${billName}" berhasil dicatat ke pengeluaran!`);
   };
 
   const handleDelete = async (billId: string, billName: string) => {
@@ -83,7 +83,7 @@ export function RecurringBillsModal({ isOpen, onClose }: RecurringBillsModalProp
               </div>
               <div>
                 <h3 className="text-base font-bold text-foreground">
-                  Tagihan & Biaya Rutin Mahasiswa 📅
+                  Tagihan & Biaya Rutin Mahasiswa
                 </h3>
                 <p className="text-xs text-muted">
                   Pantau pembayaran uang kos, UKT, WiFi, dan langganan bulanan

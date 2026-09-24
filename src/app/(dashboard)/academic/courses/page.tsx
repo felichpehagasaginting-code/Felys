@@ -89,7 +89,8 @@ export default function CoursesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Mata Kuliah Semester Ini 📚
+            <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-[#7C5CFA]" />
+            Mata Kuliah Semester Ini
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-0.5 sm:mt-1">
             Kelola daftar mata kuliah, warna tag, dan bobot SKS.

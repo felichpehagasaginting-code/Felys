@@ -82,7 +82,8 @@ export default function FinanceTransactionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Pencatatan Keuangan 💸
+            <Wallet className="w-7 h-7 text-[#1F8766] dark:text-[#7FE3C0]" />
+            Pencatatan Keuangan
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
             Catat pengeluaran, scan struk, dan bagi tagihan patungan.
@@ -240,8 +241,8 @@ export default function FinanceTransactionsPage() {
             <div className="flex items-center gap-1 p-1 bg-[#EDEAF2] dark:bg-[#383442] rounded-2xl w-full sm:w-auto">
               {[
                 { id: "all", label: "Semua" },
-                { id: "expense", label: "Keluar 💸" },
-                { id: "income", label: "Masuk 💰" },
+                { id: "expense", label: "Keluar" },
+                { id: "income", label: "Masuk" },
               ].map((t) => (
                 <button
                   key={t.id}

@@ -7,7 +7,7 @@ import { Task } from "@/types/academic";
 import { formatDateIndonesian, formatTimeIndonesian } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
 import { toast } from "sonner";
-import { Share2, Copy, MessageCircle, Check, QrCode, BookOpen, Clock, ListChecks } from "lucide-react";
+import { Share2, Copy, MessageCircle, Check, Circle, QrCode, BookOpen, Clock, ListChecks } from "lucide-react";
 
 interface ShareTaskModalProps {
   task: Task | null;
@@ -26,20 +26,19 @@ export function ShareTaskModal({ task, isOpen, onClose }: ShareTaskModalProps) {
 
   const subtasksText = task.subtasks && task.subtasks.length > 0
     ? task.subtasks
-        .map((st, i) => `${i + 1}. [${st.isDone ? "✓" : " "}] ${st.title}`)
+        .map((st, i) => `${i + 1}. [${st.isDone ? "x" : " "}] ${st.title}`)
         .join("\n")
     : "• Belum ada rincian subtask khusus";
 
-  const shareMessage = `📢 *TUGAS KELOMPOK / KULIAH: ${task.title}*
-📚 *Mata Kuliah:* ${task.courseName || "Kuliah"}
-⏰ *Deadline:* ${formattedDate} pukul ${formattedTime}
-🔥 *Prioritas:* ${task.priority.toUpperCase()}
+  const shareMessage = `*TUGAS KELOMPOK / KULIAH: ${task.title}*
+*Mata Kuliah:* ${task.courseName || "Kuliah"}
+*Deadline:* ${formattedDate} pukul ${formattedTime}
+*Prioritas:* ${task.priority.toUpperCase()}
 
-📋 *CHECKLIST PENGERJAAN:*
+*CHECKLIST PENGERJAAN:*
 ${subtasksText}
 
-${task.description ? `💡 *Catatan:* ${task.description}\n` : ""}
-✨ _Dikelola bersama di Felys — Student Super-App_`;
+${task.description ? `*Catatan:* ${task.description}\n` : ""}_Dikelola bersama di Felys — Student Super-App_`;
 
   const handleCopyText = async () => {
     try {
@@ -67,7 +66,7 @@ ${task.description ? `💡 *Catatan:* ${task.description}\n` : ""}
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Bagi Tugas Kelompok & Jadwal 👥"
+        title="Bagi Tugas Kelompok & Jadwal"
         description="Bagikan checklist subtask dan deadline tugas ke teman sekelompok via WhatsApp atau QR Code."
       >
         <div className="space-y-4 pt-2">
@@ -107,11 +106,13 @@ ${task.description ? `💡 *Catatan:* ${task.description}\n` : ""}
                   Checklist Langkah ({task.subtasks.length}):
                 </span>
                 <div className="space-y-0.5 max-h-24 overflow-y-auto">
-                  {task.subtasks.map((st, i) => (
+                  {task.subtasks.map((st) => (
                     <div key={st.id} className="flex items-center gap-1.5 text-muted">
-                      <span className={st.isDone ? "text-[#1F8766] font-bold" : ""}>
-                        {st.isDone ? "✓" : "○"}
-                      </span>
+                      {st.isDone ? (
+                        <Check className="w-3.5 h-3.5 text-[#1F8766] shrink-0" />
+                      ) : (
+                        <Circle className="w-3.5 h-3.5 text-muted/60 shrink-0" />
+                      )}
                       <span className={st.isDone ? "line-through" : "text-foreground"}>
                         {st.title}
                       </span>

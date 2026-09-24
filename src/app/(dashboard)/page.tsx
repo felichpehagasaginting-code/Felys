@@ -172,7 +172,7 @@ export default function DashboardPage() {
             className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight break-keep"
           >
             {getGreeting()},{" "}
-            <span className="inline-block whitespace-nowrap">{displayName}! ✨</span>
+            <span className="inline-block whitespace-nowrap">{displayName}!</span>
           </h1>
           <p className="hero-sub text-xs sm:text-sm text-muted max-w-xl leading-relaxed">
             {activeMode === "academic"
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                 <div className="w-14 h-14 rounded-3xl bg-[#E0FBF2] text-[#1F8766] flex items-center justify-center mx-auto">
                   <Sparkles className="w-7 h-7" />
                 </div>
-                <h4 className="text-base font-bold text-foreground">Semua Tugas Beres! 🎉</h4>
+                <h4 className="text-base font-bold text-foreground">Semua Tugas Beres!</h4>
                 <p className="text-xs text-muted max-w-md mx-auto leading-relaxed">
                   Tidak ada deadline mendesak saat ini. Waktu yang tepat untuk istirahat sejenak atau membaca materi kuliah berikutnya.
                 </p>

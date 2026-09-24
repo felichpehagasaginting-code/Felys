@@ -129,16 +129,16 @@ export async function callFioSkill(
 /** Format hasil skill jadi pesan chat Fio yang ramah + faktual. */
 export function formatSkillReply(skill: SkillName, data: SkillApiOk["data"]): string {
   if (skill === "can-i-spend") {
-    const icon = data.allowed ? "✅" : "⛔";
-    return `${icon} ${data.message || "Skill selesai."}`;
+    const statusText = data.allowed ? "[Aman]" : "[Peringatan]";
+    return `${statusText} ${data.message || "Skill selesai."}`;
   }
   if (skill === "plan-tasks") {
     const plans = data.plans || [];
-    if (plans.length === 0) return "🎉 Tidak ada tugas aktif — nikmati waktu luangmu!";
+    if (plans.length === 0) return "Tidak ada tugas aktif — nikmati waktu luangmu!";
     const lines = plans.map(
       (p, i) => `${i + 1}. **${p.title}** — ~${p.hoursPerDay} jam/hari × ${p.daysLeft} hari`
     );
-    return `📚 **Rencana cicil tugasmu (diurutkan paling mendesak):**\n\n${lines.join("\n")}\n\nTips Fio: kerjakan dengan timer Pomodoro 25 menit + jeda 5 menit. Semangat! 💪`;
+    return `**Rencana cicil tugasmu (diurutkan paling mendesak):**\n\n${lines.join("\n")}\n\nTips Fio: kerjakan dengan timer Pomodoro 25 menit + jeda 5 menit. Semangat!`;
   }
-  return `💡 ${data.message || "Simulasi selesai."}`;
+  return `Saran Fio: ${data.message || "Simulasi selesai."}`;
 }

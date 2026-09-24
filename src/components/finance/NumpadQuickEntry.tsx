@@ -126,7 +126,7 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
     !impactedBudget || afterLimit <= 0
       ? null
       : afterPct >= 100
-        ? "Transaksi ini bikin kategori ini overbudget ⚠️"
+        ? "Transaksi ini bikin kategori ini overbudget"
         : afterPct >= 90
           ? "Mepet limit — sisa dikit lagi"
           : afterPct >= 70
@@ -199,7 +199,7 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Catat Keuangan Cepat 💸"
+        title="Catat Keuangan Cepat"
         description="Input kilat dengan numpad, pilih kategori, dan alokasikan ke dompet/rekening."
         className="max-w-md"
       >
@@ -209,13 +209,13 @@ export function NumpadQuickEntry({ isOpen, onClose }: NumpadQuickEntryProps) {
             options={[
               {
                 id: "expense",
-                label: "Pengeluaran 💸",
+                label: "Pengeluaran",
                 activeColor: "bg-[#FF7A85]",
                 activeTextColor: "text-white",
               },
               {
                 id: "income",
-                label: "Pemasukan 💰",
+                label: "Pemasukan",
                 activeColor: "bg-[#7FE3C0]",
                 activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
               },

@@ -47,7 +47,7 @@ export function ScratchpadPanel() {
     triggerHaptic("light");
     if (!content.trim()) return;
     navigator.clipboard.writeText(content);
-    toast.success("Catatan disalin ke clipboard! 📋");
+    toast.success("Catatan disalin ke clipboard!");
   };
 
   return (
@@ -81,8 +81,15 @@ export function ScratchpadPanel() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-muted font-medium">
-                {isSaved ? "Tersimpan ✓" : "Menyimpan..."}
+              <span className="text-[10px] text-muted font-medium inline-flex items-center gap-1">
+                {isSaved ? (
+                  <>
+                    <Check className="w-3 h-3 text-[#1F8766]" />
+                    <span>Tersimpan</span>
+                  </>
+                ) : (
+                  "Menyimpan..."
+                )}
               </span>
               <button
                 onClick={handleCopy}

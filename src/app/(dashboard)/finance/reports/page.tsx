@@ -13,6 +13,8 @@ import {
   Calendar,
   Sparkles,
   ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { useAuthStore } from "@/stores/use-auth-store";
@@ -61,7 +63,8 @@ export default function FinanceReportsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Laporan & Grafik Keuangan 📈
+            <BarChart3 className="w-7 h-7 text-[#1F8766] dark:text-[#7FE3C0]" />
+            Laporan & Grafik Keuangan
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
             Analisis alokasi uang, laju pengeluaran harian, dan laporan resmi uang saku.
@@ -153,13 +156,23 @@ export default function FinanceReportsPage() {
 
           <div className="flex items-center gap-2">
             <span
-              className={`px-3 py-1 rounded-full text-xs font-extrabold ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold ${
                 daily.isCriticalBurn
                   ? "bg-[#FFE8EA] text-[#D93D4A]"
                   : "bg-[#E0FBF2] text-[#1F8766]"
               }`}
             >
-              {daily.isCriticalBurn ? "⚠️ Burn Rate Tinggi" : "✓ Ritme Pengeluaran Stabil"}
+              {daily.isCriticalBurn ? (
+                <>
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Burn Rate Tinggi</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Ritme Pengeluaran Stabil</span>
+                </>
+              )}
             </span>
           </div>
         </div>
@@ -184,7 +197,7 @@ export default function FinanceReportsPage() {
                 daily.projectedBurnDate ? "text-[#D93D4A]" : "text-[#1F8766]"
               }`}
             >
-              {daily.projectedBurnDate ? `Sekitar ${daily.projectedBurnDate}` : "Aman Hingga Akhir Bulan ✨"}
+              {daily.projectedBurnDate ? `Sekitar ${daily.projectedBurnDate}` : "Aman Hingga Akhir Bulan"}
             </span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles, ArrowRight, Check, Calendar, Wallet, Clock, Tag } from "lucide-react";
+import { Sparkles, ArrowRight, Check, Calendar, Wallet, Clock, Tag, BookOpen, TrendingDown, TrendingUp, CornerDownLeft } from "lucide-react";
 import { useDataStore } from "@/stores/use-data-store";
 import { parseStudentNLP, ParsedNLPResult } from "@/lib/nlp-parser";
 import { formatCurrencyIDR, formatDateRelative } from "@/lib/utils";
@@ -39,7 +39,7 @@ export function NLPQuickBar() {
           status: "todo",
         });
 
-        toast.success(`Tugas "${parsed.taskData.title}" berhasil dijadwalkan! 📚`, {
+        toast.success(`Tugas "${parsed.taskData.title}" berhasil dijadwalkan!`, {
           description: `Deadline: ${formatDateRelative(parsed.taskData.deadline)} • Estimasi ${parsed.taskData.estimatedHours} jam`,
         });
       } else if (parsed.type === "transaction" && parsed.transactionData) {
@@ -53,7 +53,7 @@ export function NLPQuickBar() {
           date: parsed.transactionData.date,
         });
 
-        toast.success(`Transaksi ${formatCurrencyIDR(parsed.transactionData.amount)} dicatat! 💸`, {
+        toast.success(`Transaksi ${formatCurrencyIDR(parsed.transactionData.amount)} dicatat!`, {
           description: `${parsed.transactionData.categoryName} • ${parsed.transactionData.type === "expense" ? "Pengeluaran" : "Pemasukan"}`,
         });
       }
@@ -103,7 +103,8 @@ export function NLPQuickBar() {
             {parsed.type === "task" && parsed.taskData ? (
               <>
                 <span className="px-2 py-0.5 rounded-full bg-[#EDE5FF] text-[#7C5CFA] font-bold text-[10px] flex items-center gap-1">
-                  📚 Tambah Tugas
+                  <BookOpen className="w-3 h-3" />
+                  <span>Tambah Tugas</span>
                 </span>
                 <span className="font-semibold text-foreground truncate">
                   {parsed.taskData.title}
@@ -126,7 +127,17 @@ export function NLPQuickBar() {
                       : "bg-[#E0FBF2] text-[#1F8766]"
                   }`}
                 >
-                  {parsed.transactionData.type === "expense" ? "💸 Pengeluaran" : "💰 Pemasukan"}
+                  {parsed.transactionData.type === "expense" ? (
+                    <>
+                      <TrendingDown className="w-3 h-3" />
+                      <span>Pengeluaran</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Pemasukan</span>
+                    </>
+                  )}
                 </span>
                 <span className="font-extrabold text-foreground">
                   {formatCurrencyIDR(parsed.transactionData.amount)}
@@ -139,8 +150,10 @@ export function NLPQuickBar() {
             ) : null}
           </div>
 
-          <span className="text-[10px] text-muted font-semibold shrink-0 hidden sm:inline">
-            Tekan ↵ Enter untuk simpan
+          <span className="text-[10px] text-muted font-semibold shrink-0 hidden sm:inline-flex items-center gap-1">
+            <span>Tekan</span>
+            <CornerDownLeft className="w-2.5 h-2.5 inline" />
+            <span>Enter untuk simpan</span>
           </span>
         </div>
       )}

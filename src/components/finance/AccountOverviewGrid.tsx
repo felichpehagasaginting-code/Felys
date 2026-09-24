@@ -53,7 +53,7 @@ export function AccountOverviewGrid() {
         accounts,
       });
       initFirestoreSync(user.uid);
-      toast.success(`Sinkronisasi Cloud Berhasil! (${accounts.length} rekening aktif) ✨`);
+      toast.success(`Sinkronisasi Cloud Berhasil! (${accounts.length} rekening aktif)`);
     } catch (err) {
       toast.error("Gagal melakukan sinkronisasi cloud. Periksa koneksi internet.");
     } finally {

@@ -75,7 +75,7 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
         categoryIcon,
       });
 
-      toast.success("Target Celengan Impian baru berhasil dibuat! 🎯");
+      toast.success("Target Celengan Impian baru berhasil dibuat!");
       setTitle("");
       setTargetAmount("");
       setTargetDate("");
@@ -97,7 +97,7 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
           spread: 70,
           origin: { y: 0.6 },
         });
-        toast.success(`🎉 SELAMAT! Target Celengan "${goal.title}" telah tercapai 100%!`);
+        toast.success(`SELAMAT! Target Celengan "${goal.title}" telah tercapai 100%!`);
       } else {
         toast.success(`Berhasil setor ${formatCurrencyIDR(amount)} ke Celengan!`);
       }
@@ -147,7 +147,7 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-extrabold text-foreground truncate">
-                Celengan Impian & Investasi 🎯
+                Celengan Impian & Investasi
               </h3>
               <p className="text-xs text-muted">
                 Target tabungan laptop, liburan, & simulasi literasi keuangan
@@ -173,7 +173,7 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
             },
             {
               id: "projections",
-              label: "Proyeksi & Simulasi Investasi 📈",
+              label: "Proyeksi & Simulasi Investasi",
               activeColor: "bg-[#7FE3C0]",
               activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
             },
@@ -299,7 +299,7 @@ export function SavingsGoalModal({ isOpen, onClose }: SavingsGoalModalProps) {
                                 : "bg-[#EDE5FF] text-[#7C5CFA]"
                             }`}
                           >
-                            {isDone ? "Tuntas! 🎉" : `${percent}%`}
+                            {isDone ? "Tuntas!" : `${percent}%`}
                           </span>
                           <button
                             type="button"

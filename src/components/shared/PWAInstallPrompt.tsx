@@ -50,12 +50,12 @@ export function PWAInstallPrompt() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
         setShowPrompt(false);
-        toast.success("Felys berhasil dipasang di layar utama! ✨");
+        toast.success("Felys berhasil dipasang di layar utama!");
       }
       setDeferredPrompt(null);
     } else if (isIOS) {
       toast.info(
-        "Untuk memasang di iPhone: Tekan tombol 'Share' (ikon kotak panah ke atas) di Safari, lalu pilih 'Add to Home Screen' 📲",
+        "Untuk memasang di iPhone: Tekan tombol 'Share' (ikon kotak panah ke atas) di Safari, lalu pilih 'Add to Home Screen'",
         { duration: 6000 }
       );
     }
@@ -72,8 +72,8 @@ export function PWAInstallPrompt() {
     if ("Notification" in window) {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
-        toast.success("Notifikasi aktif! Felys akan mengingatkan deadline & jatah harian kamu 🔔");
-        new Notification("Felys Assistant ✨", {
+        toast.success("Notifikasi aktif! Felys akan mengingatkan deadline & jatah harian kamu");
+        new Notification("Felys Assistant", {
           body: "Notifikasi pengingat akademik & keuangan aktif!",
           icon: "/favicon.ico",
         });
@@ -95,7 +95,7 @@ export function PWAInstallPrompt() {
             <FelysLogo className="w-10 h-10 shadow-soft shrink-0" />
             <div>
               <h4 className="text-xs font-bold text-foreground">
-                Pasang Felys di HP Kamu 📲
+                Pasang Felys di HP Kamu
               </h4>
               <p className="text-[11px] text-muted">
                 Akses cepat offline & bebas lag langsung dari layar utama.

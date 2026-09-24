@@ -97,7 +97,7 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
 
         setSubtasks((prev) => [...prev, ...newItems]);
         triggerHaptic("success");
-        toast.success(`Berhasil membuat ${newItems.length} subtask dengan Fio AI! ✨`);
+        toast.success(`Berhasil membuat ${newItems.length} subtask dengan Fio AI!`);
       }
     } catch (err) {
       console.error(err);
@@ -157,14 +157,14 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
       if (taskToEdit) {
         await updateTask(taskToEdit.id, taskPayload);
         triggerHaptic("success");
-        toast.success(`Tugas "${title.trim()}" berhasil diperbarui! ✨`);
+        toast.success(`Tugas "${title.trim()}" berhasil diperbarui!`);
       } else {
         await addTask({
           ...taskPayload,
           status: "todo",
         });
         triggerHaptic("success");
-        toast.success(`Tugas "${title.trim()}" berhasil ditambahkan! 🚀`);
+        toast.success(`Tugas "${title.trim()}" berhasil ditambahkan!`);
       }
       onClose();
     } catch (err) {
@@ -203,7 +203,7 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3 text-[#7C5CFA]" />
-                    <span>✨ Pecah Subtask AI</span>
+                    <span>Pecah Subtask AI</span>
                   </>
                 )}
               </button>
@@ -350,19 +350,19 @@ export function TaskFormModal({ isOpen, onClose, taskToEdit }: TaskFormModalProp
               options={[
                 {
                   id: "low",
-                  label: "Rendah 🟢",
+                  label: "Rendah",
                   activeColor: "bg-[#7FE3C0]",
                   activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
                 },
                 {
                   id: "medium",
-                  label: "Sedang 🟡",
+                  label: "Sedang",
                   activeColor: "bg-[#FFC978]",
                   activeTextColor: "text-[#4A2800] dark:text-[#4A2800]",
                 },
                 {
                   id: "high",
-                  label: "Tinggi 🔴",
+                  label: "Tinggi",
                   activeColor: "bg-[#FF7A85]",
                   activeTextColor: "text-white",
                 },

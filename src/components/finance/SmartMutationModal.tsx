@@ -87,7 +87,7 @@ export function SmartMutationModal({ isOpen, onClose }: SmartMutationModalProps)
         date: new Date().toISOString(),
       });
 
-      toast.success(`Transaksi ${formatCurrencyIDR(parsed.amount)} berhasil dicatat! ✨`, {
+      toast.success(`Transaksi ${formatCurrencyIDR(parsed.amount)} berhasil dicatat!`, {
         description: `${parsed.type === "income" ? "Pemasukan" : "Pengeluaran"} • ${parsed.merchantOrNote}`,
       });
 

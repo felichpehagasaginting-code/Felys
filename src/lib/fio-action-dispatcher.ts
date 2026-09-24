@@ -29,7 +29,7 @@ export class FioActionDispatcher {
         if (!pomodoro.isRunning) {
           pomodoro.startTimer();
         }
-        toast.success("Timer Pomodoro 25 menit dimulai! Selamat fokus 🎯");
+        toast.success("Timer Pomodoro 25 menit dimulai! Selamat fokus");
         break;
       }
 

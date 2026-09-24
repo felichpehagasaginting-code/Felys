@@ -18,6 +18,13 @@ import {
   ChevronDown,
   Activity,
   ShieldCheck,
+  BarChart2,
+  Target,
+  Coffee,
+  Timer,
+  Calendar,
+  ListOrdered,
+  Lightbulb,
 } from "lucide-react";
 import { useAIStore } from "@/stores/use-ai-store";
 import { useDataStore } from "@/stores/use-data-store";
@@ -108,13 +115,13 @@ export function AIDrawer() {
   }
 
   // Dynamic Contextual Next-Action Chips (Prioritas 4)
-  const getContextualPrompts = (): string[] => {
+  const getContextualPrompts = (): { label: string; icon: React.ComponentType<{ className?: string }> }[] => {
     if (messages.length <= 1) {
       return [
-        "Boleh aku jajan 30000 hari ini?",
-        "Buatkan rencana cicil tugas",
-        "Simulasi hemat 50% jajan",
-        "Tips hemat makan anak kos",
+        { label: "Boleh aku jajan 30000 hari ini?", icon: Wallet },
+        { label: "Buatkan rencana cicil tugas", icon: ListTodo },
+        { label: "Simulasi hemat 50% jajan", icon: PiggyBank },
+        { label: "Tips hemat makan anak kos", icon: Lightbulb },
       ];
     }
 
@@ -129,10 +136,10 @@ export function AIDrawer() {
       text.includes("saldo")
     ) {
       return [
-        "⚡ Pasang Limit Jajan",
-        "📊 Coba simulasi hemat 30%",
-        "🎯 Simpan selisih ke Celengan",
-        "☕ Tips hemat makan & ngopi",
+        { label: "Pasang Limit Jajan", icon: Zap },
+        { label: "Coba simulasi hemat 30%", icon: BarChart2 },
+        { label: "Simpan selisih ke Celengan", icon: Target },
+        { label: "Tips hemat makan & ngopi", icon: Coffee },
       ];
     }
 
@@ -143,18 +150,18 @@ export function AIDrawer() {
       text.includes("kuliah")
     ) {
       return [
-        "⏱️ Mulai Pomodoro 25 menit",
-        "📅 Rencana cicilan per hari",
-        "📋 Urutkan dari yang termudah",
-        "💡 Tips fokus anti-distraksi",
+        { label: "Mulai Pomodoro 25 menit", icon: Timer },
+        { label: "Rencana cicilan per hari", icon: Calendar },
+        { label: "Urutkan dari yang termudah", icon: ListOrdered },
+        { label: "Tips fokus anti-distraksi", icon: Lightbulb },
       ];
     }
 
     return [
-      "Boleh aku jajan 30000 hari ini?",
-      "Buatkan rencana cicil tugas",
-      "Simulasi hemat 50% jajan",
-      "Rangkum kondisi minggu ini",
+      { label: "Boleh aku jajan 30000 hari ini?", icon: Wallet },
+      { label: "Buatkan rencana cicil tugas", icon: ListTodo },
+      { label: "Simulasi hemat 50% jajan", icon: PiggyBank },
+      { label: "Rangkum kondisi minggu ini", icon: BarChart2 },
     ];
   };
 
@@ -384,7 +391,7 @@ export function AIDrawer() {
         const rateLimitMsg = await res.text();
         addMessage({
           role: "assistant",
-          content: rateLimitMsg || "Fio lagi istirahat sejenak nih ✨ Coba lagi sebentar ya!",
+          content: rateLimitMsg || "Fio lagi istirahat sejenak nih. Coba lagi sebentar ya!",
         });
         return;
       }
@@ -431,9 +438,9 @@ export function AIDrawer() {
     if (lower.includes("tugas") || lower.includes("urgent") || lower.includes("mepet")) {
       const top = [...activeTasks].sort((a, b) => b.urgencyScore - a.urgencyScore)[0];
       if (top) {
-        return `Tugas paling mendesak kamu saat ini adalah **${top.title}** (${top.courseName || "Kuliah"}) dengan skor urgensi **${Math.round(top.urgencyScore)}/100** 🔥.\n\nSaran Fio: Yuk cicil tugas ini sekarang selama 25 menit menggunakan Pomodoro timer!`;
+        return `Tugas paling mendesak kamu saat ini adalah **${top.title}** (${top.courseName || "Kuliah"}) dengan skor urgensi **${Math.round(top.urgencyScore)}/100**.\n\nSaran Fio: Yuk cicil tugas ini sekarang selama 25 menit menggunakan Pomodoro timer!`;
       }
-      return "Hore! Semua tugas kuliah kamu sudah beres atau belum ada tugas aktif. Istirahat sejenak ya! 🎉";
+      return "Hore! Semua tugas kuliah kamu sudah beres atau belum ada tugas aktif. Istirahat sejenak ya!";
     }
 
     if (lower.includes("budget") || lower.includes("uang") || lower.includes("sisa") || lower.includes("saldo")) {
@@ -443,12 +450,12 @@ export function AIDrawer() {
     if (lower.includes("nongkrong") || lower.includes("jajan") || lower.includes("kopi")) {
       const urgentCount = activeTasks.filter((t) => t.urgencyScore >= 80).length;
       if (urgentCount >= 2) {
-        return `Hmm, minggu ini lagi ada **${urgentCount} deadline tugas yang cukup mepet** 👀.\n\nKalau mau ngopi, saran Fio cari tempat yang tenang buat sekalian ngerjain tugas, atau seduh kopi di kos agar hemat! ☕`;
+        return `Hmm, minggu ini lagi ada **${urgentCount} deadline tugas yang cukup mepet**.\n\nKalau mau ngopi, saran Fio cari tempat yang tenang buat sekalian ngerjain tugas, atau seduh kopi di kos agar hemat!`;
       }
-      return `Boleh banget! Tugas kamu masih aman terkendali. Selamat menikmati waktu luang, tapi tetap jaga pengeluaran ya! ✨`;
+      return `Boleh banget! Tugas kamu masih aman terkendali. Selamat menikmati waktu luang, tapi tetap jaga pengeluaran ya!`;
     }
 
-    return `Hai! Aku Fio, asisten cerdasmu di Felys. Aku bisa bantu cek deadline tugas kuliah, pantau sisa jatah belanja, atau rekomendasi strategi belajar kamu hari ini. Ada yang mau ditanyakan? ✨`;
+    return `Hai! Aku Fio, asisten cerdasmu di Felys. Aku bisa bantu cek deadline tugas kuliah, pantau sisa jatah belanja, atau rekomendasi strategi belajar kamu hari ini. Ada yang mau ditanyakan?`;
   };
 
   const handleClose = () => {
@@ -595,8 +602,9 @@ export function AIDrawer() {
                     <Bot className="w-7 h-7" />
                   </div>
                   <div className="space-y-1 max-w-xs">
-                    <h4 className="text-sm font-bold text-foreground">
-                      Halo! Aku Fio ✨
+                    <h4 className="text-sm font-bold text-foreground flex items-center justify-center gap-1.5">
+                      <span>Halo! Aku Fio</span>
+                      <Sparkles className="w-3.5 h-3.5 text-[#7C5CFA]" />
                     </h4>
                     <p className="text-xs text-muted leading-relaxed">
                       Tanyakan apapun, atau pakai jalan pintas berbasis data real-time di bawah.
@@ -720,16 +728,20 @@ export function AIDrawer() {
 
             {/* Dynamic Contextual Next-Action Chips (Prioritas 4) */}
             <div className="px-3.5 py-2.5 border-t border-border/50 overflow-x-auto flex gap-1.5 no-scrollbar bg-surface/50 dark:bg-[#16151B]/50 backdrop-blur-md">
-              {contextualPrompts.map((prompt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(prompt.replace(/^[^\w\s]+\s?/, ""))}
-                  aria-label={`Kirim saran: ${prompt}`}
-                  className="shrink-0 px-3 py-1.5 rounded-full bg-surface dark:bg-[#201E24] border border-border/80 text-muted hover:text-[#7C5CFA] dark:hover:text-[#B69CFF] hover:border-[#7C5CFA]/40 text-[11px] font-semibold transition-all active:scale-95 shadow-2xs"
-                >
-                  {prompt}
-                </button>
-              ))}
+              {contextualPrompts.map((chip, idx) => {
+                const IconComponent = chip.icon;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(chip.label)}
+                    aria-label={`Kirim saran: ${chip.label}`}
+                    className="shrink-0 px-3 py-1.5 rounded-full bg-surface dark:bg-[#201E24] border border-border/80 text-muted hover:text-[#7C5CFA] dark:hover:text-[#B69CFF] hover:border-[#7C5CFA]/40 text-[11px] font-semibold transition-all active:scale-95 shadow-2xs inline-flex items-center gap-1.5"
+                  >
+                    {IconComponent && <IconComponent className="w-3 h-3 text-[#7C5CFA] shrink-0" />}
+                    <span>{chip.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Minimalist Floating Input Bar */}

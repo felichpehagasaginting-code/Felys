@@ -65,7 +65,7 @@ export function LiveClassStatusCard() {
           </div>
           <div>
             <span className="font-bold text-foreground block">
-              Tidak Ada Jadwal Kuliah Hari Ini ✨
+              Tidak Ada Jadwal Kuliah Hari Ini
             </span>
             <span className="text-[11px] text-muted">
               Waktunya cicil tugas berurgensi tinggi atau istirahat!
@@ -175,7 +175,7 @@ export function LiveClassStatusCard() {
         </div>
         <div>
           <span className="font-bold text-foreground block">
-            Semua Kuliah Hari Ini Selesai! 🎉
+            Semua Kuliah Hari Ini Selesai!
           </span>
           <span className="text-[11px] text-muted">
             Total {todayClasses.length} kelas telah terlaksana hari ini.

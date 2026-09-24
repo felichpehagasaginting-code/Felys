@@ -42,7 +42,7 @@ export class InsightService {
       return {
         id: `ins_cross_${Date.now()}`,
         type: "cross_mode",
-        title: "Keseimbangan Kuliah & Dompet ⚖️",
+        title: "Keseimbangan Kuliah & Dompet",
         content: `Pekan ini jadwalmu cukup padat (${urgentTasks.length} deadline mepet: ${courseNames}, estimasi ~${totalHours} jam). Budget ${overloadedDiscretionary.categoryName} sudah terpakai ${overloadedDiscretionary.usedPercentage}%. Yuk jaga stamina tanpa boros jajan pesan-antar makanan!`,
         relatedTaskId: urgentTasks[0].id,
         relatedCategoryId: overloadedDiscretionary.categoryId,
@@ -75,7 +75,7 @@ export class InsightService {
     return {
       id: `ins_task_${Date.now()}`,
       type: "task_recommendation",
-      title: "Prioritas Utama Kuliah 🔥",
+      title: "Prioritas Utama Kuliah",
       content: `Tugas "${topTask.title}" (${topTask.courseName || "Kuliah"}) butuh perhatianmu pertama kali — skor urgensi ${Math.round(topTask.urgencyScore)}/100. Semangat selesaikan lebih awal!`,
       relatedTaskId: topTask.id,
       actionCta: {
@@ -101,11 +101,11 @@ export class InsightService {
 
     let content = "";
     if (urgentBudget.usedPercentage >= 100) {
-      content = `Pengeluaran untuk ${urgentBudget.categoryName} sudah mencapai batas limit bulanan (${urgentBudget.usedPercentage}%). Tetap tenang, yuk alihkan fokus ke kebutuhan esensial ya! 💡`;
+      content = `Pengeluaran untuk ${urgentBudget.categoryName} sudah mencapai batas limit bulanan (${urgentBudget.usedPercentage}%). Tetap tenang, yuk alihkan fokus ke kebutuhan esensial ya!`;
     } else if (urgentBudget.usedPercentage >= 90) {
-      content = `Sisa anggaran ${urgentBudget.categoryName} tersisa ${100 - urgentBudget.usedPercentage}%. Yuk tahan jajan beberapa hari ke depan agar cashflow tetap aman! ✨`;
+      content = `Sisa anggaran ${urgentBudget.categoryName} tersisa ${100 - urgentBudget.usedPercentage}%. Yuk tahan jajan beberapa hari ke depan agar cashflow tetap aman!`;
     } else {
-      content = `Anggaran ${urgentBudget.categoryName} sudah terpakai ${urgentBudget.usedPercentage}%. Pengeluaranmu masih terkendali dengan baik, pertahankan! 👍`;
+      content = `Anggaran ${urgentBudget.categoryName} sudah terpakai ${urgentBudget.usedPercentage}%. Pengeluaranmu masih terkendali dengan baik, pertahankan!`;
     }
 
     return {

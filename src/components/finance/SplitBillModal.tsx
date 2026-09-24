@@ -117,7 +117,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
       });
     }
 
-    toast.success(`Berhasil mencatat talangan untuk ${friendList.length} teman! 👥`);
+    toast.success(`Berhasil mencatat talangan untuk ${friendList.length} teman!`);
     setActiveTab("list");
     setTotalBill("");
     setBillTitle("");
@@ -144,14 +144,14 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
       });
     }
 
-    toast.success(`Berhasil mencatat talangan proporsional untuk ${others.length} teman! 🍽️`);
+    toast.success(`Berhasil mencatat talangan proporsional untuk ${others.length} teman!`);
     setActiveTab("list");
   };
 
   const generateWhatsAppBroadcast = () => {
     triggerHaptic("light");
     const title = billTitle.trim() || "Makan Bersama";
-    let text = `Halo temen-temen! ✨\nIni rincian patungan untuk *${title}* yaa:\n\n`;
+    let text = `Halo temen-temen!\nIni rincian patungan untuk *${title}* yaa:\n\n`;
 
     if (splitMode === "equal") {
       text += `Total tagihan: ${formatCurrencyIDR(Number(totalBill) || 0)}\n`;
@@ -168,7 +168,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
       text += `\n*Total Bayar: ${formatCurrencyIDR(proportionalResult.grandTotal)}*\n\n`;
     }
 
-    text += `Bisa transfer talangan ke:\n💳 ${myPaymentInfo}\n\nMakasih banyak semuanya! 🙏`;
+    text += `Bisa transfer talangan ke:\nRekening/E-Wallet: ${myPaymentInfo}\n\nTerima kasih semuanya!`;
 
     const encoded = encodeURIComponent(text);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
@@ -177,7 +177,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
   const handleSettle = async (id: string, name: string, amount: number) => {
     triggerHaptic("success");
     await settleDebt(id);
-    toast.success(`Talangan dari ${name} sebesar ${formatCurrencyIDR(amount)} ditandai LUNAS! 🎉`, {
+    toast.success(`Talangan dari ${name} sebesar ${formatCurrencyIDR(amount)} ditandai LUNAS!`, {
       description: "Otomatis dicatat sebagai pemasukan di dompet Felys.",
     });
   };
@@ -204,7 +204,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-foreground">
-                Split Bill & Catatan Talangan 👥
+                Split Bill & Catatan Talangan
               </h3>
               <p className="text-xs text-muted">
                 Bagi tagihan makan kelompok proporsional & tagih via WhatsApp
@@ -224,7 +224,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
           options={[
             {
               id: "calculator",
-              label: "Kalkulator Patungan 🧮",
+              label: "Kalkulator Patungan",
               activeColor: "bg-[#7FE3C0]",
               activeTextColor: "text-[#0F3E30] dark:text-[#0F3E30]",
             },
@@ -268,7 +268,7 @@ export function SplitBillModal({ isOpen, onClose }: SplitBillModalProps) {
                     : "text-muted hover:text-foreground"
                 }`}
               >
-                Rinci per Menu + Pajak (Proporsional) ✨
+                Rinci per Menu + Pajak (Proporsional)
               </button>
             </div>
 

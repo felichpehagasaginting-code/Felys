@@ -47,7 +47,8 @@ export default function FinanceBudgetPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-            Alokasi Budget Bulanan 📊
+            <PieChart className="w-7 h-7 text-[#1F8766] dark:text-[#7FE3C0]" />
+            Alokasi Budget Bulanan
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
             Atur limit pengeluaran per kategori agar pengeluaran kamu tetap terkontrol.

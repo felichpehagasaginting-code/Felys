@@ -105,7 +105,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
       notificationService.playChime(isFocus ? "focus_done" : "break_done");
       notificationService.sendNotification(
-        isFocus ? "🎉 Sesi Fokus Selesai!" : "☕ Waktu Istirahat Selesai!",
+        isFocus ? "Sesi Fokus Selesai!" : "Waktu Istirahat Selesai!",
         {
           body: isFocus
             ? `Kerja bagus! Waktunya istirahat sejenak 5 menit sebelum lanjut ${activeTaskTitle || "tugas"}.`

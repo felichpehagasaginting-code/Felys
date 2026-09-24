@@ -93,8 +93,9 @@ export function OnboardingWizard() {
                 F
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-foreground tracking-tight">
-                  Halo, kenalin aku Fio ✨
+                <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                  <span>Halo, kenalin aku Fio</span>
+                  <Sparkles className="w-5 h-5 text-[#7C5CFA]" />
                 </h2>
                 <p className="text-xs text-muted mt-1 leading-relaxed">
                   Aku bantu jaga tugas kuliah & uang sakumu dalam satu tempat. Siapa nama panggilanmu?

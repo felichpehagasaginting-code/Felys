@@ -8,7 +8,7 @@ import { useDataStore } from "@/stores/use-data-store";
 import { AccountProviderLogo } from "./AccountProviderLogo";
 import { formatCurrencyIDR } from "@/lib/utils";
 import { triggerHaptic } from "@/lib/haptics";
-import { Check, Edit3, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import { Check, Edit3, ArrowRight, Sparkles, ShieldCheck, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 
 interface AdjustBalanceModalProps {
@@ -38,14 +38,14 @@ export function AdjustBalanceModal({ isOpen, onClose, account }: AdjustBalanceMo
     triggerHaptic("medium");
 
     await adjustAccountBalance(account.id, targetBal);
-    toast.success(`Saldo ${account.name} berhasil disesuaikan menjadi ${formatCurrencyIDR(targetBal)}! ✨`);
+    toast.success(`Saldo ${account.name} berhasil disesuaikan menjadi ${formatCurrencyIDR(targetBal)}!`);
     onClose();
   };
 
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Ubah Saldo Langsung (Rekonsiliasi) ✏️"
+        title="Ubah Saldo Langsung (Rekonsiliasi)"
         description="Ubah saldo dompet/rekening sesuai nominal asli tanpa memengaruhi grafik pemasukan dan pengeluaran bulanan."
         className="max-w-md w-[95vw]"
       >
@@ -105,8 +105,9 @@ export function AdjustBalanceModal({ isOpen, onClose, account }: AdjustBalanceMo
                 {difference > 0 ? `+${formatCurrencyIDR(difference)}` : formatCurrencyIDR(difference)}
               </span>
             </div>
-            <p className="text-[10px] text-muted leading-relaxed">
-              💡 <b>Catatan Praktis:</b> Penyesuaian saldo ini murni menyinkronkan nominal uang riil kamu tanpa dicatat sebagai transaksi pengeluaran/pemasukan.
+            <p className="text-[10px] text-muted leading-relaxed flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-[#B86B14] shrink-0" />
+              <span><b>Catatan Praktis:</b> Penyesuaian saldo ini murni menyinkronkan nominal uang riil kamu tanpa dicatat sebagai transaksi pengeluaran/pemasukan.</span>
             </p>
           </div>
 

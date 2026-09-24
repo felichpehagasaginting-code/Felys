@@ -81,7 +81,7 @@ export function AccountFormModal({ isOpen, onClose, editAccount }: AccountFormMo
         currentBalance: balanceNum,
         color,
       });
-      toast.success(`Akun "${name}" berhasil diperbarui! ✨`);
+      toast.success(`Akun "${name}" berhasil diperbarui!`);
     } else {
       await addAccount({
         name: name.trim(),
@@ -90,7 +90,7 @@ export function AccountFormModal({ isOpen, onClose, editAccount }: AccountFormMo
         currentBalance: balanceNum,
         color,
       });
-      toast.success(`Akun "${name}" berhasil ditambahkan! 💳`);
+      toast.success(`Akun "${name}" berhasil ditambahkan!`);
     }
 
     onClose();
@@ -109,7 +109,7 @@ export function AccountFormModal({ isOpen, onClose, editAccount }: AccountFormMo
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title={editAccount ? "Edit Rekening / E-Wallet 💳" : "Tambah Rekening / E-Wallet Baru 💳"}
+        title={editAccount ? "Edit Rekening / E-Wallet" : "Tambah Rekening / E-Wallet Baru"}
         description="Pilih platform keuangan pihak ketiga untuk mengalokasikan saldo dan penyimpanan uangmu."
         className="max-w-lg w-[95vw]"
       >

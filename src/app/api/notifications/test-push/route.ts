@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const { title, body } = await req.json().catch(() => ({}));
 
     const result = await PushDispatcherService.sendPushToUser(uid, {
-      title: title || "Halo dari Felys! ✨",
+      title: title || "Halo dari Felys!",
       body: body || "Uji coba notifikasi push latar belakang berhasil. Kamu siap menerima pengingat deadline & budget!",
       url: "/settings",
       tag: "felys-test-push",

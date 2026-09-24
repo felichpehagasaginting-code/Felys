@@ -89,7 +89,7 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
   const handleCopyInvite = () => {
     triggerHaptic("light");
     navigator.clipboard.writeText(workspace.inviteCode);
-    toast.success(`Kode Undangan "${workspace.inviteCode}" disalin ke clipboard! 📋`);
+    toast.success(`Kode Undangan "${workspace.inviteCode}" disalin ke clipboard!`);
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: GroupTaskStatus) => {
@@ -124,7 +124,7 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
 
     setNewTaskTitle("");
     setActiveTab("kanban");
-    toast.success(`Tugas kelompok "${newTask.title}" berhasil ditambahkan! 🚀`);
+    toast.success(`Tugas kelompok "${newTask.title}" berhasil ditambahkan!`);
   };
 
   const handleJoinByCode = () => {
@@ -133,7 +133,7 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
       return;
     }
     triggerHaptic("success");
-    toast.success(`Berhasil bergabung ke kelompok kode ${joinCodeInput.toUpperCase()}! 🎉`);
+    toast.success(`Berhasil bergabung ke kelompok kode ${joinCodeInput.toUpperCase()}!`);
     setJoinCodeInput("");
   };
 
@@ -150,14 +150,14 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
       ...prev,
       members: [...prev.members, newMember],
     }));
-    toast.success(`${newMember.displayName} berhasil ditambahkan ke tim! 👥`);
+    toast.success(`${newMember.displayName} berhasil ditambahkan ke tim!`);
     setNewMemberName("");
   };
 
   const kanbanColumns: { id: GroupTaskStatus; label: string; color: string }[] = [
-    { id: "todo", label: "Antrean 📋", color: "border-border" },
-    { id: "in_progress", label: "Dikerjakan ⏳", color: "border-[#7C5CFA]" },
-    { id: "done", label: "Selesai ✅", color: "border-[#7FE3C0]" },
+    { id: "todo", label: "Antrean", color: "border-border" },
+    { id: "in_progress", label: "Dikerjakan", color: "border-[#7C5CFA]" },
+    { id: "done", label: "Selesai", color: "border-[#7FE3C0]" },
   ];
 
   return (
@@ -310,9 +310,10 @@ export function TeamWorkspaceModal({ isOpen, onClose }: TeamWorkspaceModalProps)
                               <button
                                 type="button"
                                 onClick={() => handleTaskStatusChange(task.id, "done")}
-                                className="text-[9px] px-1.5 py-0.5 rounded bg-[#E0FBF2] dark:bg-[#1A3329] text-[#1F8766] dark:text-[#7FE3C0] font-semibold"
+                                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-[#E0FBF2] dark:bg-[#1A3329] text-[#1F8766] dark:text-[#7FE3C0] font-semibold"
                               >
-                                Selesai ✓
+                                <Check className="w-2.5 h-2.5" />
+                                <span>Selesai</span>
                               </button>
                             )}
                           </div>

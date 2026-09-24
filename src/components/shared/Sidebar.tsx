@@ -97,9 +97,10 @@ export function Sidebar() {
         </p>
         <button
           onClick={toggleDrawer}
-          className="w-full py-2 px-3 rounded-xl bg-surface text-xs font-bold text-foreground shadow-soft hover:bg-white/90 transition-all text-center"
+          className="w-full py-2 px-3 rounded-xl bg-surface text-xs font-bold text-foreground shadow-soft hover:bg-white/90 transition-all text-center flex items-center justify-center gap-1.5"
         >
-          Buka Chat AI ✨
+          <Sparkles className="w-3.5 h-3.5 text-[#7C5CFA]" />
+          <span>Buka Chat AI</span>
         </button>
       </div>
     </aside>

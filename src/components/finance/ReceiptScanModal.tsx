@@ -123,7 +123,7 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
         date: new Date(transactionDate).toISOString(),
       });
 
-      toast.success(`Transaksi ${formatCurrencyIDR(extractedAmount)} tersimpan! 🎉`);
+      toast.success(`Transaksi ${formatCurrencyIDR(extractedAmount)} tersimpan!`);
       handleReset();
       onClose();
     } catch {
@@ -150,7 +150,7 @@ export function ReceiptScanModal({ isOpen, onClose }: ReceiptScanModalProps) {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-foreground">
-                  Pindai Struk / Bukti QRIS 📸
+                  Pindai Struk / Bukti QRIS
                 </h3>
                 <p className="text-[11px] text-muted">
                   Ambil foto nota kantin atau screenshot pembayaran

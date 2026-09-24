@@ -38,7 +38,7 @@ export function DDayCountdownBanner() {
         targetDate: tempDate,
       });
       setIsEditing(false);
-      toast.success("Target D-Day berhasil disimpan! 🎯");
+      toast.success("Target D-Day berhasil disimpan!");
     } catch {
       toast.error("Gagal menyimpan Target D-Day ke server.");
     }
@@ -92,7 +92,7 @@ export function DDayCountdownBanner() {
                       : "text-[#7C5CFA]"
                   }`}
                 >
-                  {daysLeft > 0 ? `H-${daysLeft}` : daysLeft === 0 ? "HARI H! 🔥" : "Selesai ✨"}
+                  {daysLeft > 0 ? `H-${daysLeft}` : daysLeft === 0 ? "HARI H!" : "Selesai"}
                 </span>
                 <span className="text-[10px] font-bold text-muted block">
                   {daysLeft > 0 ? `${daysLeft} hari lagi` : "Semoga sukses!"}

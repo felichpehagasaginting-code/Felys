@@ -75,7 +75,7 @@ export function TaskCard({ task, onEdit }: TaskCardProps) {
         origin: { y: 0.8 },
         colors: ["#B69CFF", "#7FE3C0", "#FFC978"],
       });
-      toast.success("Hebat! 1 tugas kuliah berhasil diselesaikan 🎉");
+      toast.success("Hebat! 1 tugas kuliah berhasil diselesaikan");
     } else {
       playPop();
     }

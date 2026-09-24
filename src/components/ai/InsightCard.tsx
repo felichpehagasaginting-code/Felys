@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, X, ArrowRight, AlertTriangle, CheckCircle2, MessageSquare, Zap, Clock } from "lucide-react";
+import { Sparkles, X, ArrowRight, AlertTriangle, CheckCircle2, MessageSquare, Zap, Clock, Flame, Wallet, Target } from "lucide-react";
 import { AIInsight } from "@/types/ai";
 import { Button } from "@/components/ui/Button";
 import { useDataStore } from "@/stores/use-data-store";
@@ -168,12 +168,14 @@ export function InsightCard({ insight }: InsightCardProps) {
       {/* Data Meter — visual seirama badge skill di drawer */}
       {isCrossMode ? (
         <div className="flex flex-wrap gap-1.5 mb-4">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFE8EA] text-[#D93D4A] text-[11px] font-bold">
-            🔥 {urgentCount} deadline mepet
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFE8EA] text-[#D93D4A] text-[11px] font-bold">
+            <Flame className="w-3 h-3 text-[#D93D4A] shrink-0" />
+            <span>{urgentCount} deadline mepet</span>
           </span>
           {linkedBudget && budgetCfg && (
-            <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold", budgetCfg.badgeBg, budgetCfg.textColor)}>
-              💸 {linkedBudget.categoryName} {linkedBudget.usedPercentage}%
+            <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold", budgetCfg.badgeBg, budgetCfg.textColor)}>
+              <Wallet className="w-3 h-3 shrink-0" />
+              <span>{linkedBudget.categoryName} {linkedBudget.usedPercentage}%</span>
             </span>
           )}
         </div>
@@ -197,7 +199,10 @@ export function InsightCard({ insight }: InsightCardProps) {
       ) : linkedTask && urgencyCfg ? (
         <div className="mb-4">
           <div className="flex items-center justify-between text-[11px] font-bold mb-1.5">
-            <span className="text-foreground/80 truncate mr-2">🎯 {linkedTask.title}</span>
+            <span className="text-foreground/80 truncate mr-2 inline-flex items-center gap-1.5">
+              <Target className="w-3 h-3 text-[#7C5CFA] shrink-0" />
+              <span className="truncate">{linkedTask.title}</span>
+            </span>
             <span className={urgencyCfg.textClass}>
               {Math.round(linkedTask.urgencyScore)}/100 {urgencyCfg.label}
             </span>

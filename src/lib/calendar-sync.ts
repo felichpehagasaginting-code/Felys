@@ -34,7 +34,7 @@ export function generateGoogleCalendarUrl(task: Task): string {
       `Prioritas: ${task.priority.toUpperCase()}\n` +
       `Skor Urgensi: ${Math.round(task.urgencyScore)}/100\n` +
       (task.subtasks && task.subtasks.length > 0
-        ? `Subtasks:\n${task.subtasks.map((s, i) => `${i + 1}. ${s.title} (${s.isDone ? "✓" : "○"})`).join("\n")}`
+        ? `Subtasks:\n${task.subtasks.map((s, i) => `${i + 1}. [${s.isDone ? "x" : " "}] ${s.title}`).join("\n")}`
         : "")
   );
 

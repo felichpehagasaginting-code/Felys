@@ -36,7 +36,7 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
 
       if (actionType === "deposit") {
         await depositEmergencyFund(Number(amount), note.trim() || "Setor Dana Darurat Kos");
-        toast.success(`Berhasil menyimpan ${formatCurrencyIDR(Number(amount))} ke Dana Darurat! 🛡️`);
+        toast.success(`Berhasil menyimpan ${formatCurrencyIDR(Number(amount))} ke Dana Darurat!`);
       } else {
         if (Number(amount) > emergencyFund) {
           toast.error("Saldo dana darurat tidak mencukupi!");
@@ -62,7 +62,7 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
     try {
       triggerHaptic("success");
       await rolloverSurplus(summary.netSavings);
-      toast.success(`Berhasil memindahkan surplus ${formatCurrencyIDR(summary.netSavings)} ke Kantong Dana Darurat! ✨`);
+      toast.success(`Berhasil memindahkan surplus ${formatCurrencyIDR(summary.netSavings)} ke Kantong Dana Darurat!`);
     } catch (err) {
       toast.error("Gagal melakukan rollover.");
     }
@@ -71,7 +71,7 @@ export function EmergencyFundModal({ isOpen, onClose }: EmergencyFundModalProps)
   return (
     <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ModalContent
-        title="Kantong Dana Darurat Kos 🛡️"
+        title="Kantong Dana Darurat Kos"
         description="Simpan dana cadangan untuk keperluan tak terduga (tambal ban, obat sakit, servis laptop)."
       >
         <div className="space-y-4 pt-2">

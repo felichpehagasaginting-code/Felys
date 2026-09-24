@@ -54,8 +54,9 @@ export function OfflineStatusBanner() {
               <b>Mode Offline:</b> Perubahan disimpan lokal di HP/Laptop
             </span>
           </div>
-          <span className="text-[10px] text-white/60 bg-white/10 px-2 py-0.5 rounded-full shrink-0">
-            Aman ✓
+          <span className="text-[10px] text-white/80 bg-white/10 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+            <Check className="w-3 h-3 text-[#7FE3C0]" />
+            <span>Aman</span>
           </span>
         </motion.div>
       )}

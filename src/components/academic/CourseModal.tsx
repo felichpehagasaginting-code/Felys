@@ -62,14 +62,14 @@ export function CourseModal({ isOpen, onClose, courseToEdit }: CourseModalProps)
           color,
           sks,
         });
-        toast.success(`Mata kuliah "${name.trim()}" berhasil diperbarui! ✨`);
+        toast.success(`Mata kuliah "${name.trim()}" berhasil diperbarui!`);
       } else {
         await addCourse({
           name: name.trim(),
           color,
           sks,
         });
-        toast.success(`Mata kuliah "${name.trim()}" berhasil ditambahkan! 📚`);
+        toast.success(`Mata kuliah "${name.trim()}" berhasil ditambahkan!`);
       }
 
       setName("");

@@ -107,7 +107,7 @@ export default function SettingsPage() {
       const json = await res.json();
       if (json.success) {
         setPairingData(json.data);
-        toast.success("Kode pairing bot berhasil dibuat! 🤖", {
+        toast.success("Kode pairing bot berhasil dibuat!", {
           description: "Kirim kode ini ke bot Telegram Felys dalam 10 menit.",
         });
       } else {
@@ -168,7 +168,7 @@ export default function SettingsPage() {
         const res = await PushNotificationClient.subscribe(user.uid);
         if (res.success) {
           setIsPushSubscribed(true);
-          toast.success("Notifikasi push aktif! ✨", {
+          toast.success("Notifikasi push aktif!", {
             description: "Kamu akan menerima pengingat deadline & batas anggaran bahkan saat tab ditutup.",
           });
         } else {
@@ -191,7 +191,7 @@ export default function SettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "Uji Coba Felys Push ✨",
+          title: "Uji Coba Felys Push",
           body: "Halo! Notifikasi latar belakang Felys berfungsi dengan sempurna di perangkat kamu.",
         }),
       });
@@ -231,7 +231,7 @@ export default function SettingsPage() {
         if (res.success) {
           const updated = await GoogleCalendarClient.getStatus(user.uid);
           setGcalStatus(updated);
-          toast.success("Google Calendar terhubung! 📅", {
+          toast.success("Google Calendar terhubung!", {
             description: "Kalender 'Felys Academic' telah dibuat di akun Google kamu.",
           });
         } else {
@@ -252,7 +252,7 @@ export default function SettingsPage() {
     try {
       const res = await GoogleCalendarClient.syncNow(user.uid);
       if (res.success) {
-        toast.success("Sinkronisasi Berhasil! ✨", {
+        toast.success("Sinkronisasi Berhasil!", {
           description: `${res.pushed || 0} tugas diunggah ke Google Calendar, ${res.pulled || 0} jadwal ditarik ke Felys.`,
         });
         const updated = await GoogleCalendarClient.getStatus(user.uid);
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                   <span>Background Web Push Notifications (PWA)</span>
                   {isPushSubscribed ? (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E0FBF2] text-[#1F8766] dark:bg-[#1E332A] dark:text-[#7FE3C0]">
-                      Aktif 🔔
+                      Aktif
                     </span>
                   ) : (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-muted">
@@ -405,7 +405,7 @@ export default function SettingsPage() {
                   <span>Sinkronisasi Google Calendar (2-Way Sync)</span>
                   {gcalStatus?.isConnected ? (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EDE5FF] text-[#7C5CFA] dark:bg-[#2F244A] dark:text-[#B69CFF]">
-                      Terhubung 📅
+                      Terhubung
                     </span>
                   ) : (
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-muted">
@@ -598,7 +598,7 @@ export default function SettingsPage() {
               <span>Tema Tampilan (Tersimpan di Perangkat Ini)</span>
             </h3>
             <span className="text-[10px] font-semibold text-muted bg-surface border border-border px-2 py-0.5 rounded-full">
-              {theme === "dark" ? "Mode Gelap 🌙" : theme === "light" ? "Mode Terang ☀️" : "Sistem Otomatis 💻"}
+              {theme === "dark" ? "Mode Gelap" : theme === "light" ? "Mode Terang" : "Sistem Otomatis"}
             </span>
           </div>
 
@@ -683,7 +683,7 @@ export default function SettingsPage() {
                   : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
-              <span className="text-xs font-bold text-foreground block">Mode Akademik 🎓</span>
+              <span className="text-xs font-bold text-foreground block">Mode Akademik</span>
               <span className="text-[11px] text-muted block mt-0.5">
                 Fokus manajemen tugas & deadline kuliah
               </span>
@@ -700,7 +700,7 @@ export default function SettingsPage() {
                   : "bg-surface border-border hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
-              <span className="text-xs font-bold text-foreground block">Mode Keuangan 💸</span>
+              <span className="text-xs font-bold text-foreground block">Mode Keuangan</span>
               <span className="text-[11px] text-muted block mt-0.5">
                 Fokus pencatatan uang saku, rekening & budget
               </span>

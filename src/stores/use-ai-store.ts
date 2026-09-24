@@ -30,7 +30,7 @@ const initialMessages: AIChatMessage[] = [
   {
     id: "msg_init_1",
     role: "assistant",
-    content: "Hai! Aku **Fio**, asisten pintar Felys kamu ✨ Mau cek tugas yang harus dikerjain duluan atau mau cek sisa budget hari ini?",
+    content: "Hai! Aku **Fio**, asisten pintar Felys kamu. Mau cek tugas yang harus dikerjain duluan atau mau cek sisa budget hari ini?",
     createdAt: new Date().toISOString(),
   },
 ];

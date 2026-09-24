@@ -15,6 +15,9 @@ import {
   ExternalLink,
   Layers,
   SlidersHorizontal,
+  Timer,
+  Coffee,
+  Armchair,
 } from "lucide-react";
 import { IOSSegmentedControl } from "@/components/ui/IOSSegmentedControl";
 
@@ -67,9 +70,9 @@ export function DynamicIsland() {
 
       if (timeEl) timeEl.textContent = formatTime(timeLeft);
       if (titleEl) titleEl.textContent = activeTaskTitle || "Felys Workspace";
-      if (statusEl) statusEl.textContent = mode === "focus" ? "🍅 Fokus Belajar" : "☕ Waktu Istirahat";
+      if (statusEl) statusEl.textContent = mode === "focus" ? "Fokus Belajar" : "Waktu Istirahat";
       if (playBtn) {
-        playBtn.textContent = isRunning ? "⏸️ Jeda" : "▶️ Mulai";
+        playBtn.textContent = isRunning ? "Jeda" : "Mulai";
         playBtn.style.backgroundColor = isRunning ? "#FF7A85" : "#7FE3C0";
         playBtn.style.color = isRunning ? "#FFFFFF" : "#0F3E30";
       }
@@ -153,7 +156,7 @@ export function DynamicIsland() {
         pipWindowRef.current = pip;
 
         const doc = pip.document;
-        doc.title = "🍅 Felys Dynamic Island";
+        doc.title = "Felys Dynamic Island";
         doc.body.style.margin = "0";
         doc.body.style.padding = "10px";
         doc.body.style.boxSizing = "border-box";
@@ -170,7 +173,11 @@ export function DynamicIsland() {
         doc.body.innerHTML = `
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 14px;">${mode === "focus" ? "🍅" : "☕"}</span>
+              <span id="pip-mode-icon" style="display:flex;align-items:center;">
+                ${mode === "focus" 
+                  ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7FE3C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>` 
+                  : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFC978" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>`}
+              </span>
               <span id="pip-status" style="font-size: 11px; font-weight: 700; color: #B69CFF;">
                 ${mode === "focus" ? "Fokus Belajar" : "Istirahat"}
               </span>
@@ -186,11 +193,11 @@ export function DynamicIsland() {
             </div>
 
             <div style="display: flex; gap: 6px;">
-              <button id="pip-reset-btn" style="background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 12px; padding: 6px 8px; font-size: 11px; cursor: pointer; font-weight: bold;">
-                🔄
+              <button id="pip-reset-btn" style="background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 12px; padding: 6px 8px; font-size: 11px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
               </button>
               <button id="pip-play-btn" style="background: ${isRunning ? "#FF7A85" : "#7FE3C0"}; border: none; color: ${isRunning ? "#FFFFFF" : "#0F3E30"}; border-radius: 12px; padding: 6px 12px; font-size: 11px; cursor: pointer; font-weight: 800;">
-                ${isRunning ? "⏸️ Jeda" : "▶️ Mulai"}
+                ${isRunning ? "Jeda" : "Mulai"}
               </button>
             </div>
           </div>
@@ -290,8 +297,14 @@ export function DynamicIsland() {
             >
               {/* Left Indicator */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-sm select-none">
-                  {mode === "focus" ? "🍅" : "☕"}
+                <span className="flex items-center justify-center select-none">
+                  {mode === "focus" ? (
+                    <Timer className="w-3.5 h-3.5 text-[#7FE3C0]" />
+                  ) : mode === "short_break" ? (
+                    <Coffee className="w-3.5 h-3.5 text-[#FFC978]" />
+                  ) : (
+                    <Armchair className="w-3.5 h-3.5 text-[#8EC8FF]" />
+                  )}
                 </span>
                 {isRunning ? (
                   <span className="flex h-2 w-2 relative">
@@ -349,8 +362,14 @@ export function DynamicIsland() {
               {/* Header inside Island with Drag Bar */}
               <div className="flex items-center justify-between cursor-grab active:cursor-grabbing">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-base">
-                    {mode === "focus" ? "🍅" : "☕"}
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
+                    {mode === "focus" ? (
+                      <Timer className="w-4 h-4 text-[#7C5CFA]" />
+                    ) : mode === "short_break" ? (
+                      <Coffee className="w-4 h-4 text-[#7FE3C0]" />
+                    ) : (
+                      <Armchair className="w-4 h-4 text-[#8EC8FF]" />
+                    )}
                   </div>
                   <div>
                     <span className="text-xs font-bold text-white block leading-tight">
@@ -408,19 +427,19 @@ export function DynamicIsland() {
                   options={[
                     {
                       id: "focus",
-                      label: "Fokus 🍅",
+                      label: "Fokus",
                       activeColor: "bg-[#7C5CFA]",
                       activeTextColor: "text-white",
                     },
                     {
                       id: "short_break",
-                      label: "Jeda ☕",
+                      label: "Jeda",
                       activeColor: "bg-[#7FE3C0]",
                       activeTextColor: "text-[#0F3E30]",
                     },
                     {
                       id: "long_break",
-                      label: "Panjang 🛋️",
+                      label: "Panjang",
                       activeColor: "bg-[#8EC8FF]",
                       activeTextColor: "text-[#0C2D48]",
                     },

@@ -41,7 +41,7 @@ export class TelegramBotService {
     return {
       success: true,
       uid: record.uid,
-      message: "Akun Telegram berhasil terhubung dengan akun Felys kamu! ✨\nSekarang kamu bisa langsung ketik atau kirim pesan pengeluaran atau tugas kuliah di sini.",
+      message: "Akun Telegram berhasil terhubung dengan akun Felys kamu!\nSekarang kamu bisa langsung ketik atau kirim pesan pengeluaran atau tugas kuliah di sini.",
     };
   }
 
@@ -100,14 +100,14 @@ export class TelegramBotService {
         return { replyText: res.message, action: res.success ? "paired" : undefined };
       }
       return {
-        replyText: `Hai Mahasiswa! 🎓\nSelamat datang di Bot Asisten Felys.\n\nUntuk menghubungkan bot ini ke akun kamu, buka web Felys > Pengaturan > Bot Chat, lalu kirim perintah:\n/link KODE\n(Contoh: /link 123456)`,
+        replyText: `Hai Mahasiswa!\nSelamat datang di Bot Asisten Felys.\n\nUntuk menghubungkan bot ini ke akun kamu, buka web Felys > Pengaturan > Bot Chat, lalu kirim perintah:\n/link KODE\n(Contoh: /link 123456)`,
         action: "help",
       };
     }
 
     if (trimmed === "/help" || trimmed === "/bantuan") {
       return {
-        replyText: `Panduan Pintas Bot Felys 💡\n\n• Catat Pengeluaran: "Beli geprek 18rb pake gopay" atau "Makan siang 15000"\n• Catat Pemasukan: "Dikasih uang saku 200rb"\n• Catat Tugas: "Tugas kalkulus jumat jam 23:59" atau "Makalah AI lusa"\n• Paste SMS Bank: Cukup tempelkan SMS/notifikasi mutasi BCA/SeaBank kamu di sini!`,
+        replyText: `Panduan Pintas Bot Felys\n\n• Catat Pengeluaran: "Beli geprek 18rb pake gopay" atau "Makan siang 15000"\n• Catat Pemasukan: "Dikasih uang saku 200rb"\n• Catat Tugas: "Tugas kalkulus jumat jam 23:59" atau "Makalah AI lusa"\n• Paste SMS Bank: Cukup tempelkan SMS/notifikasi mutasi BCA/SeaBank kamu di sini!`,
         action: "help",
       };
     }
@@ -119,7 +119,7 @@ export class TelegramBotService {
     if (nlpResult && (isAcademicQuery || nlpResult.type === "task")) {
       if (nlpResult.type === "task" && nlpResult.taskData) {
         return {
-          replyText: `Tugas Berhasil Dijadwalkan! 📚\n\n• Judul: ${nlpResult.taskData.title}\n• Mata Kuliah: ${nlpResult.taskData.courseName || "Umum"}\n• Deadline: ${formatDateRelative(nlpResult.taskData.deadline)}\n• Prioritas: ${nlpResult.taskData.priority.toUpperCase()}\n\n✓ Sudah masuk ke papan tugas Felys kamu.`,
+          replyText: `Tugas Berhasil Dijadwalkan!\n\n• Judul: ${nlpResult.taskData.title}\n• Mata Kuliah: ${nlpResult.taskData.courseName || "Umum"}\n• Deadline: ${formatDateRelative(nlpResult.taskData.deadline)}\n• Prioritas: ${nlpResult.taskData.priority.toUpperCase()}\n\nStatus: Sudah masuk ke papan tugas Felys kamu.`,
           action: "task_added",
           data: nlpResult.taskData,
         };
@@ -132,7 +132,7 @@ export class TelegramBotService {
       const bankMutation = parseBankMutation(trimmed);
       if (bankMutation) {
         return {
-          replyText: `Transaksi Mutasi Dicatat! 💸\n\n• Rekening: ${bankMutation.provider.toUpperCase()}\n• Tipe: ${bankMutation.type === "income" ? "Pemasukan 🟢" : "Pengeluaran 🔴"}\n• Nominal: ${formatCurrencyIDR(bankMutation.amount)}\n• Keterangan: ${bankMutation.merchantOrNote}\n\n✓ Transaksi berhasil dicatat.`,
+          replyText: `Transaksi Mutasi Dicatat!\n\n• Rekening: ${bankMutation.provider.toUpperCase()}\n• Tipe: ${bankMutation.type === "income" ? "Pemasukan" : "Pengeluaran"}\n• Nominal: ${formatCurrencyIDR(bankMutation.amount)}\n• Keterangan: ${bankMutation.merchantOrNote}\n\nStatus: Transaksi berhasil dicatat.`,
           action: "transaction_added",
           data: bankMutation,
         };
@@ -142,7 +142,7 @@ export class TelegramBotService {
     // 4. Try parsing natural language transaction
     if (nlpResult && nlpResult.type === "transaction" && nlpResult.transactionData) {
       return {
-        replyText: `Pengeluaran Berhasil Dicatat! 💸\n\n• Nominal: ${formatCurrencyIDR(nlpResult.transactionData.amount)}\n• Kategori: ${nlpResult.transactionData.categoryName || "Umum"}\n• Keterangan: ${nlpResult.transactionData.note}\n\n✓ Saldo jatah harianmu telah disesuaikan di Felys.`,
+        replyText: `Pengeluaran Berhasil Dicatat!\n\n• Nominal: ${formatCurrencyIDR(nlpResult.transactionData.amount)}\n• Kategori: ${nlpResult.transactionData.categoryName || "Umum"}\n• Keterangan: ${nlpResult.transactionData.note}\n\nStatus: Saldo jatah harianmu telah disesuaikan di Felys.`,
         action: "transaction_added",
         data: nlpResult.transactionData,
       };
@@ -150,7 +150,7 @@ export class TelegramBotService {
 
     // 4. Default friendly prompt
     return {
-      replyText: `Fio kurang memahami teks ini 🤔\nCoba ketik seperti ini:\n• "Makan siang 15rb"\n• "Tugas algoritma selasa jam 12:00"\n\nAtau ketik /bantuan untuk melihat contoh.`,
+      replyText: `Fio kurang memahami teks ini.\nCoba ketik seperti ini:\n• "Makan siang 15rb"\n• "Tugas algoritma selasa jam 12:00"\n\nAtau ketik /bantuan untuk melihat contoh.`,
       action: "help",
     };
   }
