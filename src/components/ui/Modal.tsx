@@ -7,14 +7,22 @@ import { cn } from "@/lib/utils";
 
 export const Modal = DialogPrimitive.Root;
 export const ModalTrigger = DialogPrimitive.Trigger;
+export const ModalClose = DialogPrimitive.Close;
 
 export function ModalContent({
   className,
   children,
   title,
   description,
+  showCloseButton,
   ...props
-}: DialogPrimitive.DialogContentProps & { title?: string; description?: string }) {
+}: DialogPrimitive.DialogContentProps & {
+  title?: string;
+  description?: string;
+  showCloseButton?: boolean;
+}) {
+  const shouldShowClose = showCloseButton ?? Boolean(title);
+
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
@@ -25,17 +33,31 @@ export function ModalContent({
         )}
         {...props}
       >
-        <div className="flex items-center justify-between">
-          {title && (
+        {title ? (
+          <div className="flex items-center justify-between">
             <DialogPrimitive.Title className="text-lg font-bold text-foreground">
               {title}
             </DialogPrimitive.Title>
-          )}
-          <DialogPrimitive.Close className="rounded-full p-1.5 text-muted hover:bg-black/5 hover:text-foreground transition-colors ml-auto">
-            <X className="h-5 w-5" />
-            <span className="sr-only">Tutup</span>
-          </DialogPrimitive.Close>
-        </div>
+            {shouldShowClose && (
+              <DialogPrimitive.Close className="rounded-full p-1.5 text-muted hover:bg-black/5 hover:text-foreground transition-colors ml-auto">
+                <X className="h-5 w-5" />
+                <span className="sr-only">Tutup</span>
+              </DialogPrimitive.Close>
+            )}
+          </div>
+        ) : (
+          <>
+            <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+            {shouldShowClose && (
+              <div className="flex items-center justify-end">
+                <DialogPrimitive.Close className="rounded-full p-1.5 text-muted hover:bg-black/5 hover:text-foreground transition-colors ml-auto">
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Tutup</span>
+                </DialogPrimitive.Close>
+              </div>
+            )}
+          </>
+        )}
         {description && (
           <DialogPrimitive.Description className="text-sm text-muted -mt-2">
             {description}

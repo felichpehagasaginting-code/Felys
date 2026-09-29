@@ -17,7 +17,8 @@ export function LiveClassStatusCard() {
     return () => clearInterval(interval);
   }, []);
 
-  const currentDay = now.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
+  const jsDay = now.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const currentDay = jsDay === 0 ? 7 : jsDay; // 1 = Senin, ..., 7 = Minggu
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   // Extract all schedules for today

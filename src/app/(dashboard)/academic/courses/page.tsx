@@ -139,9 +139,15 @@ export default function CoursesPage() {
                       <h3 className="text-sm font-bold text-foreground leading-tight">
                         {course.name}
                       </h3>
-                      <span className="text-xs text-muted font-medium">
-                        {course.sks || 3} SKS
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-muted font-medium">
+                          {course.sks || 3} SKS
+                        </span>
+                        <span className="text-muted/40">•</span>
+                        <span className="text-xs text-muted font-medium">
+                          {course.schedules?.length || 0} Jadwal
+                        </span>
+                      </div>
                     </div>
                   </div>
 

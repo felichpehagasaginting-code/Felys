@@ -65,4 +65,36 @@ describe("Course CRUD & Data Integrity", () => {
     expect(cleaned.schedules?.[0].room).toBe("Lab AI 2");
     expect(cleaned.schedules?.[0].dayOfWeek).toBe(2);
   });
+
+  it("supports full 7-day schedules including Saturday (6) and Sunday (7)", () => {
+    const weekendCourse: Course = {
+      id: "c-weekend",
+      name: "Studi Mandiri & Seminar",
+      color: "#7FE3C0",
+      sks: 2,
+      schedules: [
+        {
+          id: "sch_sat",
+          dayOfWeek: 6, // Sabtu
+          startTime: "09:00",
+          endTime: "11:30",
+          room: "Auditorium",
+        },
+        {
+          id: "sch_sun",
+          dayOfWeek: 7, // Minggu
+          startTime: "13:00",
+          endTime: "15:00",
+          room: undefined, // Room kosong
+        },
+      ],
+    };
+
+    const cleaned = cleanFirestoreData(weekendCourse);
+    expect(cleaned.schedules).toHaveLength(2);
+    expect(cleaned.schedules?.[0].dayOfWeek).toBe(6);
+    expect(cleaned.schedules?.[0].room).toBe("Auditorium");
+    expect(cleaned.schedules?.[1].dayOfWeek).toBe(7);
+    expect(Object.prototype.hasOwnProperty.call(cleaned.schedules?.[1], "room")).toBe(false);
+  });
 });
