@@ -138,4 +138,73 @@ describe("useDataStore - 10-Channel Firestore Barrier & Skeleton Sync", () => {
 
     unsub();
   });
+
+  it("recovers and merges cached course schedules when Firestore returns empty schedules", () => {
+    // Pre-populate localStorage with course having schedules
+    const mockCourse = {
+      id: "course_test_sync",
+      name: "Algoritma & Struktur Data",
+      color: "#7C5CFA",
+      sks: 3,
+      schedules: [
+        {
+          id: "sch_1",
+          dayOfWeek: 1 as const,
+          startTime: "08:00",
+          endTime: "10:30",
+          room: "Lab 301",
+        },
+      ],
+    };
+    const storage: Record<string, string> = {
+      felys_courses: JSON.stringify([mockCourse]),
+    };
+    (globalThis as any).window = {};
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => storage[key] ?? null,
+      setItem: (key: string, val: string) => { storage[key] = val; },
+      removeItem: (key: string) => { delete storage[key]; },
+    };
+
+    let coursesCb: (c: any[]) => void = () => {};
+    vi.spyOn(FirestoreService, "seedDefaultCategoriesIfEmpty").mockImplementation(async () => {});
+    vi.spyOn(FirestoreService, "syncLocalDataToFirestore").mockImplementation(async () => {});
+    vi.spyOn(FirestoreService, "subscribeUserProfile").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeTasks").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeAccounts").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeCategories").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeTransactions").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeBudgets").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeSavingsGoals").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeRecurringBills").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "subscribeDebts").mockImplementation(() => () => {});
+    vi.spyOn(FirestoreService, "updateCourse").mockImplementation(async () => {});
+
+    vi.spyOn(FirestoreService, "subscribeCourses").mockImplementation((_, cb) => {
+      coursesCb = cb;
+      return () => {};
+    });
+
+    const unsub = useDataStore.getState().initFirestoreSync("test_user_resilience");
+
+    // Simulate remote returning the course but without schedules
+    coursesCb([
+      {
+        id: "course_test_sync",
+        name: "Algoritma & Struktur Data",
+        color: "#7C5CFA",
+        sks: 3,
+        schedules: [],
+      },
+    ]);
+
+    const state = useDataStore.getState();
+    const updatedCourse = state.courses.find((c) => c.id === "course_test_sync");
+    expect(updatedCourse?.schedules).toHaveLength(1);
+    expect(updatedCourse?.schedules?.[0].room).toBe("Lab 301");
+
+    unsub();
+    delete (globalThis as any).window;
+    delete (globalThis as any).localStorage;
+  });
 });
