@@ -108,14 +108,16 @@ if (typeof window !== "undefined") {
       // 5. Trigger background user summary metrics update for Firebase Console admin visibility
       fetch("/api/user/sync-stats", { method: "POST" }).catch(() => {});
     } else {
-      // User is logged out or unauthenticated: teardown listeners & clean memory
+      // User is logged out: teardown active sync listeners
       if (activeSyncUnsubscribe) {
         activeSyncUnsubscribe();
         activeSyncUnsubscribe = null;
+        // Hanya bersihkan memory & cache jika sebelumnya ada sesi cloud aktif (transisi logout)
+        useDataStore.getState().resetDataStore();
+        useAIStore.getState().resetAIStore();
+        usePomodoroStore.getState().resetPomodoroStore();
       }
-      useDataStore.getState().resetDataStore();
-      useAIStore.getState().resetAIStore();
-      usePomodoroStore.getState().resetPomodoroStore();
+      // Jika pengunjung mode tamu (belum login), data lokal di localStorage tetap dipertahankan
     }
   });
 }
