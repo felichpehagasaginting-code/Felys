@@ -47,6 +47,13 @@ export function WeeklyTimetableGrid() {
     }
   });
 
+  // Sinkronisasi otomatis selectedCourseId dengan daftar courses yang tersedia
+  React.useEffect(() => {
+    if (courses.length > 0 && (!selectedCourseId || !courses.some((c) => c.id === selectedCourseId))) {
+      setSelectedCourseId(courses[0].id);
+    }
+  }, [courses, selectedCourseId]);
+
   const resetForm = () => {
     setEditingScheduleId(null);
     setEditingFromCourseId(null);
@@ -70,13 +77,17 @@ export function WeeklyTimetableGrid() {
 
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCourseId) {
+    const effectiveCourseId = selectedCourseId || (courses.length > 0 ? courses[0].id : "");
+    if (!effectiveCourseId) {
       toast.error("Pilih mata kuliah terlebih dahulu.");
       return;
     }
 
-    const targetCourse = courses.find((c) => c.id === selectedCourseId);
-    if (!targetCourse) return;
+    const targetCourse = courses.find((c) => c.id === effectiveCourseId);
+    if (!targetCourse) {
+      toast.error("Mata kuliah tidak ditemukan.");
+      return;
+    }
 
     try {
       triggerHaptic("medium");
