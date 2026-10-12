@@ -295,6 +295,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     FirestoreService.syncLocalDataToFirestore(userId, {
       accounts: localAccounts,
+      courses: localCourses,
       transactions: localTransactions,
       ddayEvent: localDDay,
       emergencyFund: localEmergency,
@@ -329,8 +330,34 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     // 4. Subscribe to real-time collections
     const unsubCourses = FirestoreService.subscribeCourses(userId, (courses) => {
-      set({ courses });
-      saveLocal("felys_courses", courses);
+      if (courses && courses.length > 0) {
+        const cachedCourses = loadLocal<Course[]>("felys_courses", []);
+        const mergedCourses = courses.map((remoteCourse) => {
+          // Jika di remote belum ada jadwal tapi di cache lokal sudah ada jadwal, pertahankan dan sync ke Firestore
+          if (!remoteCourse.schedules || remoteCourse.schedules.length === 0) {
+            const localMatch = cachedCourses.find((lc) => lc.id === remoteCourse.id);
+            if (localMatch?.schedules && localMatch.schedules.length > 0) {
+              FirestoreService.updateCourse(userId, remoteCourse.id, {
+                ...remoteCourse,
+                schedules: localMatch.schedules,
+              }).catch(() => {});
+              return { ...remoteCourse, schedules: localMatch.schedules };
+            }
+          }
+          return remoteCourse;
+        });
+        set({ courses: mergedCourses });
+        saveLocal("felys_courses", mergedCourses);
+      } else {
+        const cached = loadLocal<Course[]>("felys_courses", []);
+        if (cached && cached.length > 0) {
+          FirestoreService.syncLocalDataToFirestore(userId, { courses: cached });
+          set({ courses: cached });
+        } else {
+          set({ courses: [] });
+          saveLocal("felys_courses", []);
+        }
+      }
       get().refreshInsights();
       markChannelReady("courses");
     });
@@ -438,6 +465,8 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateCourse: async (id, updates) => {
     const userId = getCurrentUserId();
+    const targetCourse = get().courses.find((c) => c.id === id);
+    const updatedCourse = targetCourse ? { ...targetCourse, ...updates } : updates;
     const nextCourses = get().courses.map((c) => (c.id === id ? { ...c, ...updates } : c));
     set({ courses: nextCourses });
     saveLocal("felys_courses", nextCourses);
@@ -459,7 +488,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     if (userId) {
       try {
-        await FirestoreService.updateCourse(userId, id, updates);
+        await FirestoreService.updateCourse(userId, id, updatedCourse);
         if (updates.name || updates.color) {
           const tasksToUpdate = get().tasks.filter((t) => t.courseId === id);
           for (const task of tasksToUpdate) {
