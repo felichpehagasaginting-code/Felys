@@ -44,9 +44,9 @@ export function FormattedMessage({ content, isUser }: FormattedMessageProps) {
           return (
             <div
               key={pIdx}
-              className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#7C5CFA]/10 via-[#B69CFF]/10 to-[#7FE3C0]/10 border border-[#7C5CFA]/30 space-y-1.5 shadow-2xs my-1"
+              className="p-3 sm:p-3.5 rounded-xl bg-background border border-border space-y-1.5 shadow-2xs my-1"
             >
-              <div className="flex items-center gap-1.5 text-[#7C5CFA] dark:text-[#B69CFF] font-extrabold text-[11px] uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-accent-deep font-bold text-[11px] uppercase tracking-wider">
                 <Lightbulb className="w-3.5 h-3.5 shrink-0" />
                 <span>{title}</span>
               </div>
@@ -106,7 +106,7 @@ export function FormattedMessage({ content, isUser }: FormattedMessageProps) {
             <button
               key={idx}
               onClick={() => FioActionDispatcher.execute(btn.action, btn.param)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#7C5CFA] to-[#6A4BE8] text-white font-bold text-[11px] shadow-xs hover:shadow-soft hover:scale-[1.02] active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent-deep text-white font-bold text-[11px] shadow-xs hover:opacity-90 active:scale-95 transition-all"
             >
               {btn.icon === "timer" && <Clock className="w-3.5 h-3.5" />}
               {btn.icon === "wallet" && <Wallet className="w-3.5 h-3.5" />}
